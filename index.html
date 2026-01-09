@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rolador de Dados RPG</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>🎲 Rolador de Dados</h1>
+
+        <div class="controls">
+            <div class="input-group">
+                <label for="amount">Quantidade</label>
+                <input type="number" id="amount" min="1" max="50" value="1">
+            </div>
+
+            <div class="input-group">
+                <label for="type">Tipo</label>
+                <select id="type">
+                    <option value="4">D4 (4 lados)</option>
+                    <option value="6" selected>D6 (6 lados)</option>
+                    <option value="8">D8 (8 lados)</option>
+                    <option value="10">D10 (10 lados)</option>
+                    <option value="12">D12 (12 lados)</option>
+                    <option value="20">D20 (20 lados)</option>
+                    <option value="100">D100 (100 lados)</option>
+                </select>
+            </div>
+
+            <button id="btnRoll">ROLAR</button>
+        </div>
+
+        <div id="results"></div>
+        
+        <div class="total-display" id="totalDisplay" style="display: none;">
+            Total: <span id="totalValue">0</span>
+        </div>
+    </div>
+
+    <script src="javascript/script.js"></script>
+</body>
+</html>
