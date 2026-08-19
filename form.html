@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha Ordem Paranormal — Personagem</title>
+
+    <!-- Mesma fonte "Cinzel" usada no círculo de Atributos da ficha (ver
+         sheet.html) — aqui o círculo de distribuição de pontos usa o
+         mesmo visual, então carrega a mesma fonte. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Ver o comentário sobre o importmap em index.html — precisa ser
+         idêntico em toda página que carrega javascript/firebase.js. -->
+    <script type="importmap">
+    {
+        "imports": {
+            "firebase/app": "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js",
+            "firebase/auth": "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js",
+            "firebase/firestore": "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js"
+        }
+    }
+    </script>
+</head>
+<body>
+
+    <!-- ============== CRIAR / EDITAR PERSONAGEM ==============
+         Sem parâmetro na URL = criar personagem novo.
+         Com ?id=XXXX = editar o personagem com esse id (character-form.js
+         busca os dados dele no Firestore ao carregar a página).
+
+         Layout usa a tela inteira (mesmo grid de 3 colunas da ficha, em
+         vez de um painel centralizado estreito) porque tem bastante coisa
+         pra caber: identidade+atributos, o catálogo de perícias (que é
+         grande) e, no futuro, a lista de rituais. -->
+    <div id="screen-form" class="screen">
+        <div class="sheet-topbar">
+            <button type="button" class="btn-secondary" id="btn-cancelar-form">&larr; Cancelar</button>
+            <div class="sheet-topbar-title">
+                <span id="form-title">Novo Personagem</span>
+            </div>
+            <button type="button" class="btn-action" id="btn-salvar-personagem">Salvar Personagem</button>
+        </div>
+
+        <div class="character-form-grid">
+
+            <section class="form-identity-section">
+                <div class="control-group full">
+                    <label>Nome do Personagem</label>
+                    <input type="text" id="form-nome" required>
+                </div>
+
+                <div class="form-trilha-nex-grid">
+                    <div class="control-group full">
+                        <label>Trilha</label>
+                        <select id="form-trilha">
+                            <option value="Ocultista">Ocultista</option>
+                            <option value="Combatente">Combatente</option>
+                            <option value="Especialista">Especialista</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group full">
+                        <label>NEX (Nível de Exposição)</label>
+                        <input type="number" id="form-nex" value="5" min="5" max="99" step="5">
+                    </div>
+                </div>
+
+                <h3>Atributos</h3>
+
+                <!-- Mesmo círculo ritualístico da ficha (sheet.html) — só
+                     que aqui, em vez de um botão de rolar, cada ponta tem
+                     um "−"/"+" pra distribuir os pontos, do mesmo jeito
+                     que já funcionava (mesma validação de min/máx/total
+                     em character-form.js, só a cara mudou). -->
+                <div class="pentagram-container form-pentagram">
+                    <svg class="pentagram-svg" viewBox="0 0 280 280" aria-hidden="true">
+                        <defs>
+                            <radialGradient id="opRitualGlowForm" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#3a0d0d" stop-opacity="0.55" />
+                                <stop offset="65%" stop-color="#1a0505" stop-opacity="0.22" />
+                                <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+                            </radialGradient>
+                        </defs>
+
+                        <circle cx="140" cy="140" r="132" fill="url(#opRitualGlowForm)" />
+
+                        <circle class="op-ring-outer" cx="140" cy="140" r="132" />
+                        <circle class="op-ring-outer-dash" cx="140" cy="140" r="123" />
+
+                        <polygon class="op-pentagram-star" points="140,20 210.53,237.08 25.87,102.92 254.13,102.92 69.47,237.08" />
+
+                        <circle class="op-ring-inner" cx="140" cy="140" r="120" />
+
+                        <g class="op-center-sigil">
+                            <circle cx="140" cy="140" r="34" />
+                            <line x1="140" y1="116" x2="140" y2="126" />
+                            <line x1="140" y1="154" x2="140" y2="164" />
+                            <line x1="116" y1="140" x2="126" y2="140" />
+                            <line x1="154" y1="140" x2="164" y2="140" />
+                            <circle class="op-center-dot" cx="140" cy="140" r="2.5" />
+                        </g>
+                    </svg>
+
+                    <div class="center-label">ATRIBUTOS</div>
+
+                    <div class="attr-node pos-agi">
+                        <span class="attr-label">AGI</span>
+                        <div class="attr-stepper">
+                            <button type="button" class="attr-stepper-btn" data-attr="agi" data-delta="-1" title="-1">&minus;</button>
+                            <input type="number" id="form-agi" class="attr-value-input" value="0">
+                            <button type="button" class="attr-stepper-btn" data-attr="agi" data-delta="1" title="+1">&plus;</button>
+                        </div>
+                    </div>
+
+                    <div class="attr-node pos-int">
+                        <span class="attr-label">INT</span>
+                        <div class="attr-stepper">
+                            <button type="button" class="attr-stepper-btn" data-attr="int" data-delta="-1" title="-1">&minus;</button>
+                            <input type="number" id="form-int" class="attr-value-input" value="0">
+                            <button type="button" class="attr-stepper-btn" data-attr="int" data-delta="1" title="+1">&plus;</button>
+                        </div>
+                    </div>
+
+                    <div class="attr-node pos-vig">
+                        <span class="attr-label">VIG</span>
+                        <div class="attr-stepper">
+                            <button type="button" class="attr-stepper-btn" data-attr="vig" data-delta="-1" title="-1">&minus;</button>
+                            <input type="number" id="form-vig" class="attr-value-input" value="0">
+                            <button type="button" class="attr-stepper-btn" data-attr="vig" data-delta="1" title="+1">&plus;</button>
+                        </div>
+                    </div>
+
+                    <div class="attr-node pos-pre">
+                        <span class="attr-label">PRE</span>
+                        <div class="attr-stepper">
+                            <button type="button" class="attr-stepper-btn" data-attr="pre" data-delta="-1" title="-1">&minus;</button>
+                            <input type="number" id="form-pre" class="attr-value-input" value="0">
+                            <button type="button" class="attr-stepper-btn" data-attr="pre" data-delta="1" title="+1">&plus;</button>
+                        </div>
+                    </div>
+
+                    <div class="attr-node pos-for">
+                        <span class="attr-label">FOR</span>
+                        <div class="attr-stepper">
+                            <button type="button" class="attr-stepper-btn" data-attr="for" data-delta="-1" title="-1">&minus;</button>
+                            <input type="number" id="form-for" class="attr-value-input" value="0">
+                            <button type="button" class="attr-stepper-btn" data-attr="for" data-delta="1" title="+1">&plus;</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="form-atributos-info" class="atributos-info"></div>
+            </section>
+
+            <section class="form-pericias-section skills-section">
+                <h3>Perícias</h3>
+                <div id="form-pericias-info" class="pericias-info"></div>
+                <div id="form-pericias-fixas" class="pericias-fixas"></div>
+                <div id="form-pericias-catalogo" class="form-pericias-catalogo"></div>
+            </section>
+
+            <section class="form-extra-section skills-section">
+                <h3>Rituais</h3>
+                <div id="form-rituais-info" class="rituais-info hidden"></div>
+                <p class="form-extra-hint">A lista completa de rituais por círculo ainda não faz parte do app — por enquanto, use o livro pra escolher. Esse espaço já está reservado pra quando ela for implementada.</p>
+            </section>
+
+        </div>
+    </div>
+
+    <script type="module" src="javascript/firebase.js"></script>
+    <script src="javascript/pericias.js" defer></script>
+    <script src="javascript/auth-guard.js" defer></script>
+    <script src="javascript/character-form.js" defer></script>
+</body>
+</html>

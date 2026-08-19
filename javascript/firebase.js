@@ -15,6 +15,7 @@
 //   window.Auth.friendlyError(err)     -> mensagem de erro em PT-BR
 //
 //   window.Characters.list(uid)              -> Promise<Array<Personagem>>
+//   window.Characters.get(uid, id)           -> Promise<Personagem|null>
 //   window.Characters.create(uid, dados)     -> Promise<string id>
 //   window.Characters.update(uid, id, dados) -> Promise<void>
 //   window.Characters.remove(uid, id)        -> Promise<void>
@@ -124,6 +125,18 @@ window.Characters = {
         await readyPromise;
         const snap = await firestoreApi.getDocs(personagensRef(uid));
         return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    },
+
+    // Busca um personagem específico direto pelo id — usado por
+    // form.html (editar) e sheet.html (abrir ficha), que agora são
+    // páginas separadas e recebem o id pela URL (?id=...) em vez de
+    // já terem o personagem em memória (como era quando tudo vivia
+    // numa SPA só). Devolve null se não existir (id errado/apagado).
+    async get(uid, id) {
+        await readyPromise;
+        const ref = firestoreApi.doc(db, 'usuarios', uid, 'personagens', id);
+        const snap = await firestoreApi.getDoc(ref);
+        return snap.exists() ? { id: snap.id, ...snap.data() } : null;
     },
 
     async create(uid, dados) {

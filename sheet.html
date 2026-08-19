@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha Ordem Paranormal — Ficha</title>
+
+    <!-- Fonte "Cinzel" (serifada, gravada em pedra/metal) usada só nos
+         textos do círculo de Atributos, pra dar uma cara mais ritualística/
+         oculta — de resto o app continua com a fonte padrão do sistema. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Ver o comentário sobre o importmap em index.html — precisa ser
+         idêntico em toda página que carrega javascript/firebase.js. -->
+    <script type="importmap">
+    {
+        "imports": {
+            "firebase/app": "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js",
+            "firebase/auth": "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js",
+            "firebase/firestore": "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js"
+        }
+    }
+    </script>
+</head>
+<body>
+
+    <!-- ============== FICHA DO PERSONAGEM ==============
+         Precisa de ?id=XXXX na URL (ver character-sheet.js) — sem isso
+         (ou com um id que não existe/não é seu) volta pra
+         characters.html. -->
+    <div id="screen-sheet" class="screen">
+        <div class="sheet-topbar">
+            <button class="btn-secondary" id="btn-voltar-lista">&larr; Meus Personagens</button>
+            <div class="sheet-topbar-title">
+                <span id="sheet-character-name">-</span>
+                <span id="sheet-character-trilha" class="sheet-character-trilha"></span>
+                <span id="sheet-character-nex" class="sheet-character-nex"></span>
+            </div>
+            <button class="btn-secondary" id="btn-editar-personagem">Editar</button>
+        </div>
+
+        <!-- Canto onde os dados 3D caem e rolam. Fixo no canto em telas
+             largas; em celular vira uma faixa dentro do fluxo normal
+             (ver media query no CSS), pra não flutuar por cima do conteúdo. -->
+        <div id="dice-box"></div>
+
+        <div class="character-sheet">
+
+            <section class="attributes-section">
+                <div class="pentagram-container">
+                    <!-- Círculo ritualístico atrás dos botões: anel externo
+                         tracejado que gira bem devagar, um pentagrama de
+                         verdade (ligando os 5 atributos pelas pontas, no
+                         padrão clássico de "pular uma") em vermelho, um anel
+                         em roxo (cor já usada no resto do app) passando
+                         exatamente pelo centro dos 5 nós, e um pequeno selo
+                         no centro. Tudo decorativo (aria-hidden), não muda
+                         nada da lógica dos botões. -->
+                    <svg class="pentagram-svg" viewBox="0 0 280 280" aria-hidden="true">
+                        <defs>
+                            <radialGradient id="opRitualGlow" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#3a0d0d" stop-opacity="0.55" />
+                                <stop offset="65%" stop-color="#1a0505" stop-opacity="0.22" />
+                                <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+                            </radialGradient>
+                        </defs>
+
+                        <circle cx="140" cy="140" r="132" fill="url(#opRitualGlow)" />
+
+                        <circle class="op-ring-outer" cx="140" cy="140" r="132" />
+                        <circle class="op-ring-outer-dash" cx="140" cy="140" r="123" />
+
+                        <polygon class="op-pentagram-star" points="140,20 210.53,237.08 25.87,102.92 254.13,102.92 69.47,237.08" />
+
+                        <circle class="op-ring-inner" cx="140" cy="140" r="120" />
+
+                        <g class="op-center-sigil">
+                            <circle cx="140" cy="140" r="34" />
+                            <line x1="140" y1="116" x2="140" y2="126" />
+                            <line x1="140" y1="154" x2="140" y2="164" />
+                            <line x1="116" y1="140" x2="126" y2="140" />
+                            <line x1="154" y1="140" x2="164" y2="140" />
+                            <circle class="op-center-dot" cx="140" cy="140" r="2.5" />
+                        </g>
+                    </svg>
+
+                    <div class="center-label">ATRIBUTOS</div>
+
+                    <div class="attr-node pos-agi">
+                        <span class="attr-label">AGI</span>
+                        <button class="attr-btn" id="attr-btn-agi">0</button>
+                    </div>
+
+                    <div class="attr-node pos-int">
+                        <span class="attr-label">INT</span>
+                        <button class="attr-btn" id="attr-btn-int">0</button>
+                    </div>
+
+                    <div class="attr-node pos-vig">
+                        <span class="attr-label">VIG</span>
+                        <button class="attr-btn" id="attr-btn-vig">0</button>
+                    </div>
+
+                    <div class="attr-node pos-pre">
+                        <span class="attr-label">PRE</span>
+                        <button class="attr-btn" id="attr-btn-pre">0</button>
+                    </div>
+
+                    <div class="attr-node pos-for">
+                        <span class="attr-label">FOR</span>
+                        <button class="attr-btn" id="attr-btn-for">0</button>
+                    </div>
+                </div>
+
+                <div class="pentagram-footer">
+                    <small>Clique no número para rolar</small>
+                </div>
+
+                <!-- Vida, Determinação e Defesa: dependem da trilha, do NEX
+                     e dos atributos (calculados em pericias.js), mas os
+                     valores ATUAIS de vida/determinação (quanto já foi
+                     gasto/perdido) e os bônus de equipamento/outros da
+                     Defesa são editáveis aqui e salvos automaticamente. -->
+                <div class="vitals-block">
+                    <div class="vital-row">
+                        <div class="vital-label">VIDA</div>
+                        <div class="vital-bar-wrap">
+                            <button class="vital-btn" id="vida-menos5" title="-5">«</button>
+                            <button class="vital-btn" id="vida-menos1" title="-1">‹</button>
+                            <div class="vital-bar vida-bar">
+                                <div class="vital-bar-fill vida-fill" id="vida-fill"></div>
+                                <span class="vital-bar-text" id="vida-text">0 / 0</span>
+                            </div>
+                            <button class="vital-btn" id="vida-mais1" title="+1">›</button>
+                            <button class="vital-btn" id="vida-mais5" title="+5">»</button>
+                        </div>
+                    </div>
+
+                    <div class="vital-row">
+                        <div class="vital-label">DETERMINAÇÃO</div>
+                        <div class="vital-bar-wrap">
+                            <button class="vital-btn" id="det-menos5" title="-5">«</button>
+                            <button class="vital-btn" id="det-menos1" title="-1">‹</button>
+                            <div class="vital-bar det-bar">
+                                <div class="vital-bar-fill det-fill" id="det-fill"></div>
+                                <span class="vital-bar-text" id="det-text">0 / 0</span>
+                            </div>
+                            <button class="vital-btn" id="det-mais1" title="+1">›</button>
+                            <button class="vital-btn" id="det-mais5" title="+5">»</button>
+                        </div>
+                    </div>
+
+                    <div class="defesa-row">
+                        <div class="defesa-box">
+                            <span class="defesa-label">DEFESA</span>
+                            <span class="defesa-total" id="defesa-total">10</span>
+                        </div>
+                        <div class="defesa-formula">
+                            10 + AGI +
+                            <span class="defesa-input defesa-equip-readonly" id="defesa-equip" title="Vem da proteção equipada no Inventário">0</span>
+                            <small>equip.</small> +
+                            <input type="number" id="defesa-outros" class="defesa-input" value="0" title="Outros bônus (talentos, condições)">
+                            <small>outros</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inventário: fica na lateral, embaixo de Vida/Determinação/
+                     Defesa (em vez de uma faixa separada embaixo das 3
+                     colunas), pra ficar tudo que é "sobre o personagem" junto
+                     no mesmo lugar. -->
+                <div class="inventory-section">
+                    <div class="inventory-section-header">
+                        <h3>Inventário</h3>
+                        <button type="button" class="btn-add-item" id="btn-abrir-modal-item" title="Adicionar item">+</button>
+                    </div>
+
+                    <div id="inventory-carga-info" class="inventory-carga-info"></div>
+
+                    <div id="inventory-list" class="inventory-list"></div>
+                </div>
+            </section>
+
+            <section class="skills-section">
+                <h3>Perícias</h3>
+
+                <div class="skills-header">
+                    <span>Nome</span>
+                    <span>Dados</span>
+                    <span>Bônus</span>
+                    <span>Treino</span>
+                    <span>Ação</span>
+                </div>
+
+                <div class="skills-list" id="skills-list"></div>
+            </section>
+
+            <section class="dice-section">
+                <div class="custom-roller">
+                    <h3>Rolagem Personalizada</h3>
+
+                    <div class="dice-type-selector">
+                        <button class="die-btn" onclick="selectDie(4)" id="d4">d4</button>
+                        <button class="die-btn" onclick="selectDie(6)" id="d6">d6</button>
+                        <button class="die-btn" onclick="selectDie(8)" id="d8">d8</button>
+                        <button class="die-btn" onclick="selectDie(10)" id="d10">d10</button>
+                        <button class="die-btn" onclick="selectDie(12)" id="d12">d12</button>
+                        <button class="die-btn active" onclick="selectDie(20)" id="d20">d20</button>
+                        <button class="die-btn" onclick="selectDie(100)" id="d100">d100</button>
+                    </div>
+
+                    <div class="dice-controls">
+                        <div class="control-group">
+                            <label>Qtd.</label>
+                            <input type="number" id="diceQty" value="1" min="1">
+                        </div>
+                        <div class="control-group">
+                            <label>Bônus</label>
+                            <input type="number" id="diceMod" value="0">
+                        </div>
+                        <button class="btn-action" onclick="rollSelectedDice()">ROLAR</button>
+                    </div>
+                </div>
+
+                <div id="roll-log" class="log-container">
+                    <div class="log-entry system-msg">
+                        Sessão iniciada.
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Modal: adicionar item ao inventário. Abre ao clicar no "+" do
+             Inventário (ver botão #btn-abrir-modal-item lá em cima). Tem
+             duas abas: catálogo (mostra descrição/efeito/espaço do item
+             escolhido antes de confirmar) e item personalizado. -->
+        <div id="modal-add-item" class="modal-overlay hidden">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <h3>Adicionar Item</h3>
+                    <button type="button" class="modal-close" id="btn-modal-item-fechar" title="Fechar">&times;</button>
+                </div>
+
+                <div class="modal-item-tabs">
+                    <button type="button" class="modal-tab active" id="tab-btn-catalogo">Catálogo</button>
+                    <button type="button" class="modal-tab" id="tab-btn-personalizado">Personalizado</button>
+                </div>
+
+                <div id="modal-tab-catalogo" class="modal-tab-content">
+                    <div id="modal-catalogo-subtabs" class="modal-catalogo-subtabs"></div>
+
+                    <input type="text" id="modal-item-busca" class="modal-search-input" placeholder="Buscar item...">
+
+                    <div id="modal-item-cards" class="modal-item-cards"></div>
+
+                    <div class="modal-item-actions">
+                        <span id="modal-item-feedback" class="modal-item-feedback"></span>
+                    </div>
+                </div>
+
+                <div id="modal-tab-personalizado" class="modal-tab-content hidden">
+                    <div class="control-group full">
+                        <label>Nome do item</label>
+                        <input type="text" id="modal-custom-nome" placeholder="Ex: Amuleto de família">
+                    </div>
+                    <div class="control-group full">
+                        <label>Espaços ocupados</label>
+                        <input type="number" id="modal-custom-espacos" value="1" min="0">
+                    </div>
+                    <div class="control-group full">
+                        <label>Descrição / efeito (opcional)</label>
+                        <textarea id="modal-custom-efeito" rows="3" placeholder="Pra que serve, bônus, restrições..."></textarea>
+                    </div>
+
+                    <div class="modal-item-actions">
+                        <span id="modal-custom-feedback" class="modal-item-feedback"></span>
+                        <button type="button" class="btn-action" id="btn-modal-custom-adicionar">Adicionar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="javascript/firebase.js"></script>
+    <script type="module" src="javascript/dice-animation.js"></script>
+    <script src="javascript/pericias.js" defer></script>
+    <script src="javascript/itens.js" defer></script>
+    <script src="javascript/dice-sound.js" defer></script>
+    <script src="javascript/auth-guard.js" defer></script>
+    <script src="javascript/script.js" defer></script>
+    <script src="javascript/character-sheet.js" defer></script>
+</body>
+</html>

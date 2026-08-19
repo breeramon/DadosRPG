@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ficha Ordem Paranormal</title>
+    <title>Ficha Ordem Paranormal — Entrar</title>
     <link rel="stylesheet" href="css/style.css">
 
     <!--
@@ -13,7 +13,9 @@
       não sabe pra onde apontar e quebra com o erro
       "Failed to resolve module specifier 'firebase/app'".
       Se você atualizar a versão em javascript/firebase.js, atualize aqui
-      também (os dois precisam apontar pra mesma versão).
+      também (os dois precisam apontar pra mesma versão) — e nas outras 3
+      páginas (characters.html, form.html, sheet.html), que têm o mesmo
+      mapa de importação porque cada uma carrega firebase.js de novo.
     -->
     <script type="importmap">
     {
@@ -27,7 +29,10 @@
 </head>
 <body>
 
-    <!-- ============== TELA: LOGIN / CADASTRO ============== -->
+    <!-- ============== LOGIN / CADASTRO ==============
+         Esta é a página de entrada do app (index.html). Se o usuário já
+         estiver logado (sessão salva pelo Firebase), auth.js manda ele
+         direto pra characters.html sem nem mostrar este formulário. -->
     <div id="screen-login" class="screen">
         <div class="auth-card">
             <h2>Ficha Ordem Paranormal</h2>
@@ -54,246 +59,7 @@
         </div>
     </div>
 
-    <!-- ============== TELA: LISTA DE PERSONAGENS ============== -->
-    <div id="screen-characters" class="screen hidden">
-        <div class="characters-panel">
-            <div class="characters-header">
-                <h2>Meus Personagens</h2>
-                <div class="characters-header-actions">
-                    <button class="btn-action" id="btn-novo-personagem">+ Novo Personagem</button>
-                    <button class="btn-secondary" id="btn-logout">Sair</button>
-                </div>
-            </div>
-
-            <div id="characters-empty" class="characters-empty hidden">
-                Você ainda não criou nenhum personagem.
-            </div>
-
-            <div id="characters-list" class="characters-list"></div>
-        </div>
-    </div>
-
-    <!-- ============== TELA: CRIAR / EDITAR PERSONAGEM ============== -->
-    <div id="screen-form" class="screen hidden">
-        <div class="character-form-panel">
-            <h2 id="form-title">Novo Personagem</h2>
-
-            <div class="control-group full">
-                <label>Nome do Personagem</label>
-                <input type="text" id="form-nome" required>
-            </div>
-
-            <div class="form-trilha-nex-grid">
-                <div class="control-group full">
-                    <label>Trilha</label>
-                    <select id="form-trilha">
-                        <option value="Ocultista">Ocultista</option>
-                        <option value="Combatente">Combatente</option>
-                        <option value="Especialista">Especialista</option>
-                    </select>
-                </div>
-
-                <div class="control-group full">
-                    <label>NEX (Nível de Exposição)</label>
-                    <input type="number" id="form-nex" value="5" min="5" max="99" step="5">
-                </div>
-            </div>
-
-            <h3>Atributos</h3>
-            <div class="form-attrs-grid">
-                <div class="control-group">
-                    <label>AGI</label>
-                    <input type="number" id="form-agi" value="0">
-                </div>
-                <div class="control-group">
-                    <label>INT</label>
-                    <input type="number" id="form-int" value="0">
-                </div>
-                <div class="control-group">
-                    <label>VIG</label>
-                    <input type="number" id="form-vig" value="0">
-                </div>
-                <div class="control-group">
-                    <label>PRE</label>
-                    <input type="number" id="form-pre" value="0">
-                </div>
-                <div class="control-group">
-                    <label>FOR</label>
-                    <input type="number" id="form-for" value="0">
-                </div>
-            </div>
-
-            <h3>Perícias</h3>
-            <div id="form-pericias-info" class="pericias-info"></div>
-            <div id="form-pericias-fixas" class="pericias-fixas"></div>
-            <div id="form-pericias-catalogo" class="form-pericias-catalogo"></div>
-            <div id="form-rituais-info" class="rituais-info hidden"></div>
-
-            <div class="form-actions">
-                <button type="button" class="btn-action" id="btn-salvar-personagem">Salvar Personagem</button>
-                <button type="button" class="btn-secondary" id="btn-cancelar-form">Cancelar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============== TELA: FICHA DO PERSONAGEM ============== -->
-    <div id="screen-sheet" class="screen hidden">
-        <div class="sheet-topbar">
-            <button class="btn-secondary" id="btn-voltar-lista">&larr; Meus Personagens</button>
-            <div class="sheet-topbar-title">
-                <span id="sheet-character-name">-</span>
-                <span id="sheet-character-trilha" class="sheet-character-trilha"></span>
-                <span id="sheet-character-nex" class="sheet-character-nex"></span>
-            </div>
-            <button class="btn-secondary" id="btn-editar-personagem">Editar</button>
-        </div>
-
-        <!-- Canto onde os dados 3D caem e rolam. Fixo no canto em telas
-             largas; em celular vira uma faixa dentro do fluxo normal
-             (ver media query no CSS), pra não flutuar por cima do conteúdo. -->
-        <div id="dice-box"></div>
-
-        <div class="character-sheet">
-
-            <section class="attributes-section">
-                <div class="pentagram-container">
-                    <div class="center-label">ATRIBUTOS</div>
-
-                    <div class="attr-node pos-agi">
-                        <span class="attr-label">AGI</span>
-                        <button class="attr-btn" id="attr-btn-agi">0</button>
-                    </div>
-
-                    <div class="attr-node pos-int">
-                        <span class="attr-label">INT</span>
-                        <button class="attr-btn" id="attr-btn-int">0</button>
-                    </div>
-
-                    <div class="attr-node pos-vig">
-                        <span class="attr-label">VIG</span>
-                        <button class="attr-btn" id="attr-btn-vig">0</button>
-                    </div>
-
-                    <div class="attr-node pos-pre">
-                        <span class="attr-label">PRE</span>
-                        <button class="attr-btn" id="attr-btn-pre">0</button>
-                    </div>
-
-                    <div class="attr-node pos-for">
-                        <span class="attr-label">FOR</span>
-                        <button class="attr-btn" id="attr-btn-for">0</button>
-                    </div>
-                </div>
-
-                <div class="pentagram-footer">
-                    <small>Clique no número para rolar</small>
-                </div>
-
-                <!-- Vida, Determinação e Defesa: dependem da trilha, do NEX
-                     e dos atributos (calculados em pericias.js), mas os
-                     valores ATUAIS de vida/determinação (quanto já foi
-                     gasto/perdido) e os bônus de equipamento/outros da
-                     Defesa são editáveis aqui e salvos automaticamente. -->
-                <div class="vitals-block">
-                    <div class="vital-row">
-                        <div class="vital-label">VIDA</div>
-                        <div class="vital-bar-wrap">
-                            <button class="vital-btn" id="vida-menos5" title="-5">«</button>
-                            <button class="vital-btn" id="vida-menos1" title="-1">‹</button>
-                            <div class="vital-bar vida-bar">
-                                <div class="vital-bar-fill vida-fill" id="vida-fill"></div>
-                                <span class="vital-bar-text" id="vida-text">0 / 0</span>
-                            </div>
-                            <button class="vital-btn" id="vida-mais1" title="+1">›</button>
-                            <button class="vital-btn" id="vida-mais5" title="+5">»</button>
-                        </div>
-                    </div>
-
-                    <div class="vital-row">
-                        <div class="vital-label">DETERMINAÇÃO</div>
-                        <div class="vital-bar-wrap">
-                            <button class="vital-btn" id="det-menos5" title="-5">«</button>
-                            <button class="vital-btn" id="det-menos1" title="-1">‹</button>
-                            <div class="vital-bar det-bar">
-                                <div class="vital-bar-fill det-fill" id="det-fill"></div>
-                                <span class="vital-bar-text" id="det-text">0 / 0</span>
-                            </div>
-                            <button class="vital-btn" id="det-mais1" title="+1">›</button>
-                            <button class="vital-btn" id="det-mais5" title="+5">»</button>
-                        </div>
-                    </div>
-
-                    <div class="defesa-row">
-                        <div class="defesa-box">
-                            <span class="defesa-label">DEFESA</span>
-                            <span class="defesa-total" id="defesa-total">10</span>
-                        </div>
-                        <div class="defesa-formula">
-                            10 + AGI +
-                            <input type="number" id="defesa-equip" class="defesa-input" value="0" title="Bônus de equipamento/armadura">
-                            <small>equip.</small> +
-                            <input type="number" id="defesa-outros" class="defesa-input" value="0" title="Outros bônus (talentos, condições)">
-                            <small>outros</small>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="skills-section">
-                <h3>Perícias</h3>
-
-                <div class="skills-header">
-                    <span>Nome</span>
-                    <span>Dados</span>
-                    <span>Bônus</span>
-                    <span>Treino</span>
-                    <span>Ação</span>
-                </div>
-
-                <div class="skills-list" id="skills-list"></div>
-            </section>
-
-            <section class="dice-section">
-                <div class="custom-roller">
-                    <h3>Rolagem Personalizada</h3>
-
-                    <div class="dice-type-selector">
-                        <button class="die-btn" onclick="selectDie(4)" id="d4">d4</button>
-                        <button class="die-btn" onclick="selectDie(6)" id="d6">d6</button>
-                        <button class="die-btn" onclick="selectDie(8)" id="d8">d8</button>
-                        <button class="die-btn" onclick="selectDie(10)" id="d10">d10</button>
-                        <button class="die-btn" onclick="selectDie(12)" id="d12">d12</button>
-                        <button class="die-btn active" onclick="selectDie(20)" id="d20">d20</button>
-                        <button class="die-btn" onclick="selectDie(100)" id="d100">d100</button>
-                    </div>
-
-                    <div class="dice-controls">
-                        <div class="control-group">
-                            <label>Qtd.</label>
-                            <input type="number" id="diceQty" value="1" min="1">
-                        </div>
-                        <div class="control-group">
-                            <label>Bônus</label>
-                            <input type="number" id="diceMod" value="0">
-                        </div>
-                        <button class="btn-action" onclick="rollSelectedDice()">ROLAR</button>
-                    </div>
-                </div>
-
-                <div id="roll-log" class="log-container">
-                    <div class="log-entry system-msg">
-                        Sessão iniciada.
-                    </div>
-                </div>
-            </section>
-
-        </div>
-    </div>
-
     <script type="module" src="javascript/firebase.js"></script>
-    <script type="module" src="javascript/dice-animation.js"></script>
-    <script src="javascript/pericias.js" defer></script>
-    <script src="javascript/script.js" defer></script>
-    <script src="javascript/app-ui.js" defer></script>
+    <script src="javascript/auth.js" defer></script>
 </body>
 </html>

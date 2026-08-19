@@ -99,6 +99,45 @@
         { circulo: 4, nexMinimo: 85 },
     ];
 
+    // Pontos de atributo disponíveis na CRIAÇÃO do personagem, de acordo
+    // com o NEX escolhido.
+    //
+    // CONFIRMADO (3 fontes independentes, texto praticamente idêntico ao
+    // do livro oficial): em NEX 5% — o NEX padrão de criação — todos os
+    // 5 atributos começam em 1 (soma 5) e o jogador ganha +4 pontos
+    // livres pra distribuir entre eles como quiser (total 9 pontos).
+    // Dá pra zerar um atributo (mínimo 0) pra ganhar 1 ponto extra em
+    // outro. O valor máximo de qualquer atributo NA CRIAÇÃO é 3.
+    //
+    // ATENÇÃO — extrapolação pra NEX inicial > 5%: o livro NÃO tem uma
+    // tabela oficial de "quantos pontos de atributo pra criar direto num
+    // NEX mais alto" — isso é decisão de mesa. Como este app deixa
+    // escolher qualquer NEX de 5% a 99% já na criação, uso como extensão
+    // a tabela que O LIVRO realmente tem pra personagens JÁ EM JOGO
+    // subindo de NEX (confirmado em 2 fontes: a cada marco de NEX 20%,
+    // 50%, 80% e 95%, o personagem ganha +1 ponto de atributo à escolha,
+    // com teto de 5 em qualquer atributo por essa via). Ou seja, pra
+    // criar um personagem já em NEX 50%, este app libera 9 + 2 = 11
+    // pontos e sobe o teto por atributo pra 5. É a extrapolação mais
+    // próxima do texto oficial que encontrei, mas não é regra "como está
+    // escrita" — se sua mesa usa outra convenção, ajuste os números
+    // abaixo (tudo centralizado aqui).
+    const ATRIBUTOS_NEX_MARCOS = [20, 50, 80, 95];
+    const ATRIBUTOS_BASE = { total: 9, maxPorAtributo: 3, minPorAtributo: 0 };
+    const ATRIBUTOS_TETO_ABSOLUTO = 5; // nenhum atributo passa disso por essa conta
+
+    function pontosAtributoPorNex(nex) {
+        const n = clampNex(nex);
+        const marcosAtingidos = ATRIBUTOS_NEX_MARCOS.filter(m => n >= m).length;
+        return {
+            total: ATRIBUTOS_BASE.total + marcosAtingidos,
+            maxPorAtributo: Math.min(ATRIBUTOS_TETO_ABSOLUTO, ATRIBUTOS_BASE.maxPorAtributo + marcosAtingidos),
+            minPorAtributo: ATRIBUTOS_BASE.minPorAtributo,
+            // true = NEX acima de 5%, usando a extensão não-oficial acima
+            extrapolado: marcosAtingidos > 0,
+        };
+    }
+
     // Vida (PV) e Determinação, por trilha: valor inicial (NEX 5%) e
     // quanto aumenta a cada "subida" de NEX (cada 5%), sempre somando o
     // atributo relevante (Vigor pra Vida, Presença pra Determinação) de
@@ -196,6 +235,9 @@
         PERICIAS_CATALOGO,
         TRILHA_REGRAS,
         RECURSOS,
+        ATRIBUTOS_NEX_MARCOS,
+        ATRIBUTOS_BASE,
+        pontosAtributoPorNex,
         GRAU_BONUS,
         GRAU_ORDEM,
         GRAU_LABEL,

@@ -20,8 +20,35 @@ const CDN_BASE = `https://cdn.jsdelivr.net/npm/@3d-dice/dice-box@${DICE_BOX_VERS
 
 let diceBox = null;
 
+// #dice-box vive dentro de #screen-sheet, que começa com "display: none"
+// (classe .hidden) até o usuário abrir um personagem — e só nesse
+// momento ganha um tamanho real na tela. Se a gente inicializasse a
+// DiceBox (Babylon + física) enquanto o container ainda está com
+// display:none, o mundo físico nasce com limites 0x0/degenerados: os
+// dados nunca "assentam" de verdade, sempre batem no settleTimeout e a
+// lib não consegue identificar a face voltada pra cima (erro
+// "colliderFaceMap ... face -1"), devolvendo sempre 0 depois de vários
+// segundos — é exatamente o bug de "nenhum dado rola". Por isso, espera
+// o container ter largura/altura de verdade (ou seja, a tela da ficha
+// já estar visível) antes de criar a DiceBox.
+function esperarContainerVisivel(seletor) {
+    return new Promise(resolve => {
+        function checar() {
+            const el = document.querySelector(seletor);
+            const rect = el ? el.getBoundingClientRect() : null;
+            if (rect && rect.width > 0 && rect.height > 0) {
+                resolve();
+            } else {
+                requestAnimationFrame(checar);
+            }
+        }
+        checar();
+    });
+}
+
 async function setupDiceBox() {
     try {
+        await esperarContainerVisivel('#dice-box');
         const { default: DiceBox } = await import(/* webpackIgnore: true */ `${CDN_BASE}dice-box.es.min.js`);
 
         const box = new DiceBox({
