@@ -1,94 +1,1099 @@
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #2c3e50;
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
+/* --- RESET E GERAL --- */
+* {
+    box-sizing: border-box;
     margin: 0;
+    padding: 0;
 }
 
-.container {
-    background-color: #34495e;
-    padding: 2rem;
-    border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    text-align: center;
-    width: 90%;
-    max-width: 500px;
+body {
+    background-color: #121212;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    overflow-y: auto;
 }
 
-h1 { margin-bottom: 1.5rem; }
+/* Fonte de pelo menos 16px em campos — evita o iOS dar zoom automático
+   ao focar um input/select em celular. */
+input, select, button, textarea {
+    font-size: 1rem;
+}
 
-.controls {
+/* --- TELAS (login, lista de personagens, formulário, ficha) --- */
+.screen {
+    min-height: 100vh;
+}
+
+/* Classe utilitária genérica: esconde qualquer elemento (telas,
+   mensagens de erro, estados vazios etc). */
+.hidden {
+    display: none !important;
+}
+
+/* --- CANTO DE ANIMAÇÃO 3D DOS DADOS (dice-box) --- */
+/* Caixinha fixa no canto inferior direito (embaixo da coluna de
+   rolagem/log, perto do botão ROLAR), em vez de ocupar a tela toda. */
+#dice-box {
+    position: fixed;
+    bottom: 16px;
+    /* Canto inferior DIREITO (embaixo da coluna de rolagem/log) — não o
+       esquerdo, porque agora a coluna de atributos tem o bloco de
+       Vida/Determinação/Defesa embaixo do pentagrama, sem espaço vazio
+       sobrando pra caixa dos dados não sobrepor o conteúdo. */
+    right: 16px;
+    width: 380px;
+    height: 380px;
+    pointer-events: none; /* nunca bloqueia cliques na ficha */
+    z-index: 9999;
+    background-color: rgba(18, 18, 18, 0.55);
+    border: 1px solid #4a148c;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+}
+
+#dice-box canvas {
+    width: 100%;
+    height: 100%;
+}
+
+@media (max-width: 1000px) {
+    #dice-box {
+        width: 260px;
+        height: 260px;
+    }
+}
+
+@media (max-width: 600px) {
+    /* Em celular a tela vira uma coluna só e rola; uma caixa "fixed" no
+       canto acabaria flutuando por cima do conteúdo. Em vez disso, ela
+       passa a fazer parte do fluxo normal — uma faixa no topo da ficha. */
+    #dice-box {
+        position: static;
+        width: 100%;
+        max-width: 320px;
+        height: 200px;
+        margin: 0 auto 16px auto;
+    }
+}
+
+/* --- LAYOUT PRINCIPAL (GRID) --- */
+.character-sheet {
+    display: grid;
+    grid-template-columns: 320px 1fr 300px;
+    gap: 20px;
+    padding: 20px;
+    height: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+h3 {
+    color: #ffffff;
+    border-bottom: 2px solid #4a148c;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* --- COLUNA 1: ATRIBUTOS --- */
+.attributes-section {
     display: flex;
-    gap: 10px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 40px;
+}
+
+.pentagram-container {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    /* Insira aqui o caminho da sua imagem */
+    /* background: url('../assets/pentagrama.png') no-repeat center/contain; */
+    border: 1px dashed #333; /* Remova esta linha ao adicionar a imagem */
+    border-radius: 50%;
+}
+
+.center-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: bold;
+    color: #555;
+    font-size: 0.9rem;
+    pointer-events: none;
+}
+
+.pentagram-footer {
+    margin-top: 30px;
+    text-align: center;
+    color: #666;
+}
+
+/* Botões do Pentagrama */
+.attr-node {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.attr-label {
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #ccc;
+}
+
+.attr-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #000;
+    border: 2px solid #fff;
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 0 10px rgba(0,0,0,0.8);
+}
+
+.attr-btn:hover {
+    background-color: #fff;
+    color: #000;
+    box-shadow: 0 0 15px #fff;
+    transform: scale(1.1);
+}
+
+/* Posicionamento dos nós do pentagrama */
+.pos-agi { top: -10px; left: 50%; transform: translateX(-50%); }
+.pos-int { top: 30%; right: -10px; }
+.pos-vig { bottom: 10px; right: 20px; }
+.pos-pre { bottom: 10px; left: 20px; }
+.pos-for { top: 30%; left: -10px; }
+
+/* --- Vida / Determinação / Defesa --- */
+.vitals-block {
+    width: 100%;
+    max-width: 280px;
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.vital-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.vital-label {
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    color: #aaa;
+}
+
+.vital-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.vital-btn {
+    background-color: #232323;
+    border: 1px solid #444;
+    color: #ccc;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.vital-btn:hover {
+    background-color: #333;
+}
+
+.vital-bar {
+    position: relative;
+    flex: 1;
+    height: 22px;
+    background-color: #1a0000;
+    border: 1px solid #444;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.det-bar {
+    background-color: #001a1a;
+}
+
+.vital-bar-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    transition: width 0.2s ease;
+}
+
+.vida-fill {
+    background-color: #b71c1c;
+}
+
+.det-fill {
+    background-color: #00695c;
+}
+
+.vital-bar-text {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
     justify-content: center;
-    margin-bottom: 20px;
+    height: 100%;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.defesa-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.defesa-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border: 2px solid #fff;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.defesa-label {
+    font-size: 0.6rem;
+    color: #aaa;
+    letter-spacing: 0.5px;
+}
+
+.defesa-total {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #fff;
+}
+
+.defesa-formula {
+    font-size: 0.75rem;
+    color: #888;
+    display: flex;
+    align-items: center;
     flex-wrap: wrap;
+    gap: 4px;
+}
+
+.defesa-input {
+    width: 42px;
+    padding: 3px;
+    background-color: #121212;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.defesa-formula small {
+    color: #666;
+}
+
+/* --- COLUNA 2: PERÍCIAS --- */
+.skills-section {
+    background-color: #1e1e1e;
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.skills-header {
+    display: grid;
+    grid-template-columns: 3fr 1fr 1fr 1fr 1fr;
+    padding: 10px;
+    background-color: #2c2c2c;
+    font-weight: bold;
+    font-size: 0.85rem;
+    color: #aaa;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.skills-header span:first-child { text-align: left; }
+
+.skills-list {
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 5px;
+}
+
+.skills-list::-webkit-scrollbar { width: 8px; }
+.skills-list::-webkit-scrollbar-track { background: #121212; }
+.skills-list::-webkit-scrollbar-thumb { background: #4a148c; border-radius: 4px; }
+
+.skill-item {
+    display: grid;
+    grid-template-columns: 3fr 1fr 1fr 1fr 1fr;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #333;
+    transition: background 0.2s;
+    text-align: center;
+}
+
+.skill-item:hover { background-color: #252525; }
+
+.skill-name { text-align: left; font-weight: 500; }
+.skill-attr-ref { color: #888; font-size: 0.8rem; margin-left: 5px; }
+
+/* Perícia treinada: nome em verde, igual à ficha oficial. */
+.skill-item.treinada .skill-name { color: #4caf50; }
+
+/* Perícia "só treinada" (não dá pra tentar sem treino) que o personagem
+   ainda não tem: cinza/apagada e sem botão de rolar. */
+.skill-item.bloqueada { opacity: 0.45; }
+.skill-item.bloqueada .btn-roll-skill { visibility: hidden; }
+
+/* Em telas estreitas, a linha de tabela (nome | dado | bônus | treino |
+   ação) fica apertada demais — vira um "cartão" de 2 linhas por perícia. */
+@media (max-width: 700px) {
+    .skills-header {
+        display: none;
+    }
+
+    .skill-item {
+        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-areas:
+            "name name action"
+            "dice bonus treino";
+        row-gap: 8px;
+        text-align: left;
+    }
+
+    .skill-name { grid-area: name; }
+    .skill-dice { grid-area: dice; text-align: left; color: #aaa; }
+    .skill-bonus { grid-area: bonus; text-align: left; color: #aaa; }
+    .skill-treino { grid-area: treino; text-align: left; color: #aaa; }
+    .btn-roll-skill {
+        grid-area: action;
+        justify-self: end;
+        align-self: start;
+    }
+}
+
+.btn-roll-skill {
+    background-color: transparent;
+    border: 1px solid #4a148c;
+    color: #b39ddb;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-roll-skill:hover {
+    background-color: #4a148c;
+    color: white;
+}
+
+/* --- COLUNA 3: DADOS E LOG --- */
+.dice-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Container dos botões de dados */
+.dice-type-selector {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    gap: 5px;
+}
+
+.die-btn {
+    flex: 1 1 55px;
+    background-color: #333;
+    border: 1px solid #555;
+    color: #fff;
+    padding: 8px 0;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.die-btn:hover { background-color: #444; }
+
+/* Estado Ativo (Dado Selecionado) */
+.die-btn.active {
+    background-color: #4a148c; /* Roxo Ordem */
+    border-color: #7c43bd;
+    box-shadow: 0 0 8px rgba(124, 67, 189, 0.5);
+}
+
+/* Controles de input */
+.dice-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.control-group label {
+    font-size: 0.75rem;
+    color: #aaa;
+    margin-bottom: 4px;
+}
+
+.control-group input {
+    width: 60px;
+    padding: 10px;
+    background-color: #121212;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.custom-roller {
+    background-color: #1e1e1e;
+    padding: 15px;
+    border-radius: 8px;
 }
 
 .input-group {
     display: flex;
-    flex-direction: column;
-    text-align: left;
+    gap: 10px;
 }
 
-label { font-size: 0.9rem; margin-bottom: 5px; color: #bdc3c7; }
-
-input, select, button {
+.input-group input {
+    flex: 1;
     padding: 10px;
-    border-radius: 5px;
-    border: none;
-    font-size: 1rem;
+    background-color: #121212;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 4px;
+    font-family: monospace;
 }
 
-button {
-    background-color: #e74c3c;
+.btn-action {
+    padding: 10px 20px;
+    background-color: #4a148c;
     color: white;
+    border: none;
+    border-radius: 4px;
     cursor: pointer;
     font-weight: bold;
-    transition: background 0.2s;
-    margin-top: auto;
-    height: 40px;
-    align-self: flex-end;
+    transition: 0.2s;
 }
 
-button:hover { background-color: #c0392b; }
+.btn-action:hover { background-color: #6a1b9a; }
 
-#results {
+/* Log Styles */
+.log-container {
+    flex: 1;
+    background-color: #000;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 10px;
+    overflow-y: auto;
+    font-family: 'Consolas', monospace;
     display: flex;
+    flex-direction: column-reverse;
+}
+
+.log-entry {
+    margin-bottom: 8px;
+    padding: 8px;
+    border-left: 3px solid #4a148c;
+    background-color: #1a1a1a;
+    font-size: 0.9rem;
+    animation: fadeIn 0.3s ease;
+}
+
+.system-msg { border-left-color: #fff; }
+.crit-success { border-left-color: #00e676; color: #00e676; }
+.crit-fail { border-left-color: #ff1744; color: #ff1744; }
+
+.result-highlight {
+    color: #b39ddb;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   TELA: LOGIN / CADASTRO
+   ============================================================ */
+#screen-login {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.auth-card {
+    background-color: #1e1e1e;
+    border-radius: 8px;
+    padding: 30px;
+    width: 100%;
+    max-width: 380px;
+}
+
+.auth-card h2 {
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.auth-subtitle {
+    color: #aaa;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+}
+
+.auth-error {
+    background-color: rgba(255, 23, 68, 0.12);
+    border: 1px solid #ff1744;
+    color: #ff8a80;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+}
+
+#form-auth {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.control-group.full {
+    width: 100%;
+}
+
+.control-group.full input,
+.control-group.full select {
+    width: 100%;
+}
+
+.btn-action.full {
+    width: 100%;
+}
+
+.auth-toggle {
+    margin-top: 18px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #aaa;
+}
+
+.auth-toggle a {
+    color: #b39ddb;
+    text-decoration: none;
+    margin-left: 4px;
+}
+
+.auth-toggle a:hover {
+    text-decoration: underline;
+}
+
+/* ============================================================
+   BOTÕES SECUNDÁRIO E DE PERIGO (reaproveitados nas telas novas)
+   ============================================================ */
+.btn-secondary {
+    padding: 10px 20px;
+    background-color: transparent;
+    border: 1px solid #555;
+    color: #e0e0e0;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.btn-secondary:hover {
+    background-color: #333;
+}
+
+.btn-danger {
+    padding: 8px 14px;
+    background-color: transparent;
+    border: 1px solid #ff1744;
+    color: #ff8a80;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.btn-danger:hover {
+    background-color: #ff1744;
+    color: white;
+}
+
+/* ============================================================
+   TELA: LISTA DE PERSONAGENS
+   ============================================================ */
+#screen-characters {
+    padding: 40px 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.characters-panel {
+    width: 100%;
+    max-width: 800px;
+}
+
+.characters-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
     flex-wrap: wrap;
     gap: 10px;
-    justify-content: center;
-    margin-top: 20px;
 }
 
-.die {
-    width: 50px;
-    height: 50px;
-    background-color: #ecf0f1;
-    color: #2c3e50;
+.characters-header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.characters-empty {
+    background-color: #1e1e1e;
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    color: #888;
+}
+
+.characters-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.character-card {
+    background-color: #1e1e1e;
+    border-radius: 8px;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-left: 3px solid #4a148c;
+}
+
+.character-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.character-card-info strong {
+    font-size: 1.1rem;
+}
+
+.character-card-trilha {
+    color: #b39ddb;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.character-card-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* ============================================================
+   TELA: CRIAR / EDITAR PERSONAGEM
+   ============================================================ */
+#screen-form {
+    padding: 40px 20px;
     display: flex;
     justify-content: center;
-    align-items: center;
-    font-weight: bold;
-    font-size: 1.2rem;
+}
+
+.character-form-panel {
+    background-color: #1e1e1e;
     border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    animation: popIn 0.3s ease-out;
+    padding: 30px;
+    width: 100%;
+    max-width: 700px;
 }
 
-.total-display {
-    margin-top: 20px;
-    font-size: 1.5rem;
-    border-top: 2px solid #7f8c8d;
-    padding-top: 10px;
+.character-form-panel select {
+    padding: 10px;
+    background-color: #121212;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 4px;
+    width: 100%;
 }
 
-@keyframes popIn {
-    0% { transform: scale(0); opacity: 0; }
-    80% { transform: scale(1.1); }
-    100% { transform: scale(1); opacity: 1; }
+.form-attrs-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.form-attrs-grid .control-group input {
+    width: 100%;
+}
+
+.form-trilha-nex-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+/* --- Perícias: catálogo fixo (NEX + trilha decidem o que é permitido) --- */
+.pericias-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    color: #ccc;
+}
+
+.pericias-info strong {
+    color: #fff;
+}
+
+.pericias-cota-cheia strong {
+    color: #ff8a80;
+}
+
+.pericias-fixas {
+    margin-bottom: 14px;
+}
+
+.pericias-fixas-titulo {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #aaa;
+    margin-bottom: 6px;
+}
+
+.pericia-fixa-item {
+    background-color: #23172f;
+    border: 1px solid #4a148c;
+    border-radius: 4px;
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    color: #d1c4e9;
+}
+
+.pericia-fixa-grupo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background-color: #121212;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+}
+
+.pericia-fixa-grupo select {
+    padding: 6px;
+    background-color: #1e1e1e;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 4px;
+}
+
+.rituais-info {
+    background-color: rgba(74, 20, 140, 0.18);
+    border: 1px solid #4a148c;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    font-size: 0.85rem;
+    color: #d1c4e9;
+}
+
+.form-pericias-catalogo {
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 6px;
+    margin-bottom: 12px;
+}
+
+.pericias-catalogo-grupo {
+    margin-bottom: 14px;
+}
+
+.pericias-catalogo-grupo-titulo {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #7c43bd;
+    font-weight: bold;
+    border-bottom: 1px solid #333;
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+}
+
+.pericia-catalogo-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 4px;
+    border-bottom: 1px solid #262626;
+}
+
+.pericia-catalogo-checkbox {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.pericia-catalogo-checkbox input {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.pericia-catalogo-grau {
+    padding: 6px;
+    background-color: #121212;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.pericia-catalogo-bonus-extra {
+    width: 56px;
+    padding: 6px;
+    background-color: #121212;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.form-actions {
+    margin-top: 25px;
+    display: flex;
+    gap: 10px;
+}
+
+@media (max-width: 700px) {
+    .character-form-panel,
+    .characters-panel,
+    .auth-card {
+        padding: 18px;
+    }
+
+    #screen-form,
+    #screen-characters {
+        padding: 20px 12px;
+    }
+
+    .form-attrs-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .form-trilha-nex-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    /* Em telas estreitas a linha de perícia (checkbox + grau + bônus)
+       não cabe numa linha só — empilha o grau/bônus embaixo do nome. */
+    .pericia-catalogo-row {
+        flex-wrap: wrap;
+    }
+
+    .pericia-catalogo-checkbox {
+        flex-basis: 100%;
+    }
+
+    .pericia-fixa-grupo {
+        flex-wrap: wrap;
+    }
+}
+
+/* ============================================================
+   TELA: FICHA (barra superior nova + grid já existente)
+   ============================================================ */
+#screen-sheet {
+    height: 100vh;
+}
+
+.sheet-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    background-color: #1e1e1e;
+    border-bottom: 1px solid #333;
+}
+
+.sheet-topbar-title {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.sheet-character-trilha {
+    color: #b39ddb;
+    font-weight: normal;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+}
+
+.sheet-character-nex {
+    color: #888;
+    font-weight: normal;
+    font-size: 0.85rem;
+}
+
+#screen-sheet .character-sheet {
+    height: calc(100vh - 57px);
+}
+
+@media (max-width: 600px) {
+    .sheet-topbar {
+        flex-wrap: wrap;
+        justify-content: center;
+        text-align: center;
+        gap: 8px;
+        padding: 10px;
+    }
+}
+
+/* ============================================================
+   RESPONSIVO: FICHA (TABLET E CELULAR)
+   ------------------------------------------------------------
+   Estes blocos ficam de propósito no FINAL do arquivo. Como têm a
+   mesma especificidade (0,0,1,0) das regras "base" lá em cima
+   (.skills-section, .skills-list, #screen-sheet etc.), o CSS resolve
+   o empate por ORDEM NO ARQUIVO — a regra que aparece por último
+   vence, independente de estar dentro de uma media query ou não.
+   Se esses blocos ficarem antes das regras base (como estavam antes),
+   as regras base "ganham" de volta fora da media query e a versão
+   responsiva nunca é aplicada de verdade. Por isso: NÃO mover estes
+   blocos pra cima sem também aumentar a especificidade das regras,
+   senão o bug de perícias/log somem em celular volta.
+   ============================================================ */
+
+/* Tablet: ainda 2 colunas dá pra usar, mas a 3ª coluna fica estreita
+   demais — melhor empilhar tudo numa coluna só e deixar a página rolar. */
+@media (max-width: 1000px) {
+    .character-sheet {
+        grid-template-columns: 1fr;
+        height: auto;
+        padding: 16px;
+        gap: 16px;
+    }
+
+    #screen-sheet {
+        height: auto;
+        min-height: 100vh;
+    }
+
+    #screen-sheet .character-sheet {
+        height: auto;
+    }
+
+    /* Com a altura da coluna virando "auto", os filhos com flex:1 (que
+       dependiam de um container de altura fixa pra calcular espaço)
+       colapsavam pra 0px e a lista de perícias/log sumiam da tela.
+       Aqui eles saem do esquema flex-fill e passam a ter altura própria,
+       limitada e com rolagem interna. */
+    .skills-section,
+    .dice-section {
+        display: block;
+    }
+
+    .skills-list {
+        flex: none;
+        max-height: 340px;
+        overflow-y: auto;
+    }
+
+    .custom-roller {
+        margin-bottom: 20px;
+    }
+
+    .log-container {
+        flex: none;
+        max-height: 340px;
+    }
+}
+
+@media (max-width: 600px) {
+    .character-sheet {
+        padding: 12px;
+    }
+
+    .attributes-section {
+        padding-top: 10px;
+    }
+
+    .pentagram-container {
+        width: 220px;
+        height: 220px;
+    }
+
+    .attr-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 1.2rem;
+    }
 }
