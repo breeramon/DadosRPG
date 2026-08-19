@@ -1,11 +1,29 @@
-# Chaves do Firebase do SEU projeto — não sobem pro Git. Cada pessoa que
-# clonar o repositório cria seu próprio projeto no Firebase e copia
-# javascript/firebase-config.example.js para javascript/firebase-config.js,
-# preenchendo com as chaves dela.
-javascript/firebase-config.js
-
-# Arquivos comuns de SO / editor que não têm nada a ver com o projeto.
-.DS_Store
-Thumbs.db
+# Logs
+logs
 *.log
-.vscode/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Assets binários dos dados 3D (@3d-dice/dice-box) — copiados
+# automaticamente pro projeto por um script "postinstall" que roda
+# sozinho depois de "npm install" (ver README), não precisa versionar.
+public/assets
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

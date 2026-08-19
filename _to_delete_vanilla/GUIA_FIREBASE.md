@@ -1,6 +1,6 @@
 # Configurando o login e o salvamento de personagens (Firebase)
 
-A ficha tem login por e-mail/senha e salva os personagens de cada
+A ficha agora tem login por e-mail/senha e salva os personagens de cada
 usuário na nuvem, usando o Firebase (serviço gratuito do Google). Esse
 passo eu não consigo fazer por você — precisa da sua conta Google —,
 mas leva uns 5 minutos. Depois disso, o código já está pronto pra
@@ -29,18 +29,7 @@ const firebaseConfig = {
 };
 ```
 
-4. Copie **`.env.example`** (na raiz do projeto) para um novo arquivo chamado **`.env.local`**, e preencha cada linha com o valor correspondente do bloco acima:
-
-```
-VITE_FIREBASE_API_KEY=AIzaSy...
-VITE_FIREBASE_AUTH_DOMAIN=dados-rpg-xxxxx.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=dados-rpg-xxxxx
-VITE_FIREBASE_STORAGE_BUCKET=dados-rpg-xxxxx.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=123456789012
-VITE_FIREBASE_APP_ID=1:123456789012:web:abcdef1234567890
-```
-
-Essas chaves não são secretas (não são como uma senha) — só identificam o projeto. O `.env.local` não sobe pro Git (já está no `.gitignore` por padrão do Vite).
+4. Copie esses valores e cole no arquivo **`javascript/firebase-config.js`** do projeto, substituindo os valores de exemplo. Essas chaves não são secretas (não são como uma senha) — só identificam o projeto.
 
 ## 3. Ativar login por e-mail/senha
 
@@ -78,27 +67,18 @@ service cloud.firestore {
 
 ## 6. Testar
 
-1. Salve o `.env.local` com suas chaves.
-2. Instale as dependências e rode o servidor local (veja abaixo).
-3. Abra o endereço que aparecer no terminal: deve aparecer a tela de login. Clique em "Criar conta", cadastre um e-mail/senha de teste, e você deve cair na tela "Meus Personagens".
+1. Salve o `javascript/firebase-config.js` com suas chaves.
+2. Rode o projeto por um servidor local (veja abaixo — é obrigatório, `file://` direto não funciona com módulos JS).
+3. Abra a página: deve aparecer a tela de login. Clique em "Criar conta", cadastre um e-mail/senha de teste, e você deve cair na tela "Meus Personagens".
 
 ### Como rodar o projeto (lembrete)
 
-```bash
-npm install
-npm run dev
-```
+- **VS Code + Live Server**: clique com o botão direito no `index.html` → "Open with Live Server".
+- **ou Python**: `python -m http.server 8000` na pasta do projeto, depois abra `http://localhost:8000`.
 
-Abra o endereço que aparecer no terminal (normalmente `http://localhost:5173`).
-
-## Já tinha a versão antiga (HTML/CSS/JS puro) rodando?
-
-Se você já tinha um `javascript/firebase-config.js` preenchido na
-versão anterior deste projeto, não precisa criar um projeto Firebase
-novo — é o mesmo projeto, só muda onde as chaves ficam guardadas.
-Copie os mesmos valores de lá pro `.env.local` novo, seguindo o passo 2
-acima (`apiKey` → `VITE_FIREBASE_API_KEY`, `authDomain` →
-`VITE_FIREBASE_AUTH_DOMAIN`, e assim por diante).
+Abrir o `index.html` com duplo clique (`file://`) não funciona — nem a
+animação dos dados nem o login carregam nesse modo, porque o navegador
+bloqueia esse tipo de módulo JavaScript fora de um servidor.
 
 ## Estrutura dos dados no Firestore
 
@@ -117,6 +97,6 @@ Cada personagem é salvo em `usuarios/{seu-uid}/personagens/{id-do-personagem}` 
 
 ## Problemas comuns
 
-- **Tela de login não sai do lugar / erro no console mencionando "firebase" ou ".env"**: as chaves em `.env.local` ainda não foram preenchidas (ou o arquivo tem outro nome) — volte no passo 2, e lembre de reiniciar `npm run dev` depois de criar/editar o `.env.local`.
+- **Tela de login não sai do lugar / erro no console mencionando "firebase-config"**: as chaves em `javascript/firebase-config.js` ainda estão com os valores de exemplo — volte no passo 2.
 - **"Missing or insufficient permissions"**: as regras de segurança (passo 5) não foram publicadas, ou você editou a estrutura de pastas do Firestore.
 - **E-mail/senha não funciona**: confira se o método "Email/Password" está mesmo ativado (passo 3).
