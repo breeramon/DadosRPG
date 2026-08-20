@@ -84,6 +84,9 @@ export default function CharacterSheetPage() {
     const [detAtual, setDetAtual] = useState(0);
     const [defesaOutros, setDefesaOutros] = useState(0);
     const [rollLog, setRollLog] = useState([]);
+    // Só a rolagem mais recente, pra mostrar em cima do quadrado dos
+    // dados (sem histórico ali — o histórico já vive no log abaixo).
+    const [ultimoResultado, setUltimoResultado] = useState(null);
 
     // --- Modal "Adicionar Item" ---
     const [modalAberto, setModalAberto] = useState(false);
@@ -175,9 +178,17 @@ export default function CharacterSheetPage() {
     // ---------------------------------------------------------------
     const logMessage = useCallback((title, details, result, type = 'normal') => {
         setRollLog(prev => [{ id: proximoLogId++, title, details, result, type }, ...prev].slice(0, MAX_LOG_ENTRIES));
+        // Mesma informação, só que "sem memória" — cada rolagem nova
+        // substitui a anterior (ver .dice-box-result no CSS).
+        setUltimoResultado({ id: proximoLogId, titulo: title, valor: result, tipo: type });
     }, []);
 
     async function rollDice(qty, sides) {
+        // Tira o resultado anterior de cima do quadrado assim que uma
+        // rolagem nova começa, em vez de deixá-lo lá até o novo valor
+        // ficar pronto — some na hora do clique, o número novo só some
+        // depois que a animação/física da rolagem atual terminar.
+        setUltimoResultado(null);
         playDiceRollSound(qty);
         return rollDiceAnimated(`${qty}d${sides}`);
     }
@@ -389,7 +400,19 @@ export default function CharacterSheetPage() {
                 <button className="btn-secondary" onClick={() => navigate(`/form/${encodeURIComponent(id)}`)}>Editar</button>
             </div>
 
-            <div id="dice-box"></div>
+            <div className="dice-box-wrap">
+                <div id="dice-box"></div>
+                {ultimoResultado && (
+                    <div
+                        className={`dice-box-result${ultimoResultado.tipo === 'crit' ? ' crit-success' : ''}${ultimoResultado.tipo === 'fail' ? ' crit-fail' : ''}`}
+                        key={ultimoResultado.id}
+                        aria-hidden="true"
+                    >
+                        <span className="dice-box-result-titulo">{ultimoResultado.titulo}</span>
+                        <span className="dice-box-result-valor">{ultimoResultado.valor}</span>
+                    </div>
+                )}
+            </div>
 
             <div className="character-sheet">
                 <section className="attributes-section">
