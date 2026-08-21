@@ -155,6 +155,15 @@ export function determinacaoMaxima(trilha, presenca, nex) {
     return (r.detInicial + pre) + passos * (r.detIncremento + pre);
 }
 
+// Quantos PE o personagem pode gastar POR RODADA, de acordo com o NEX —
+// Tabela 1.2 ("Progressão de Personagem") do livro básico, conferida
+// direto no PDF que o usuário enviou nesta conversa (confiança alta):
+// NEX 5% = 1, NEX 10% = 2, NEX 15% = 3 ... NEX 95% = 19, NEX 99% = 20.
+// Um padrão simples e exato: 1 PE de rodada a cada 5% de NEX.
+export function peRodadaPorNex(nex) {
+    return Math.round(clampNex(nex) / 5);
+}
+
 // Defesa = 10 + Agilidade + bônus de equipamento/armadura + outros
 // bônus (talentos, condições) — a classe não entra direto na conta.
 export function defesaTotal(agilidade, bonusEquipamento, bonusOutros) {

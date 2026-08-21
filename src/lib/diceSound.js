@@ -65,6 +65,44 @@ function tocarBatida(ctx, tempo, volume) {
     fonte.stop(tempo + duracao);
 }
 
+// Um tom curto que sobe de frequência (com decaimento exponencial no
+// volume, pra evitar clique no início/fim) — a peça básica do som de
+// "conjurar" abaixo. `tipo` é a forma de onda do oscilador.
+function tocarTom(ctx, tempo, freqInicial, freqFinal, duracao, volume, tipo) {
+    const osc = ctx.createOscillator();
+    osc.type = tipo;
+    osc.frequency.setValueAtTime(freqInicial, tempo);
+    osc.frequency.exponentialRampToValueAtTime(freqFinal, tempo + duracao);
+
+    const ganho = ctx.createGain();
+    ganho.gain.setValueAtTime(0.0001, tempo);
+    ganho.gain.exponentialRampToValueAtTime(volume, tempo + duracao * 0.15);
+    ganho.gain.exponentialRampToValueAtTime(0.0001, tempo + duracao);
+
+    osc.connect(ganho);
+    ganho.connect(ctx.destination);
+
+    osc.start(tempo);
+    osc.stop(tempo + duracao + 0.02);
+}
+
+// Efeito sonoro de "conjurar um ritual" (PE gasto) — três tons curtos
+// subindo de frequência, sobrepostos, num timbre mais etéreo/tilintado
+// (não percussivo feito o barulho de dados acima) pra combinar com o
+// tema de magia/ritual. Toca junto com o feedback visual em
+// CharacterSheetPage (ver conjurarRitual) pra dar um retorno imediato
+// de que o PE foi descontado, mesmo sem estar olhando pro log (que só
+// existe na aba Combate).
+export function playRitualCastSound() {
+    const ctx = getContext();
+    if (!ctx) return;
+
+    const agora = ctx.currentTime;
+    tocarTom(ctx, agora, 320, 640, 0.22, 0.11, 'sine');
+    tocarTom(ctx, agora + 0.09, 480, 900, 0.28, 0.09, 'triangle');
+    tocarTom(ctx, agora + 0.14, 1200, 1800, 0.35, 0.045, 'sine');
+}
+
 export function playDiceRollSound(qtdDados) {
     const ctx = getContext();
     if (!ctx) return;

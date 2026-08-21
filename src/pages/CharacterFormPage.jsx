@@ -546,13 +546,14 @@ export default function CharacterFormPage() {
                     {trilha === 'Ocultista' && (
                         <div className="rituais-info">
                             {circuloOcultista > 0
-                                ? `Círculo de Rituais liberado neste NEX: até o ${circuloOcultista}º círculo. (Lista de rituais ainda não faz parte do app — use o livro pra escolher.)`
+                                ? `Círculo de Rituais liberado neste NEX: até o ${circuloOcultista}º círculo.`
                                 : 'NEX ainda não libera nenhum círculo de rituais.'}
                         </div>
                     )}
                     <p className="form-extra-hint">
-                        A lista completa de rituais por círculo ainda não faz parte do app — por enquanto, use o livro
-                        pra escolher. Esse espaço já está reservado pra quando ela for implementada.
+                        A escolha dos rituais em si agora é feita direto na ficha do personagem (seção "Rituais",
+                        com um catálogo filtrável por Elemento e Círculo) — esse formulário só cuida da identidade
+                        e dos atributos.
                     </p>
                 </section>
             </div>

@@ -1,0 +1,149 @@
+// ============================================================
+// rituais.js
+//
+// Catálogo dos Rituais de Ordem Paranormal (o "grimório" do Ocultista),
+// organizados por Elemento (Conhecimento, Energia, Morte, Sangue, Medo)
+// e Círculo (1º a 4º, ligado ao NEX — ver CIRCULOS_RITUAL em
+// pericias.js). Ainda não está ligado a nenhuma tela da ficha; esse
+// arquivo só guarda os dados para uma futura aba "Rituais".
+//
+// FONTE E CONFIANÇA DOS DADOS: extraído diretamente do PDF do livro
+// básico de Ordem Paranormal (Capítulo 5: O Outro Lado, seção "Lista
+// de Rituais" / "Descrição dos Rituais") que o usuário enviou nesta
+// conversa — não veio de pesquisa on-line, então a confiança é alta
+// (🟢) para execução/alcance/duração/resistência/dano de todos os
+// rituais abaixo, com uma única exceção sinalizada.
+//
+// O QUE NÃO ESTÁ AQUI (de propósito): o texto integral de cada ritual
+// (regras de "Discente"/"Verdadeiro", aprimoramentos, exceções) NÃO é
+// conteúdo coberto pela OGL de Ordem Paranormal — só perícias, combate
+// e itens "de sistema" são abertos. Por isso `descricao` é um resumo
+// bem curto, escrito com minhas próprias palavras, e não uma cópia do
+// livro. Os números de dano/cura na BASE do ritual (sem aprimorar)
+// estão inclusos porque são dado de jogo (mecânica), não texto
+// narrativo — mesmo cuidado que já foi usado em itens.js.
+//
+// CUSTO EM PE: sempre fixo por Círculo (Tabela 5.2 do livro), não
+// varia por ritual — por isso fica centralizado aqui em vez de repetido
+// em cada item.
+// ============================================================
+
+export const CUSTO_PE_POR_CIRCULO = { 1: 1, 2: 3, 3: 6, 4: 10 };
+
+export const ELEMENTOS_RITUAL = ['Conhecimento', 'Energia', 'Morte', 'Sangue', 'Medo'];
+
+export const RITUAIS_CATALOGO = [
+    // ============================================================
+    // CONHECIMENTO — "Saber tudo é perder tudo"
+    // ============================================================
+    { nome: 'Compreensão Paranormal', elemento: 'Conhecimento', circulo: 1, execucao: 'padrão', alcance: 'toque', alvo: 'um texto, gravação ou criatura', duracao: 'cena', resistencia: 'Vontade anula', dano: null, descricao: 'Permite entender qualquer texto, fala ou idioma, mesmo desconhecido.' },
+    { nome: 'Enfeitiçar', elemento: 'Conhecimento', circulo: 1, execucao: 'padrão', alcance: 'curto', alvo: '1 personagem', duracao: 'cena', resistencia: 'Vontade anula', dano: null, descricao: 'Torna o alvo prestativo e mais receptivo a pedidos (+10 em Diplomacia com ele).' },
+    { nome: 'Ouvir os Sussurros', elemento: 'Conhecimento', circulo: 1, execucao: 'completa', alcance: 'pessoal', alvo: 'você', duracao: 'instantânea', resistencia: null, dano: null, descricao: 'Consulta "vozes" do Outro Lado para uma resposta oracular simples sobre uma ação futura.' },
+    { nome: 'Perturbação', elemento: 'Conhecimento', circulo: 1, execucao: 'ação padrão', alcance: 'curto', alvo: '1 personagem', duracao: '1 rodada', resistencia: 'Vontade anula', dano: null, descricao: 'Força o alvo a obedecer uma ordem simples e imediata (fugir, largar algo, ficar parado, sentar ou se aproximar).' },
+    { nome: 'Terceiro Olho', elemento: 'Conhecimento', circulo: 1, execucao: 'padrão', alcance: 'pessoal', alvo: 'você', duracao: 'cena', resistencia: null, dano: null, descricao: 'Permite enxergar auras e manifestações paranormais ao redor.' },
+    { nome: 'Aprimoramento Mental', elemento: 'Conhecimento', circulo: 2, execucao: 'padrão', alcance: 'toque', alvo: '1 criatura', duracao: 'cena', resistencia: null, dano: null, descricao: 'Concede +1 em Intelecto ou Presença ao alvo.' },
+    { nome: 'Detecção de Ameaças', elemento: 'Conhecimento', circulo: 2, execucao: 'padrão', alcance: 'pessoal', alvo: 'área de 18m de raio', duracao: 'cena (até ser descarregado)', resistencia: null, dano: null, descricao: 'Avisa quando um perigo (armadilha ou criatura hostil) entra na área ao redor do conjurador.' },
+    { nome: 'Esconder dos Olhos', elemento: 'Conhecimento', circulo: 2, execucao: 'livre', alcance: 'pessoal', alvo: 'você', duracao: '1 rodada', resistencia: null, dano: null, descricao: 'Torna o conjurador (e o que carrega) invisível por uma rodada.' },
+    { nome: 'Ligação Telepática', elemento: 'Conhecimento', circulo: 2, execucao: 'padrão', alcance: 'toque', alvo: '2 criaturas voluntárias', duracao: '1 dia', resistencia: null, dano: null, descricao: 'Cria um elo telepático que permite comunicação independente da distância.' },
+    { nome: 'Localização', elemento: 'Conhecimento', circulo: 2, execucao: 'padrão', alcance: 'pessoal', alvo: 'área de 90m de raio', duracao: 'cena', resistencia: null, dano: null, descricao: 'Indica a direção e distância de uma pessoa ou objeto conhecido dentro do alcance.' },
+    { nome: 'Alterar Memória', elemento: 'Conhecimento', circulo: 3, execucao: 'padrão', alcance: 'toque', alvo: '1 criatura', duracao: 'instantânea', resistencia: 'Vontade anula', dano: null, descricao: 'Apaga ou modifica memórias recentes (da última hora) do alvo.' },
+    { nome: 'Contato Paranormal', elemento: 'Conhecimento', circulo: 3, execucao: 'completa', alcance: 'pessoal', alvo: 'você', duracao: '1 dia', resistencia: null, dano: null, descricao: 'Barganha auxílio com uma entidade de Conhecimento: ganha 6d6 de bônus (um por teste de perícia) em troca de Sanidade.' },
+    { nome: 'Mergulho Mental', elemento: 'Conhecimento', circulo: 3, execucao: 'padrão', alcance: 'toque', alvo: '1 personagem', duracao: 'sustentada', resistencia: 'Vontade anula', dano: null, descricao: 'Mergulha nos pensamentos do alvo, que deve responder perguntas honestamente enquanto durar.' },
+    { nome: 'Vidência', elemento: 'Conhecimento', circulo: 3, execucao: 'completa', alcance: 'ilimitado', alvo: '1 criatura', duracao: '5 rodadas', resistencia: 'Vontade anula', dano: null, descricao: 'Vê e ouve remotamente uma criatura conhecida e seus arredores através de uma superfície reflexiva.' },
+    { nome: 'Controle Mental', elemento: 'Conhecimento', circulo: 4, execucao: 'padrão', alcance: 'médio', alvo: '1 personagem', duracao: 'sustentada', resistencia: 'Vontade parcial', dano: null, descricao: 'Domina a mente do alvo, que obedece a quase qualquer comando (exceto ordens claramente suicidas).' },
+    { nome: 'Possessão', elemento: 'Conhecimento', circulo: 4, execucao: 'padrão', alcance: 'longo', alvo: '1 personagem', duracao: '1 dia', resistencia: 'Vontade anula', dano: null, descricao: 'Projeta a consciência do conjurador para dentro do corpo do alvo, assumindo controle total dele.' },
+    { nome: 'Visão da Verdade', elemento: 'Conhecimento', circulo: 4, execucao: 'movimento', alcance: 'pessoal', alvo: 'você', duracao: 'cena', resistencia: null, dano: null, descricao: 'Permite enxergar através de disfarces, camuflagem, escuridão e ilusões, vendo a forma real das coisas.' },
+
+    // ============================================================
+    // ENERGIA — "O caos é inevitável"
+    // ============================================================
+    { nome: 'Amaldiçoar Tecnologia', elemento: 'Energia', circulo: 1, execucao: 'padrão', alcance: 'toque', alvo: 'um acessório, arma de fogo ou vestimenta', duracao: 'cena', resistencia: null, dano: null, descricao: 'Sobrecarrega um item para funcionar acima da capacidade normal (+2 em perícia ou ataque, conforme o item).' },
+    { nome: 'Criar Ilusão', elemento: 'Energia', circulo: 1, execucao: 'padrão', alcance: 'médio', alvo: 'até 4 cubos de 1,5m', duracao: 'cena', resistencia: 'Vontade desacredita', dano: null, descricao: 'Cria uma ilusão visual ou sonora simples (uma pessoa, um som, uma parede).' },
+    { nome: 'Eletrocussão', elemento: 'Energia', circulo: 1, execucao: 'padrão', alcance: 'curto', alvo: '1 personagem', duracao: 'instantânea', resistencia: 'Fortitude parcial', dano: '2d6 de Energia', descricao: 'Dispara uma corrente elétrica que choca o alvo, deixando-o vulnerável por 1 rodada se falhar na resistência.' },
+    { nome: 'Embaralhar', elemento: 'Energia', circulo: 1, execucao: 'padrão', alcance: 'pessoal', alvo: 'você', duracao: 'cena', resistencia: null, dano: null, descricao: 'Cria 3 cópias ilusórias ao redor do conjurador, concedendo +6 na Defesa.' },
+    { nome: 'Luz', elemento: 'Energia', circulo: 1, execucao: 'padrão', alcance: 'curto', alvo: '1 objeto', duracao: 'cena', resistencia: 'Vontade anula', dano: null, descricao: 'Faz um objeto brilhar como uma lâmpada, iluminando uma área de 9m de raio.' },
+    { nome: 'Polarização Caótica', elemento: 'Energia', circulo: 1, execucao: 'padrão', alcance: 'curto', alvo: 'você', duracao: 'sustentada', resistencia: 'Vontade anula', dano: null, descricao: 'Gera uma aura magnética que atrai ou repele objetos metálicos próximos.' },
+    { nome: 'Chamas do Caos', elemento: 'Energia', circulo: 2, execucao: 'padrão', alcance: 'curto', alvo: 'uma arma, um objeto ou uma chama existente', duracao: 'cena', resistencia: null, dano: '4d6 de fogo (efeito "Esquentar")', descricao: 'Manipula chamas de forma caótica: pode incendiar uma arma, esquentar um objeto perigosamente ou mover/apagar uma chama existente.' },
+    { nome: 'Coincidência Forçada', elemento: 'Energia', circulo: 2, execucao: 'padrão', alcance: 'curto', alvo: '1 criatura', duracao: 'cena', resistencia: null, dano: null, descricao: 'Força a sorte do alvo: sempre que rolar um teste do atributo escolhido, pode repetir a rolagem com o pior resultado.' },
+    { nome: 'Contenção Fantasmagórica', elemento: 'Energia', circulo: 2, execucao: 'padrão', alcance: 'médio', alvo: '1 inimigo', duracao: 'cena', resistencia: 'Reflexos anula', dano: null, descricao: 'Prende o alvo com três laços de Energia que ele precisa destruir ou testar Atletismo para se livrar.' },
+    { nome: 'Dissonância Acústica', elemento: 'Energia', circulo: 2, execucao: 'padrão', alcance: 'médio', alvo: 'esfera de 6m de raio', duracao: 'sustentada', resistencia: null, dano: null, descricao: 'Cria uma área de silêncio e dificuldade de concentração, impedindo inclusive a conjuração de rituais ali dentro.' },
+    { nome: 'Sopro do Caos', elemento: 'Energia', circulo: 2, execucao: 'padrão', alcance: 'médio', alvo: 'varia (correntes ou lufadas de vento)', duracao: 'cena', resistencia: 'veja descrição', dano: null, descricao: 'Manipula massas de ar: cria uma corrente ascendente para levitar algo, ou uma lufada de vento que empurra alvos.' },
+    { nome: 'Tela de Ruído', elemento: 'Energia', circulo: 2, execucao: 'padrão', alcance: 'pessoal', alvo: 'você', duracao: 'cena', resistencia: null, dano: null, descricao: 'Cobre o conjurador com uma película de energia que absorve dano (30 PV temporários contra dano físico e balístico).' },
+    { nome: 'Convocação Instantânea', elemento: 'Energia', circulo: 3, execucao: 'padrão', alcance: 'ilimitado', alvo: 'um objeto de até 2 espaços', duracao: 'instantânea', resistencia: 'Vontade anula', dano: null, descricao: 'Invoca um objeto conhecido de qualquer lugar diretamente para a mão do conjurador.' },
+    { nome: 'Salto Fantasma', elemento: 'Energia', circulo: 3, execucao: 'padrão', alcance: 'médio', alvo: 'você', duracao: 'instantânea', resistencia: null, dano: null, descricao: 'Transforma o corpo em Energia pura e viaja instantaneamente até outro ponto dentro do alcance, mesmo através de portas fechadas.' },
+    { nome: 'Transfigurar Água', elemento: 'Energia', circulo: 3, execucao: 'padrão', alcance: 'longo', alvo: 'esfera de 30m de raio', duracao: 'cena', resistencia: 'veja descrição', dano: '5d8 de Energia (efeito "Evaporar")', descricao: 'Faz água e gelo se comportarem de forma caótica: congelar, derreter, elevar o nível ou evaporar a água na área.' },
+    { nome: 'Transfigurar Terra', elemento: 'Energia', circulo: 3, execucao: 'padrão', alcance: 'longo', alvo: '9 cubos de 1,5m de lado', duracao: 'instantânea', resistencia: 'veja descrição', dano: '10d6 de impacto (efeito "Amolecer")', descricao: 'Manipula terra, pedra, lama ou areia de forma sobrenatural: desabar uma estrutura, modelar objetos ou solidificar/agarrar alvos.' },
+    { nome: 'Alterar Destino', elemento: 'Energia', circulo: 4, execucao: 'reação', alcance: 'pessoal', alvo: 'você', duracao: 'instantânea', resistencia: null, dano: null, descricao: 'Vislumbra possíveis futuros próximos para automaticamente passar num teste de resistência ou evitar um ataque contra si.' },
+    { nome: 'Deflagração de Energia', elemento: 'Energia', circulo: 4, execucao: 'completa', alcance: 'pessoal', alvo: 'explosão de 15m de raio', duracao: 'instantânea', resistencia: 'Fortitude parcial', dano: '150 de Energia', descricao: 'Emana uma explosão de radiação elétrica devastadora e inutiliza todos os itens tecnológicos na área (o conjurador não é afetado).' },
+    { nome: 'Teletransporte', elemento: 'Energia', circulo: 4, execucao: 'padrão', alcance: 'toque', alvo: 'até 5 criaturas voluntárias', duracao: 'instantânea', resistencia: null, dano: null, descricao: 'Transforma o grupo em Energia pura e o faz reaparecer em outro lugar conhecido, a até 1.000km (teste de Ocultismo).' },
+
+    // ============================================================
+    // MORTE — "Todas as coisas precisam de um fim"
+    // ============================================================
+    { nome: 'Cicatrização', elemento: 'Morte', circulo: 1, execucao: 'padrão', alcance: 'toque', alvo: '1 criatura', duracao: 'instantânea', resistencia: null, dano: '2d8+2 pontos de vida (cura)', descricao: 'Acelera a regeneração de um ferimento do alvo.' },
+    { nome: 'Consumir Manancial', elemento: 'Morte', circulo: 1, execucao: 'padrão', alcance: 'pessoal', alvo: 'você', duracao: 'instantânea', resistencia: null, dano: '3d6 pontos de vida temporários', descricao: 'Suga tempo de vida de plantas e insetos próximos para recuperar pontos de vida temporários.' },
+    { nome: 'Decadência', elemento: 'Morte', circulo: 1, execucao: 'padrão', alcance: 'toque', alvo: '1 criatura ou personagem', duracao: 'instantânea', resistencia: 'Fortitude reduz à metade', dano: '2d8+2 de Morte', descricao: 'Acelera o envelhecimento dos órgãos internos do alvo ao toque.' },
+    { nome: 'Definhar', elemento: 'Morte', circulo: 1, execucao: 'padrão', alcance: 'curto', alvo: '1 criatura', duracao: 'cena', resistencia: 'Fortitude parcial', dano: null, descricao: 'Dispara uma lufada de cinzas que drena as forças do alvo, deixando-o Fatigado (ou só Vulnerável, se resistir).' },
+    { nome: 'Nuvem de Cinzas', elemento: 'Morte', circulo: 1, execucao: 'padrão', alcance: 'curto', alvo: 'nuvem de 6m de raio e 6m de altura', duracao: 'cena', resistencia: null, dano: null, descricao: 'Invoca uma nuvem de cinzas que fornece camuflagem a quem está dentro dela.' },
+    { nome: 'Espirais da Perdição', elemento: 'Morte', circulo: 1, execucao: 'padrão', alcance: 'curto', alvo: 'criaturas escolhidas', duracao: 'sustentada', resistencia: null, dano: null, descricao: 'Manifesta espirais negras nos alvos, que sofrem penalidade em testes de ataque e rolagens de dano.' },
+    { nome: 'Desacelerar Impacto', elemento: 'Morte', circulo: 2, execucao: 'reação', alcance: 'curto', alvo: 'criaturas, personagens ou objetos (até 10 espaços)', duracao: 'até chegar ao solo ou fim de cena', resistencia: null, dano: null, descricao: 'Reduz a velocidade de uma queda, evitando (ou reduzindo bastante) o dano de impacto.' },
+    { nome: 'Eco Espiral', elemento: 'Morte', circulo: 2, execucao: 'padrão', alcance: 'curto', alvo: '1 personagem', duracao: 'até 3 rodadas', resistencia: 'Fortitude parcial', dano: 'igual ao dano acumulado no alvo desde a conjuração', descricao: 'Cria uma réplica de cinzas do alvo que, ao ser descarregada, explode e devolve o dano acumulado como dano de Morte.' },
+    { nome: 'Miasma', elemento: 'Morte', circulo: 2, execucao: 'padrão', alcance: 'médio', alvo: 'nuvem de 6m de raio', duracao: 'instantânea', resistencia: 'Fortitude', dano: '5d6 de veneno + enjoo', descricao: 'Cobre uma área com emanações tóxicas letais.' },
+    { nome: 'Paradoxo', elemento: 'Morte', circulo: 2, execucao: 'padrão', alcance: 'médio', alvo: 'esfera de 6m de raio', duracao: 'instantânea', resistencia: 'Fortitude reduz à metade', dano: '6d6 de Morte', descricao: 'Cria uma implosão de distorção temporal contraditória na área.' },
+    { nome: 'Velocidade Mortal', elemento: 'Morte', circulo: 2, execucao: 'padrão', alcance: 'curto', alvo: '1 criatura', duracao: 'cena', resistencia: null, dano: null, descricao: 'Distorce a percepção de tempo do alvo, concedendo uma ação de movimento adicional por rodada.' },
+    { nome: 'Âncora Temporal', elemento: 'Morte', circulo: 3, execucao: 'padrão', alcance: 'curto', alvo: '1 criatura ou objeto', duracao: 'cena', resistencia: 'Vontade parcial', dano: null, descricao: 'Envolve o alvo numa aura espiralada que impede que ele se afaste de um ponto.' },
+    { nome: 'Poeira da Podridão', elemento: 'Morte', circulo: 3, execucao: 'padrão', alcance: 'médio', alvo: 'nuvem de 6m de raio', duracao: 'cena', resistencia: 'Fortitude reduz à metade', dano: '2d8+8 de Morte por rodada', descricao: 'Manifesta uma nuvem de poeira que apodrece lentamente as criaturas na área e impede que recuperem vida.' },
+    { nome: 'Tentáculos de Lodo', elemento: 'Morte', circulo: 3, execucao: 'padrão', alcance: 'médio', alvo: 'círculo de 6m de raio', duracao: 'cena', resistencia: null, dano: '4d6 (metade impacto, metade Morte)', descricao: 'Abre uma fenda no chão de onde surgem tentáculos de lodo que agarram e esmagam criaturas na área.' },
+    { nome: 'Zerar Entropia', elemento: 'Morte', circulo: 3, execucao: 'padrão', alcance: 'curto', alvo: '1 personagem', duracao: 'cena', resistencia: 'Vontade parcial', dano: null, descricao: 'Zera a entropia do alvo em relação ao ambiente, deixando-o paralisado (ou lento, se resistir).' },
+    { nome: 'Convocar o Algoz', elemento: 'Morte', circulo: 4, execucao: 'padrão', alcance: 'longo', alvo: '1 personagem', duracao: 'cena (até ser descarregado)', resistencia: 'Vontade e Fortitude parcial', dano: '6d6 de Morte', descricao: 'Manipula os medos do alvo para criar um perseguidor incorpóreo que só ele consegue ver com nitidez.' },
+    { nome: 'Distorção Temporal', elemento: 'Morte', circulo: 4, execucao: 'padrão', alcance: 'pessoal', alvo: 'você', duracao: 'veja descrição', resistencia: null, dano: null, descricao: 'Cria um pequeno bolsão temporal de 3 rodadas em que o conjurador age livremente sem interagir com o mundo ao redor.' },
+    { nome: 'Fim Inevitável', elemento: 'Morte', circulo: 4, execucao: 'completa', alcance: 'extremo', alvo: 'buraco negro de 1,5m de diâmetro', duracao: '3 rodadas', resistencia: 'Fortitude parcial', dano: null, descricao: 'Cria um vácuo temporal que suga e desintegra tudo que se aproxima demais dele.' },
+
+    // ============================================================
+    // SANGUE — "O sangue é o fluxo que banha o Outro Lado"
+    // ============================================================
+    { nome: 'Arma Atroz', elemento: 'Sangue', circulo: 1, execucao: 'padrão', alcance: 'toque', alvo: '1 arma corpo a corpo', duracao: 'cena', resistencia: null, dano: '+1d6 de Sangue (dano adicional na arma)', descricao: 'Cobre uma arma corpo a corpo com veias que passam a causar dano de Sangue extra.' },
+    { nome: 'Armadura de Sangue', elemento: 'Sangue', circulo: 1, execucao: 'padrão', alcance: 'pessoal', alvo: 'você', duracao: 'cena', resistencia: null, dano: null, descricao: 'Recobre o corpo do conjurador com uma carapaça de sangue endurecido, concedendo +5 na Defesa.' },
+    { nome: 'Corpo Adaptado', elemento: 'Sangue', circulo: 1, execucao: 'padrão', alcance: 'toque', alvo: '1 personagem', duracao: 'cena', resistencia: null, dano: null, descricao: 'Adapta a biologia do alvo para sobreviver a calor e frio extremos, respirar embaixo d\'água e não sufocar em fumaça.' },
+    { nome: 'Distorcer Aparência', elemento: 'Sangue', circulo: 1, execucao: 'padrão', alcance: 'pessoal', alvo: 'você', duracao: 'cena', resistencia: 'Vontade desacredita', dano: null, descricao: 'Modifica a aparência física do conjurador para se passar por outra pessoa (+10 em Enganação para disfarce).' },
+    { nome: 'Fortalecimento Sensorial', elemento: 'Sangue', circulo: 1, execucao: 'ação padrão', alcance: 'pessoal', alvo: 'você', duracao: 'cena', resistencia: null, dano: null, descricao: 'Potencializa os sentidos do conjurador, concedendo bônus em Investigação, Luta, Percepção e Pontaria.' },
+    { nome: 'Ódio Incontrolável', elemento: 'Sangue', circulo: 1, execucao: 'padrão', alcance: 'toque', alvo: '1 personagem', duracao: 'cena', resistencia: null, dano: null, descricao: 'Coloca o alvo num frenesi de combate (+5 em ataque e dano corpo a corpo), mas ele só consegue atacar enquanto durar.' },
+    { nome: 'Descarnar', elemento: 'Sangue', circulo: 2, execucao: 'padrão', alcance: 'toque', alvo: '1 criatura ou personagem', duracao: 'instantânea', resistencia: 'Fortitude parcial', dano: '6d8 (metade corte, metade Sangue) + hemorragia', descricao: 'Faz lacerações horríveis se manifestarem na pele e órgãos do alvo, causando sangramento contínuo.' },
+    { nome: 'Físico Aprimorado', elemento: 'Sangue', circulo: 2, execucao: 'padrão', alcance: 'toque', alvo: '1 criatura', duracao: 'cena', resistencia: null, dano: null, descricao: 'Reforça músculos e ligamentos do alvo, concedendo +1 em Agilidade ou Força.' },
+    { nome: 'Forma Monstruosa', elemento: 'Sangue', circulo: 2, execucao: 'padrão', alcance: 'pessoal', alvo: 'você', duracao: 'cena', resistencia: null, dano: null, descricao: 'Transforma o conjurador numa forma bestial combinando características de criaturas de Sangue (+5 Defesa, +5 em perícias, PV temporários), mas o deixa incapaz de falar e sempre precisando atacar.' },
+    { nome: 'Hemofagia', elemento: 'Sangue', circulo: 2, execucao: 'padrão', alcance: 'toque', alvo: '1 criatura', duracao: 'instantânea', resistencia: 'Fortitude reduz à metade', dano: '6d6 de Sangue', descricao: 'Arranca o sangue do alvo pela pele e o absorve, recuperando pontos de vida iguais à metade do dano causado.' },
+    { nome: 'Transfusão Vital', elemento: 'Sangue', circulo: 2, execucao: 'padrão', alcance: 'toque', alvo: '1 criatura', duracao: 'instantânea', resistencia: null, dano: 'até 30 pontos de vida (transferidos)', descricao: 'Transfere a própria energia vital do conjurador para curar o alvo.' },
+    { nome: 'Ferver Sangue', elemento: 'Sangue', circulo: 3, execucao: 'padrão', alcance: 'curto', alvo: '1 criatura', duracao: 'sustentada', resistencia: 'Fortitude parcial', dano: '4d8 de Sangue por rodada', descricao: 'Aquece rapidamente o sangue do alvo até a ebulição, causando dano contínuo enquanto durar.' },
+    { nome: 'Purgatório', elemento: 'Sangue', circulo: 3, execucao: 'padrão', alcance: 'curto', alvo: 'área de 6m de raio', duracao: 'sustentada', resistencia: 'Fortitude parcial', dano: '6d8 de Sangue (ao tentar sair da área)', descricao: 'Faz brotar uma poça de sangue pegajoso que deixa inimigos vulneráveis e os fere caso tentem escapar dela.' },
+    { nome: 'Vomitar Pestes', elemento: 'Sangue', circulo: 3, execucao: 'padrão', alcance: 'médio', alvo: '1 enxame Grande (quadrado de 3m)', duracao: 'sustentada', resistencia: 'Reflexos reduz à metade', dano: '5d12 de Sangue por rodada', descricao: 'Vomita um enxame de pequenas criaturas de Sangue que causa dano contínuo a quem estiver em seu espaço.' },
+    { nome: 'Capturar o Coração', elemento: 'Sangue', circulo: 4, execucao: 'padrão', alcance: 'curto', alvo: '1 pessoa', duracao: 'cena', resistencia: 'Vontade parcial', dano: null, descricao: 'Manipula as emoções do alvo para que ele fique obcecado em agradar e proteger o conjurador, agindo como aliado.' },
+    { nome: 'Invólucro de Carne', elemento: 'Sangue', circulo: 4, execucao: 'padrão', alcance: 'longo', alvo: 'cria um clone', duracao: 'cena', resistencia: null, dano: null, descricao: 'Manifesta uma poça de sangue da qual emerge um clone perfeito de uma criatura conhecida, controlável pelo conjurador.' },
+    { nome: 'Vínculo de Sangue', elemento: 'Sangue', circulo: 4, execucao: 'padrão', alcance: 'curto', alvo: '1 personagem', duracao: 'cena', resistencia: 'Fortitude parcial', dano: null, descricao: 'Cria um vínculo pelo qual o alvo sofre todo dano e efeitos negativos que o conjurador sofrer (ou o inverso).' },
+
+    // ============================================================
+    // MEDO — "O medo é infinito" (elemento raro; a maioria dos rituais
+    // é defensiva/anti-ritual — poucos causam dano direto, mas quando
+    // causam costumam ser os mais pesados do jogo)
+    // ============================================================
+    { nome: 'Cinerária', elemento: 'Medo', circulo: 1, execucao: 'padrão', alcance: 'curto', alvo: 'nuvem de 6m de raio', duracao: 'cena', resistencia: null, dano: null, descricao: 'Manifesta uma névoa fina que aumenta a dificuldade de resistir a rituais conjurados dentro dela.' },
+    { nome: 'Proteção contra Rituais', elemento: 'Medo', circulo: 2, execucao: 'padrão', alcance: 'toque', alvo: '1 criatura', duracao: 'cena', resistencia: null, dano: null, descricao: 'Concede ao alvo bônus em testes de resistência contra rituais e habilidades de criaturas paranormais.' },
+    { nome: 'Rejeitar Névoa', elemento: 'Medo', circulo: 2, execucao: 'padrão', alcance: 'curto', alvo: 'nuvem de 6m de raio', duracao: 'cena', resistencia: null, dano: null, descricao: 'Cria uma névoa que dificulta e encarece a conjuração de outros rituais dentro dela.' },
+    { nome: 'Neutralizar Ritual', elemento: 'Medo', circulo: 3, execucao: 'padrão', alcance: 'médio', alvo: '1 pessoa/objeto ou esfera de 3m', duracao: 'instantânea', resistencia: null, dano: null, descricao: 'Dissipa os efeitos de rituais ativos, encerrando sua duração antes do tempo.' },
+    { nome: 'Canalizar o Medo', elemento: 'Medo', circulo: 4, execucao: 'padrão', alcance: 'toque', alvo: '1 criatura', duracao: 'permanente (até ser descarregado)', resistencia: null, dano: null, descricao: 'Transfere um ritual conhecido (até 3º círculo) para outra pessoa poder conjurar uma vez, sem pagar o custo em PE.' },
+    { nome: 'Conhecendo o Medo', elemento: 'Medo', circulo: 4, execucao: 'ação padrão', alcance: 'toque', alvo: '1 criatura', duracao: 'cena', resistencia: 'Vontade parcial', dano: '10d6 de dano mental', descricao: 'Manifesta um estado de choque absoluto na mente do alvo; se falhar na resistência, sua Sanidade cai a 0.' },
+    { nome: 'Lâmina do Medo', elemento: 'Medo', circulo: 4, execucao: 'padrão', alcance: 'toque', alvo: '1 criatura', duracao: 'instantânea', resistencia: 'Fortitude parcial', dano: '10d8 de Medo (ignora todas as resistências)', descricao: 'Manifesta uma lâmina impossível — descrita como "uma fenda na Realidade" — que golpeia o alvo com o próprio Medo.' },
+    { nome: 'Medo Tangível', elemento: 'Medo', circulo: 4, execucao: 'padrão', alcance: 'pessoal', alvo: 'você', duracao: 'cena', resistencia: null, dano: null, descricao: 'Transforma o corpo do conjurador numa manifestação do Medo, concedendo uma longa lista de imunidades e deixando-o quase imortal.' },
+    { nome: 'Presença do Medo', elemento: 'Medo', circulo: 4, execucao: 'padrão', alcance: 'pessoal', alvo: 'emanação de 9m de raio', duracao: 'cena', resistencia: 'Vontade reduz à metade', dano: '5d8 mental + 5d8 impacto', descricao: 'Torna o conjurador um receptáculo do Medo puro, castigando com dor intensa quem estiver na área ao seu redor.' },
+];
+
+// Devolve só os rituais de um elemento (case-insensitive), útil pra
+// filtros de UI.
+export function rituaisDoElemento(elemento) {
+    const alvo = String(elemento || '').toLowerCase();
+    return RITUAIS_CATALOGO.filter(r => r.elemento.toLowerCase() === alvo);
+}
+
+// Devolve só os rituais de um círculo (1 a 4).
+export function rituaisDoCirculo(circulo) {
+    return RITUAIS_CATALOGO.filter(r => r.circulo === Number(circulo));
+}

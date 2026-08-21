@@ -19,6 +19,20 @@ input, select, button, textarea {
     font-size: 1rem;
 }
 
+/* Uma única fonte pra todo botão do projeto — antes só as abas
+   COMBATE/RITUAIS/INVENTÁRIO e o pentagrama de atributos usavam Cinzel
+   (ver seletores específicos mais abaixo), e o resto (inclusive os
+   botões redondos de remover/conjurar dentro das abas) herdava a fonte
+   padrão do body (sans-serif), o que deixava a ficha com uma mistura de
+   2 fontes em botões. Regra base aqui pra cobrir todo `<button>`; os
+   seletores mais específicos que já declaravam Cinzel continuam
+   funcionando normalmente (mesma fonte, então não há conflito).
+   `input`/`select`/`textarea` ficam de fora de propósito — texto
+   digitado/editável é mais legível em sans-serif. */
+button {
+    font-family: 'Cinzel', 'Segoe UI', serif;
+}
+
 /* --- TELAS (login, lista de personagens, formulário, ficha) --- */
 .screen {
     min-height: 100vh;
@@ -123,10 +137,26 @@ input, select, button, textarea {
     }
 }
 
+/* A partir daqui a ficha já colapsa pra uma coluna só (ver
+   .character-sheet mais abaixo) e cresce bastante em altura — uma
+   caixa "fixed" no canto acabaria flutuando por cima do conteúdo (a
+   coluna de Perícias, as abas) ao rolar a página. Em vez disso, ela
+   passa a fazer parte do fluxo normal — uma faixa no topo da ficha —
+   assim que a coluna única entra em ação, não só em celular. */
 @media (max-width: 1000px) {
     .dice-box-wrap {
-        width: 260px;
-        height: 260px;
+        /* "relative", não "static": ainda entra no fluxo normal da
+           página (o que importa aqui), mas continua sendo o ponto de
+           referência do ".dice-box-result" (position:absolute) — com
+           "static" esse overlay "escapa" pro ancestral posicionado
+           mais próximo (ou pro topo da página, se não houver nenhum) e
+           aparece flutuando sobre a barra superior em vez de dentro do
+           quadrado dos dados. */
+        position: relative;
+        width: 100%;
+        max-width: 340px;
+        height: 240px;
+        margin: 0 auto 16px auto;
     }
 
     .dice-box-result-valor {
@@ -135,25 +165,21 @@ input, select, button, textarea {
 }
 
 @media (max-width: 600px) {
-    /* Em celular a tela vira uma coluna só e rola; uma caixa "fixed" no
-       canto acabaria flutuando por cima do conteúdo. Em vez disso, ela
-       passa a fazer parte do fluxo normal — uma faixa no topo da ficha. */
     .dice-box-wrap {
-        position: static;
-        width: 100%;
         max-width: 320px;
         height: 200px;
-        margin: 0 auto 16px auto;
     }
 }
 
 /* --- LAYOUT PRINCIPAL (GRID) --- */
 .character-sheet {
     display: grid;
-    /* Coluna 1 mais larga que antes (320px -> 360px) pra caber o
-       Inventário embaixo de Vida/Determinação/Defesa; a coluna de
-       Perícias (2ª, "1fr") fica proporcionalmente um pouco menor. */
-    grid-template-columns: 360px 1fr 300px;
+    /* Coluna 1 (atributos/vida/PE/defesa) volta a ficar mais enxuta
+       agora que o Inventário saiu dela; coluna 3 cresceu bastante
+       (300px -> 440px) porque virou uma seção com abas de verdade
+       (Combate/Rituais/Inventário — ver .sheet-tabs-section), que
+       precisa de espaço pra cartões, rolagem personalizada e log. */
+    grid-template-columns: 320px 1fr 440px;
     gap: 20px;
     padding: 20px;
     height: 100%;
@@ -418,11 +444,95 @@ h3 {
 .pos-pre { top: 84.67%; left: 24.81%; transform: translate(-50%, -50%); }
 .pos-for { top: 36.76%; left: 9.24%;  transform: translate(-50%, -50%); }
 
+/* --- Identidade (Origem/Classe/NEX/PE por Rodada) — mesmo agrupamento
+   da ficha oficial do livro, só que com o visual do resto do app (campos
+   pequenos com rótulo em vez das "caixas pretas" do papel). Origem é o
+   único campo digitável aqui (nunca existiu em nenhum lugar do projeto);
+   Classe e NEX são só exibidos (já são editados na tela de Editar
+   personagem) — editar aqui de novo abriria brecha pra ficar
+   inconsistente com as quotas de perícia/atributo calculadas por eles. */
+.identity-block {
+    width: 100%;
+    max-width: 280px;
+    margin-top: 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.identity-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.identity-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.identity-field-label {
+    font-size: 0.65rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    color: #aaa;
+    text-transform: uppercase;
+}
+
+.identity-field input[type="text"] {
+    width: 100%;
+    box-sizing: border-box;
+    background-color: #121212;
+    border: 1px solid #444;
+    color: #fff;
+    border-radius: 4px;
+    padding: 7px 9px;
+    font-size: 0.85rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.identity-field input[type="text"]:focus {
+    outline: none;
+    border-color: #7c43bd;
+    box-shadow: 0 0 0 3px rgba(124, 67, 189, 0.22);
+}
+
+.identity-field input[type="text"]::placeholder {
+    color: #555;
+}
+
+.identity-field-value {
+    display: block;
+    background-color: #0d0d0d;
+    border: 1px solid #333;
+    color: #a5d6a7;
+    border-radius: 4px;
+    padding: 7px 9px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* --- Proteção / Resistências — mesma "dupla de campos" do livro,
+   agora empilhada em vez de lado a lado (nomes de proteção e
+   descrições de resistência tendem a ser mais longos que Origem/NEX). */
+.protecao-resistencias-block {
+    width: 100%;
+    max-width: 280px;
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 /* --- Vida / Determinação / Defesa --- */
 .vitals-block {
     width: 100%;
     max-width: 280px;
-    margin-top: 30px;
+    margin-top: 22px;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -439,6 +549,17 @@ h3 {
     font-weight: bold;
     letter-spacing: 0.5px;
     color: #aaa;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.vital-label-sub {
+    font-weight: normal;
+    font-size: 0.65rem;
+    letter-spacing: 0.3px;
+    color: #666;
+    text-transform: none;
 }
 
 .vital-bar-wrap {
@@ -448,21 +569,27 @@ h3 {
 }
 
 .vital-btn {
-    background-color: #232323;
+    background-image: linear-gradient(160deg, #2a2a2a, #161616);
     border: 1px solid #444;
     color: #ccc;
     width: 24px;
     height: 24px;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 0.85rem;
     line-height: 1;
     flex-shrink: 0;
+    transition: transform 0.12s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .vital-btn:hover {
-    background-color: #333;
+    border-color: #7c43bd;
+    color: #fff;
+    box-shadow: 0 0 8px rgba(124, 67, 189, 0.35);
+    transform: translateY(-1px);
 }
+
+.vital-btn:active { transform: translateY(0) scale(0.94); }
 
 .vital-bar {
     position: relative;
@@ -492,6 +619,21 @@ h3 {
 
 .det-fill {
     background-color: #00695c;
+}
+
+/* Pisca a barra de PE quando um ritual é conjurado (ver conjurarRitual em
+   CharacterSheetPage.jsx) — sinal visual de que o PE foi gasto, visível
+   mesmo se o usuário não estiver olhando pro log da aba Combate. O key
+   trocado no elemento força o React a remontá-lo a cada conjuração, o
+   que reinicia a animação mesmo em conjurações seguidas. */
+@keyframes peSpentFlash {
+    0% { box-shadow: 0 0 0 rgba(0, 191, 165, 0); border-color: #444; }
+    25% { box-shadow: 0 0 14px 3px rgba(0, 191, 165, 0.85); border-color: #26cbb3; }
+    100% { box-shadow: 0 0 0 rgba(0, 191, 165, 0); border-color: #444; }
+}
+
+.pe-spent-flash {
+    animation: peSpentFlash 0.7s ease-out;
 }
 
 .vital-bar-text {
@@ -667,24 +809,163 @@ h3 {
     color: white;
 }
 
-/* --- COLUNA 3: DADOS E LOG --- */
-.dice-section {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-/* --- INVENTÁRIO (agora na lateral, embaixo de Vida/Determinação/Defesa,
-   dentro da mesma coluna 1 — por isso a largura casa com .vitals-block) --- */
-.inventory-section {
-    width: 100%;
-    max-width: 320px;
-    margin-top: 24px;
+/* --- COLUNA 3: ABAS (Combate / Rituais / Inventário) -----------------
+   Substitui as antigas seções empilhadas (.dice-section direto na
+   coluna 3, .inventory-section espremida na coluna 1, .rituals-section
+   como uma 4ª linha de largura total) por uma única coluna com
+   navegação por abas, no espírito da referência que o usuário mandou —
+   só uma aba de conteúdo fica montada por vez. */
+.sheet-tabs-section {
     background-color: #1e1e1e;
     border-radius: 8px;
     padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
 }
 
+.sheet-tabs-nav {
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid #2a2a2a;
+}
+
+.sheet-tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    color: #888;
+    font-family: 'Cinzel', 'Segoe UI', serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 10px 4px;
+    cursor: pointer;
+    transition: color 0.18s ease, border-color 0.18s ease;
+}
+
+.sheet-tab-btn:hover {
+    color: #d1c4e9;
+}
+
+.sheet-tab-btn.active {
+    color: #ce93d8;
+    border-bottom-color: #9c64d6;
+    text-shadow: 0 0 10px rgba(156, 100, 214, 0.5);
+}
+
+.sheet-tab-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.tab-panel-combate,
+.tab-panel-rituais,
+.tab-panel-inventario {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    animation: fadeIn 0.2s ease both;
+}
+
+.tab-inline-feedback {
+    color: #a5d6a7;
+    font-size: 0.8rem;
+}
+
+/* --- COMBATE: cabeçalho de filtro + lista de Ataques --- */
+.ataques-section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tab-filter-input {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.ataques-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ataque-card-actions {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-roll-icon {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-image: linear-gradient(145deg, #2b2b2b, #0a0a0a);
+    border: 1px solid #5c1414;
+    color: #e8d5d5;
+    font-size: 0.95rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-roll-icon:hover {
+    border-color: #e53935;
+    transform: scale(1.1);
+    box-shadow: 0 0 12px rgba(255, 23, 23, 0.45);
+}
+
+.btn-roll-icon:active { transform: scale(0.94); }
+
+.btn-conjurar {
+    flex-shrink: 0;
+    padding: 5px 12px;
+    background-image: linear-gradient(135deg, #6a1b9a, #4a148c);
+    border: 1px solid #9c64d6;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 0.3px;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(74, 20, 140, 0.4);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-conjurar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(124, 67, 189, 0.55);
+}
+
+.btn-conjurar:active { transform: translateY(0); }
+
+.ataque-form-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.ataque-form-row .control-group {
+    flex: 1 1 100px;
+}
+
+.ataque-form-row .control-group input {
+    width: 100%;
+}
+
+/* --- INVENTÁRIO (agora dentro da aba "Inventário" da coluna 3, em
+   vez de espremido na coluna 1 — por isso perdeu o max-width antigo,
+   que existia só pra caber ao lado de Vida/Determinação/Defesa) --- */
 .inventory-section-header {
     display: flex;
     align-items: center;
@@ -706,8 +987,8 @@ h3 {
     height: 30px;
     flex-shrink: 0;
     border-radius: 50%;
-    background-color: #4a148c;
-    border: 1px solid #7c43bd;
+    background-image: linear-gradient(145deg, #6a1b9a, #4a148c);
+    border: 1px solid #9c64d6;
     color: #fff;
     font-size: 1.2rem;
     line-height: 1;
@@ -715,9 +996,16 @@ h3 {
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 2px 6px rgba(74, 20, 140, 0.4);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.btn-add-item:hover { background-color: #6a1fb8; }
+.btn-add-item:hover {
+    transform: scale(1.08) rotate(90deg);
+    box-shadow: 0 0 12px rgba(156, 100, 214, 0.6);
+}
+
+.btn-add-item:active { transform: scale(0.96); }
 
 .inventory-carga-info {
     display: flex;
@@ -790,12 +1078,23 @@ h3 {
 .inventory-item-qty button {
     width: 22px;
     height: 22px;
-    background-color: #232323;
+    background-image: linear-gradient(160deg, #2a2a2a, #161616);
     border: 1px solid #444;
     color: #ccc;
-    border-radius: 4px;
+    border-radius: 50%;
     cursor: pointer;
+    line-height: 1;
+    transition: transform 0.12s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
+
+.inventory-item-qty button:hover {
+    border-color: #7c43bd;
+    color: #fff;
+    box-shadow: 0 0 8px rgba(124, 67, 189, 0.35);
+    transform: scale(1.08);
+}
+
+.inventory-item-qty button:active { transform: scale(0.94); }
 
 .inventory-item-qty span { min-width: 18px; text-align: center; font-size: 0.85rem; }
 
@@ -803,11 +1102,18 @@ h3 {
     background-color: transparent;
     border: 1px solid #4caf50;
     color: #a5d6a7;
-    padding: 4px 8px;
-    border-radius: 4px;
+    padding: 4px 10px;
+    border-radius: 999px;
     cursor: pointer;
     font-size: 0.8rem;
+    font-weight: 600;
     white-space: nowrap;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.btn-equipar:hover {
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.4);
+    transform: translateY(-1px);
 }
 
 .btn-equipar.equipado {
@@ -827,11 +1133,52 @@ h3 {
    tempo todo, não só em telas pequenas. Por isso não precisa mais de uma
    versão diferente aqui pra mobile.) */
 
+/* --- RITUAIS (aba "Rituais" da coluna 3) ------------------------------
+   Cada ritual reaproveita a mesma classe `.modal-item-card` da modal
+   de itens (cartão expansível) — ver `.ritual-card`/`.badge-elemento-*`
+   mais abaixo pra a parte específica de ritual (cor por Elemento). */
+.rituals-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border-bottom: 2px solid #4a148c;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.rituals-section-header h3 {
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.rituals-nex-info {
+    background-color: rgba(74, 20, 140, 0.18);
+    border: 1px solid #4a148c;
+    border-radius: 6px;
+    padding: 8px 14px;
+    margin-bottom: 14px;
+    font-size: 0.85rem;
+    color: #d1c4e9;
+}
+
+.rituals-list {
+    /* Antes era um grid de várias colunas (a seção ocupava a largura
+       toda da ficha); agora mora dentro da aba "Rituais" da coluna 3
+       (~440px), então uma lista de 1 coluna (igual ao Inventário)
+       aproveita melhor o espaço. */
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 /* --- MODAL: Adicionar Item (catálogo ou personalizado) --- */
 .modal-overlay {
     position: fixed;
     inset: 0;
     background-color: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(2px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -841,16 +1188,47 @@ h3 {
 
 .modal-overlay.hidden { display: none; }
 
+/* Entrada suave (sobe + cresce levemente) em vez da modal simplesmente
+   "aparecer" — mesma ideia usada no .auth-card da tela de login
+   (authCardEnter), reaproveitada aqui num keyframe próprio porque a
+   distância percorrida é bem menor (a modal já nasce quase no centro). */
+@keyframes modalBoxEnter {
+    from { opacity: 0; transform: translateY(10px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .modal-box {
+    position: relative;
     background-color: #1e1e1e;
-    border: 1px solid #333;
-    border-radius: 10px;
-    padding: 20px;
+    background-image: linear-gradient(160deg, rgba(74, 20, 140, 0.14), transparent 55%);
+    border: 1px solid #3a3a3a;
+    border-radius: 12px;
+    padding: 22px;
     width: 100%;
     max-width: 560px;
     max-height: 85vh;
     overflow-y: auto;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 16px 50px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(124, 67, 189, 0.08);
+    animation: modalBoxEnter 0.22s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+/* Faixa decorativa no topo — o mesmo roxo do resto do app, só que
+   como um "sinal" visual de que a modal pertence à ficha, em vez de
+   simplesmente uma caixa cinza igual a qualquer outra. */
+.modal-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 12px;
+    right: 12px;
+    height: 3px;
+    border-radius: 0 0 3px 3px;
+    background: linear-gradient(90deg, transparent, #7c43bd, #ce93d8, #7c43bd, transparent);
+    opacity: 0.85;
+}
+
+.modal-box.wide {
+    max-width: 660px;
 }
 
 .modal-header {
@@ -867,16 +1245,27 @@ h3 {
 }
 
 .modal-close {
-    background: none;
-    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 50%;
     color: #aaa;
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     line-height: 1;
     cursor: pointer;
-    padding: 0 4px;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 
-.modal-close:hover { color: #fff; }
+.modal-close:hover {
+    color: #fff;
+    background-color: rgba(229, 57, 53, 0.18);
+    border-color: rgba(229, 57, 53, 0.4);
+    transform: rotate(90deg);
+}
 
 .modal-item-tabs {
     display: flex;
@@ -886,19 +1275,28 @@ h3 {
 
 .modal-tab {
     flex: 1;
-    padding: 8px;
+    padding: 9px 8px;
     background-color: #121212;
     border: 1px solid #333;
     color: #aaa;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 0.85rem;
+    font-weight: 500;
+    transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease;
+}
+
+.modal-tab:hover {
+    border-color: #7c43bd;
+    color: #d1c4e9;
 }
 
 .modal-tab.active {
-    background-color: #4a148c;
-    border-color: #7c43bd;
+    background-image: linear-gradient(135deg, #4a148c, #6a1b9a);
+    border-color: #9c64d6;
     color: #fff;
+    box-shadow: 0 3px 12px rgba(124, 67, 189, 0.45);
+    transform: translateY(-1px);
 }
 
 .modal-tab-content.hidden { display: none; }
@@ -990,12 +1388,34 @@ h3 {
     cursor: pointer;
     font-size: 0.78rem;
     white-space: nowrap;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+}
+
+.modal-subtab:hover {
+    border-color: #7c43bd;
+    color: #d1c4e9;
+    transform: translateY(-1px);
 }
 
 .modal-subtab.active {
-    background-color: #4a148c;
-    border-color: #7c43bd;
+    background-image: linear-gradient(135deg, #4a148c, #6a1b9a);
+    border-color: #9c64d6;
     color: #fff;
+    box-shadow: 0 2px 8px rgba(124, 67, 189, 0.4);
+}
+
+/* Sub-abas de Elemento (modal de Rituais) — cada elemento ganha a cor
+   de destaque dele (ver .badge-elemento-* mais abaixo) quando ativo,
+   em vez do roxo genérico, pra reforçar visualmente qual elemento está
+   sendo navegado. */
+.modal-subtab.elemento-conhecimento.active { background-image: linear-gradient(135deg, #a1811e, #d4af37); border-color: #e8cf7a; color: #241d04; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.45); }
+.modal-subtab.elemento-energia.active { background-image: linear-gradient(135deg, #6a1b9a, #ab47bc); border-color: #ce93d8; box-shadow: 0 2px 8px rgba(171, 71, 188, 0.45); }
+.modal-subtab.elemento-morte.active { background-image: linear-gradient(135deg, #37474f, #546e7a); border-color: #90a4ae; box-shadow: 0 2px 8px rgba(84, 110, 122, 0.45); }
+.modal-subtab.elemento-sangue.active { background-image: linear-gradient(135deg, #b71c1c, #d32f2f); border-color: #ef5350; box-shadow: 0 2px 8px rgba(211, 47, 47, 0.45); }
+.modal-subtab.elemento-medo.active { background-image: linear-gradient(135deg, #0d2b4e, #1a4971); border-color: #4a76a8; box-shadow: 0 2px 8px rgba(26, 73, 113, 0.5); }
+
+.modal-circulo-filtro {
+    margin-top: -4px;
 }
 
 .modal-search-input {
@@ -1008,6 +1428,13 @@ h3 {
     padding: 8px 10px;
     margin-bottom: 10px;
     font-size: 0.85rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.modal-search-input:focus {
+    outline: none;
+    border-color: #7c43bd;
+    box-shadow: 0 0 0 3px rgba(124, 67, 189, 0.22);
 }
 
 /* --- Modal: cartões expansíveis de item do catálogo --- */
@@ -1033,12 +1460,39 @@ h3 {
     border: 1px solid #333;
     border-radius: 8px;
     overflow: hidden;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
     /* Sem isso, o flexbox (coluna) espreme os cartões pra caber dentro
        do max-height do container em vez de deixar rolar (overflow-y:
        auto) — todo mundo fica achatado numa lasquinha de poucos
        pixels. flex-shrink:0 mantém cada cartão na altura real do seu
        conteúdo e deixa a rolagem cuidar do resto. */
     flex-shrink: 0;
+}
+
+.modal-item-card:hover {
+    border-color: #4a4a4a;
+    background-color: #161616;
+}
+
+/* Cartão de ritual: faixa de cor à esquerda identificando o elemento
+   (Conhecimento/Energia/Morte/Sangue/Medo — ver rituais.js), tanto na
+   lista de "Rituais Conhecidos" da ficha quanto nos cartões da modal
+   de adicionar. */
+.ritual-card {
+    border-left: 3px solid #4a148c;
+}
+
+.ritual-card.elemento-conhecimento { border-left-color: #d4af37; }
+.ritual-card.elemento-energia { border-left-color: #ab47bc; }
+.ritual-card.elemento-morte { border-left-color: #546e7a; }
+.ritual-card.elemento-sangue { border-left-color: #d32f2f; }
+.ritual-card.elemento-medo { border-left-color: #1a4971; }
+
+/* Cartão de ataque (aba Combate) — mesma base de .modal-item-card, com
+   uma faixa vermelha à esquerda (cor do pentagrama de combate) em vez
+   da cor por elemento dos rituais. */
+.ataque-card {
+    border-left: 3px solid #8b1e1e;
 }
 
 .modal-item-card-header {
@@ -1086,6 +1540,27 @@ h3 {
     font-size: 0.68rem;
     padding: 1px 7px;
     border-radius: 10px;
+    white-space: nowrap;
+}
+
+/* Badges de elemento (mesma paleta usada em .ritual-card/.modal-subtab
+   acima) e de círculo/aviso de NEX, usados nos cartões de ritual. */
+.badge-elemento-conhecimento { background-color: rgba(212, 175, 55, 0.16); border-color: #d4af37; color: #f0d98c; }
+.badge-elemento-energia { background-color: rgba(171, 71, 188, 0.16); border-color: #ab47bc; color: #e1bee7; }
+.badge-elemento-morte { background-color: rgba(84, 110, 122, 0.16); border-color: #546e7a; color: #cfd8dc; }
+.badge-elemento-sangue { background-color: rgba(211, 47, 47, 0.14); border-color: #d32f2f; color: #ef9a9a; }
+.badge-elemento-medo { background-color: rgba(26, 73, 113, 0.2); border-color: #1a4971; color: #90b8e0; }
+
+.badge-circulo {
+    background-color: #181818;
+    border-color: #555;
+    color: #bbb;
+}
+
+.badge-locked {
+    background-color: rgba(255, 143, 0, 0.14);
+    border-color: #ff8f00;
+    color: #ffcc80;
 }
 
 .modal-item-card-sub {
@@ -1097,21 +1572,68 @@ h3 {
 
 .modal-item-card-add {
     flex-shrink: 0;
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    background-color: #4a148c;
-    border: 1px solid #7c43bd;
+    background-image: linear-gradient(145deg, #6a1b9a, #4a148c);
+    border: 1px solid #9c64d6;
     color: #fff;
-    font-size: 1rem;
+    font-size: 1.05rem;
     line-height: 1;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 2px 6px rgba(74, 20, 140, 0.4);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-image 0.15s ease;
 }
 
-.modal-item-card-add:hover { background-color: #6a1fb1; }
+.modal-item-card-add:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 12px rgba(156, 100, 214, 0.65);
+}
+
+.modal-item-card-add:active { transform: scale(0.96); }
+
+.modal-item-card-add.added,
+.modal-item-card-add:disabled {
+    background-image: linear-gradient(145deg, #43a047, #2e7d32);
+    border-color: #81c784;
+    cursor: default;
+    box-shadow: none;
+}
+
+.modal-item-card-add.added:hover { transform: none; box-shadow: none; }
+
+/* Botão de remover (ícone de lixeira) — mesma "moldura" circular do de
+   adicionar, só que em vermelho. Usado nos 3 lugares de "remover" da
+   ficha: item do inventário, ritual conhecido e ataque cadastrado — os
+   três com o mesmo estilo agora (antes o inventário usava .btn-danger,
+   retangular com "✕" de texto, e ritual/ataque só tinham o "✕" sem o
+   estilo do inventário; ver TrashIcon em CharacterSheetPage.jsx). */
+.modal-item-card-remove {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background-image: linear-gradient(145deg, #c62828, #7f0000);
+    border: 1px solid #e57373;
+    color: #fff;
+    font-size: 0.85rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.modal-item-card-remove:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 12px rgba(229, 57, 53, 0.55);
+}
+
+.modal-item-card-remove:active { transform: scale(0.96); }
 
 .modal-item-card-body {
     padding: 0 10px 10px 30px;
@@ -1240,16 +1762,23 @@ h3 {
 
 .btn-action {
     padding: 10px 20px;
-    background-color: #4a148c;
+    background-image: linear-gradient(135deg, #6a1b9a, #4a148c);
     color: white;
-    border: none;
-    border-radius: 4px;
+    border: 1px solid #9c64d6;
+    border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
-    transition: 0.2s;
+    letter-spacing: 0.3px;
+    box-shadow: 0 3px 10px rgba(74, 20, 140, 0.35);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-image 0.15s ease;
 }
 
-.btn-action:hover { background-color: #6a1b9a; }
+.btn-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 16px rgba(124, 67, 189, 0.5);
+}
+
+.btn-action:active { transform: translateY(0); box-shadow: 0 2px 6px rgba(74, 20, 140, 0.4); }
 
 /* Log Styles */
 .log-container {
@@ -1561,7 +2090,8 @@ h3 {
     .auth-selo-icon,
     .auth-subtitle,
     .auth-error,
-    .form-hint {
+    .form-hint,
+    .modal-box {
         animation: none !important;
     }
 }
@@ -1592,13 +2122,17 @@ h3 {
     border-radius: 4px;
     cursor: pointer;
     font-weight: bold;
-    transition: 0.2s;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease, color 0.2s ease;
 }
 
 .btn-danger:hover {
     background-color: #ff1744;
     color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 23, 68, 0.4);
 }
+
+.btn-danger:active { transform: translateY(0); }
 
 /* ============================================================
    TELA: LISTA DE PERSONAGENS
@@ -2058,7 +2592,7 @@ h3 {
        Aqui eles saem do esquema flex-fill e passam a ter altura própria,
        limitada e com rolagem interna. */
     .skills-section,
-    .dice-section {
+    .sheet-tabs-section {
         display: block;
     }
 
@@ -2096,6 +2630,16 @@ h3 {
 @media (max-width: 600px) {
     .character-sheet {
         padding: 12px;
+    }
+
+    .sheet-tabs-section {
+        padding: 12px;
+    }
+
+    .sheet-tab-btn {
+        font-size: 0.72rem;
+        letter-spacing: 0.5px;
+        padding: 8px 2px;
     }
 
     .attributes-section,
