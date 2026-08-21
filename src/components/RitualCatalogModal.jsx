@@ -81,11 +81,9 @@ export function TrashIcon() {
 //                         conhecido" (✓, desabilitado) nos cartões
 //   onAdicionar(ritual) — chamado ao clicar "+" num cartão; quem chama
 //                         decide se aceita (duplicata etc.) e mostra o
-//                         feedback
-//   feedback            — texto de feedback (controlado por quem usa a
-//                         modal, ex: "X adicionado aos rituais")
+//                         aviso (toast — ver App.jsx) de sucesso/erro
 // ---------------------------------------------------------------
-export default function RitualCatalogModal({ aberto, onFechar, trilha, nex, rituaisConhecidos, onAdicionar, feedback }) {
+export default function RitualCatalogModal({ aberto, onFechar, trilha, nex, rituaisConhecidos, onAdicionar }) {
     const [elementoAtivo, setElementoAtivo] = useState(OPR.ELEMENTOS_RITUAL[0]);
     const [circuloFiltro, setCirculoFiltro] = useState(0); // 0 = todos os círculos
     const [busca, setBusca] = useState('');
@@ -231,10 +229,6 @@ export default function RitualCatalogModal({ aberto, onFechar, trilha, nex, ritu
                             </div>
                         );
                     })}
-                </div>
-
-                <div className="modal-item-actions">
-                    <span className="modal-item-feedback">{feedback}</span>
                 </div>
             </div>
         </div>

@@ -882,11 +882,6 @@ h3 {
     animation: fadeIn 0.2s ease both;
 }
 
-.tab-inline-feedback {
-    color: #a5d6a7;
-    font-size: 0.8rem;
-}
-
 /* --- COMBATE: cabeçalho de filtro + lista de Ataques --- */
 .ataques-section-header {
     display: flex;
@@ -1373,12 +1368,6 @@ h3 {
     align-items: center;
     justify-content: flex-end;
     gap: 12px;
-}
-
-.modal-item-feedback {
-    flex: 1;
-    color: #a5d6a7;
-    font-size: 0.8rem;
 }
 
 /* --- Modal: sub-abas de categoria (Armas / Munições / Proteções / Geral) --- */

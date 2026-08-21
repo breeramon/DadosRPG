@@ -25,6 +25,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { Characters } from '@/services/firebase';
 import AttributePentagram from '@/components/AttributePentagram';
 import { useDiceBox } from '@/hooks/useDiceBox';
@@ -206,11 +207,9 @@ export default function CharacterSheetPage() {
     const [grupoAtivo, setGrupoAtivo] = useState(OPI.GRUPOS[0]?.chave || 'armas');
     const [busca, setBusca] = useState('');
     const [expandidos, setExpandidos] = useState(() => new Set());
-    const [feedback, setFeedback] = useState('');
     const [customNome, setCustomNome] = useState('');
     const [customEspacos, setCustomEspacos] = useState(1);
     const [customEfeito, setCustomEfeito] = useState('');
-    const [customFeedback, setCustomFeedback] = useState('');
 
     // --- Modal "Adicionar Ritual" (mesmo espírito da de item, mas
     // filtrando por Elemento + Círculo em vez de grupo/categoria) ---
@@ -219,7 +218,6 @@ export default function CharacterSheetPage() {
     const [circuloFiltro, setCirculoFiltro] = useState(0); // 0 = todos os círculos
     const [buscaRitual, setBuscaRitual] = useState('');
     const [expandidosRituais, setExpandidosRituais] = useState(() => new Set());
-    const [feedbackRitual, setFeedbackRitual] = useState('');
     // Expandir/recolher os cartões da lista de "Rituais Conhecidos" na
     // própria ficha (Set separado do usado dentro da modal).
     const [expandidosConhecidos, setExpandidosConhecidos] = useState(() => new Set());
@@ -436,13 +434,6 @@ export default function CharacterSheetPage() {
         atualizarInventario(inventario.filter((_, i) => i !== index));
     }
 
-    let feedbackTimeoutRef = useRef(null);
-    function mostrarFeedback(texto) {
-        setFeedback(texto);
-        clearTimeout(feedbackTimeoutRef.current);
-        feedbackTimeoutRef.current = setTimeout(() => setFeedback(''), 2500);
-    }
-
     function adicionarAoInventario(catalogItem) {
         const existenteIdx = inventario.findIndex(i => i.nome === catalogItem.nome && !i.custom);
         let next;
@@ -454,10 +445,9 @@ export default function CharacterSheetPage() {
             next = [...inventario, { ...catalogItem, quantidade: 1, equipado: false }];
         }
         atualizarInventario(next);
-        mostrarFeedback(`"${catalogItem.nome}" adicionado ao inventário.`);
+        toast.success(`"${catalogItem.nome}" adicionado ao inventário.`);
     }
 
-    let customFeedbackTimeoutRef = useRef(null);
     function handleAdicionarCustom() {
         const nome = customNome.trim();
         if (!nome) {
@@ -467,19 +457,16 @@ export default function CharacterSheetPage() {
         const espacos = parseInt(customEspacos, 10) || 0;
         const efeito = customEfeito.trim();
         atualizarInventario([...inventario, { nome, categoria: 'Personalizado', espacos, efeito, quantidade: 1, equipado: false, custom: true }]);
-        setCustomFeedback(`"${nome}" adicionado ao inventário.`);
+        toast.success(`"${nome}" adicionado ao inventário.`);
         setCustomNome('');
         setCustomEspacos(1);
         setCustomEfeito('');
-        clearTimeout(customFeedbackTimeoutRef.current);
-        customFeedbackTimeoutRef.current = setTimeout(() => setCustomFeedback(''), 2500);
     }
 
     function abrirModal() {
         setModalTab('catalogo');
         setBusca('');
         setExpandidos(new Set());
-        setFeedback('');
         setModalAberto(true);
     }
     function fecharModal() {
@@ -534,22 +521,15 @@ export default function CharacterSheetPage() {
         atualizarRituais(rituais.filter((_, i) => i !== index));
     }
 
-    let feedbackRitualTimeoutRef = useRef(null);
-    function mostrarFeedbackRitual(texto) {
-        setFeedbackRitual(texto);
-        clearTimeout(feedbackRitualTimeoutRef.current);
-        feedbackRitualTimeoutRef.current = setTimeout(() => setFeedbackRitual(''), 2500);
-    }
-
     function adicionarRitual(catalogRitual) {
         // Diferente do inventário (onde dá pra ter várias facas), um
         // ritual só faz sentido conhecer uma vez — ignora duplicata.
         if (rituais.some(r => r.nome === catalogRitual.nome)) {
-            mostrarFeedbackRitual(`Você já conhece "${catalogRitual.nome}".`);
+            toast.error(`Você já conhece "${catalogRitual.nome}".`);
             return;
         }
         atualizarRituais([...rituais, { ...catalogRitual }]);
-        mostrarFeedbackRitual(`"${catalogRitual.nome}" adicionado aos rituais.`);
+        toast.success(`"${catalogRitual.nome}" adicionado aos rituais.`);
     }
 
     function abrirModalRituais() {
@@ -557,7 +537,6 @@ export default function CharacterSheetPage() {
         setCirculoFiltro(0);
         setBuscaRitual('');
         setExpandidosRituais(new Set());
-        setFeedbackRitual('');
         setModalRitualAberto(true);
     }
     function fecharModalRituais() {
@@ -612,14 +591,14 @@ export default function CharacterSheetPage() {
     function conjurarRitual(ritual) {
         const custo = OPR.CUSTO_PE_POR_CIRCULO[ritual.circulo] || 0;
         if (detAtual < custo) {
-            mostrarFeedbackRitual(`PE insuficiente pra conjurar "${ritual.nome}" (precisa de ${custo}).`);
+            toast.error(`PE insuficiente pra conjurar "${ritual.nome}" (precisa de ${custo}).`);
             return;
         }
         const novo = Math.max(0, detAtual - custo);
         setDetAtual(novo);
         salvarCampos({ determinacaoAtual: novo });
         setRollLog(prev => [{ id: proximoLogId++, system: true, title: `Ritual: ${ritual.nome} conjurado (-${custo} PE).` }, ...prev].slice(0, MAX_LOG_ENTRIES));
-        mostrarFeedbackRitual(`"${ritual.nome}" conjurado! -${custo} PE (restam ${novo}/${detMax}).`);
+        toast.success(`"${ritual.nome}" conjurado! -${custo} PE (restam ${novo}/${detMax}).`);
         playRitualCastSound();
         setPeFlash(f => f + 1);
     }
@@ -1050,8 +1029,6 @@ export default function CharacterSheetPage() {
                                     </div>
                                 )}
 
-                                {feedbackRitual && <div className="modal-item-feedback tab-inline-feedback">{feedbackRitual}</div>}
-
                                 <div className="rituals-list">
                                     {rituais.length === 0 && (
                                         <div className="inventory-empty">Nenhum ritual conhecido ainda.</div>
@@ -1255,10 +1232,6 @@ export default function CharacterSheetPage() {
                                         );
                                     })}
                                 </div>
-
-                                <div className="modal-item-actions">
-                                    <span className="modal-item-feedback">{feedback}</span>
-                                </div>
                             </div>
                         )}
 
@@ -1277,7 +1250,6 @@ export default function CharacterSheetPage() {
                                     <textarea rows={3} placeholder="Pra que serve, bônus, restrições..." value={customEfeito} onChange={e => setCustomEfeito(e.target.value)}></textarea>
                                 </div>
                                 <div className="modal-item-actions">
-                                    <span className="modal-custom-feedback">{customFeedback}</span>
                                     <button type="button" className="btn-action" onClick={handleAdicionarCustom}>Adicionar</button>
                                 </div>
                             </div>
@@ -1384,10 +1356,6 @@ export default function CharacterSheetPage() {
                                     </div>
                                 );
                             })}
-                        </div>
-
-                        <div className="modal-item-actions">
-                            <span className="modal-item-feedback">{feedbackRitual}</span>
                         </div>
                     </div>
                 </div>

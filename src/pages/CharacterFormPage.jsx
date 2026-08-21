@@ -15,8 +15,9 @@
 // puro em vez de mutação direta do objeto).
 // ============================================================
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { Characters } from '@/services/firebase';
 import AttributePentagram from '@/components/AttributePentagram';
 import RitualCatalogModal, { elementoSlug, subtituloRitual, statsDoRitual, TrashIcon } from '@/components/RitualCatalogModal';
@@ -133,9 +134,7 @@ export default function CharacterFormPage() {
     // dá pra escolher quais o personagem já conhece, não gastar PE). ---
     const [rituais, setRituais] = useState([]);
     const [modalRitualAberto, setModalRitualAberto] = useState(false);
-    const [feedbackRitual, setFeedbackRitual] = useState('');
     const [expandidosConhecidos, setExpandidosConhecidos] = useState(() => new Set());
-    const feedbackRitualTimeoutRef = useRef(null);
 
     // ---------------------------------------------------------------
     // Carrega o personagem (edição) ou reseta pros padrões (criação).
@@ -333,19 +332,13 @@ export default function CharacterFormPage() {
     // que aqui não salva na hora — fica só no estado local até
     // "Salvar Personagem" (mesmo padrão do resto deste formulário).
     // ---------------------------------------------------------------
-    function mostrarFeedbackRitual(texto) {
-        setFeedbackRitual(texto);
-        clearTimeout(feedbackRitualTimeoutRef.current);
-        feedbackRitualTimeoutRef.current = setTimeout(() => setFeedbackRitual(''), 2500);
-    }
-
     function adicionarRitual(catalogRitual) {
         if (rituais.some(r => r.nome === catalogRitual.nome)) {
-            mostrarFeedbackRitual(`Você já conhece "${catalogRitual.nome}".`);
+            toast.error(`Você já conhece "${catalogRitual.nome}".`);
             return;
         }
         setRituais(prev => [...prev, { ...catalogRitual }]);
-        mostrarFeedbackRitual(`"${catalogRitual.nome}" adicionado aos rituais.`);
+        toast.success(`"${catalogRitual.nome}" adicionado aos rituais.`);
     }
 
     function handleRemoverRitual(index) {
@@ -590,7 +583,7 @@ export default function CharacterFormPage() {
                 <section className="form-extra-section skills-section">
                     <div className="rituals-section-header">
                         <h3>Rituais</h3>
-                        <button type="button" className="btn-add-item" title="Adicionar ritual" onClick={() => { setFeedbackRitual(''); setModalRitualAberto(true); }}>+</button>
+                        <button type="button" className="btn-add-item" title="Adicionar ritual" onClick={() => setModalRitualAberto(true)}>+</button>
                     </div>
 
                     {trilha === 'Ocultista' && (
@@ -600,8 +593,6 @@ export default function CharacterFormPage() {
                                 : 'NEX ainda não libera nenhum círculo de rituais.'}
                         </div>
                     )}
-
-                    {feedbackRitual && <div className="modal-item-feedback tab-inline-feedback">{feedbackRitual}</div>}
 
                     <div className="rituals-list">
                         {rituais.length === 0 && (
@@ -657,7 +648,6 @@ export default function CharacterFormPage() {
                 nex={nex}
                 rituaisConhecidos={rituais}
                 onAdicionar={adicionarRitual}
-                feedback={feedbackRitual}
             />
         </div>
     );
