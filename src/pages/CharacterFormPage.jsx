@@ -15,11 +15,13 @@
 // puro em vez de mutação direta do objeto).
 // ============================================================
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { Characters } from '@/services/firebase';
 import AttributePentagram from '@/components/AttributePentagram';
+import RitualCatalogModal, { elementoSlug, subtituloRitual, statsDoRitual, TrashIcon } from '@/components/RitualCatalogModal';
 import * as OP from '@/lib/pericias';
+import * as OPR from '@/lib/rituais';
 
 const ATRIBUTOS = [
     { key: 'agi', label: 'AGI', posClass: 'pos-agi' },
@@ -126,6 +128,15 @@ export default function CharacterFormPage() {
     const [periciasState, setPericiasState] = useState(catalogoInicial);
     const [combatenteEscolhasFixas, setCombatenteEscolhasFixas] = useState([null, null]);
 
+    // --- Rituais conhecidos (mesma ideia da ficha — ver
+    // CharacterSheetPage.jsx — só que aqui sem "Conjurar": nesta tela só
+    // dá pra escolher quais o personagem já conhece, não gastar PE). ---
+    const [rituais, setRituais] = useState([]);
+    const [modalRitualAberto, setModalRitualAberto] = useState(false);
+    const [feedbackRitual, setFeedbackRitual] = useState('');
+    const [expandidosConhecidos, setExpandidosConhecidos] = useState(() => new Set());
+    const feedbackRitualTimeoutRef = useRef(null);
+
     // ---------------------------------------------------------------
     // Carrega o personagem (edição) ou reseta pros padrões (criação).
     // ---------------------------------------------------------------
@@ -140,6 +151,7 @@ export default function CharacterFormPage() {
             const { estado, escolhas } = periciasStateApartirDoPersonagem(null);
             setPericiasState(estado);
             setCombatenteEscolhasFixas(escolhas);
+            setRituais([]);
             setCarregando(false);
             return;
         }
@@ -167,6 +179,7 @@ export default function CharacterFormPage() {
                 const { estado, escolhas } = periciasStateApartirDoPersonagem(personagem);
                 setPericiasState(estado);
                 setCombatenteEscolhasFixas(escolhas);
+                setRituais(Array.isArray(personagem.rituais) ? personagem.rituais : []);
             })
             .catch(err => {
                 console.error('[character-form] Erro ao carregar personagem pra edição:', err);
@@ -314,6 +327,39 @@ export default function CharacterFormPage() {
         setPericiasState(prev => ({ ...prev, [nomePericia]: { ...prev[nomePericia], bonusExtra: v } }));
     }
 
+    // ---------------------------------------------------------------
+    // Rituais — mesmo espírito do que já existe na ficha (ver
+    // CharacterSheetPage.jsx: adicionarRitual/handleRemoverRitual), só
+    // que aqui não salva na hora — fica só no estado local até
+    // "Salvar Personagem" (mesmo padrão do resto deste formulário).
+    // ---------------------------------------------------------------
+    function mostrarFeedbackRitual(texto) {
+        setFeedbackRitual(texto);
+        clearTimeout(feedbackRitualTimeoutRef.current);
+        feedbackRitualTimeoutRef.current = setTimeout(() => setFeedbackRitual(''), 2500);
+    }
+
+    function adicionarRitual(catalogRitual) {
+        if (rituais.some(r => r.nome === catalogRitual.nome)) {
+            mostrarFeedbackRitual(`Você já conhece "${catalogRitual.nome}".`);
+            return;
+        }
+        setRituais(prev => [...prev, { ...catalogRitual }]);
+        mostrarFeedbackRitual(`"${catalogRitual.nome}" adicionado aos rituais.`);
+    }
+
+    function handleRemoverRitual(index) {
+        setRituais(prev => prev.filter((_, i) => i !== index));
+    }
+
+    function toggleExpandidoConhecido(nome) {
+        setExpandidosConhecidos(prev => {
+            const next = new Set(prev);
+            if (next.has(nome)) next.delete(nome); else next.add(nome);
+            return next;
+        });
+    }
+
     function validarECollectar() {
         if (!nome.trim()) {
             window.alert('Dê um nome para o personagem.');
@@ -347,7 +393,7 @@ export default function CharacterFormPage() {
                 return { nome: p.nome, atributo: p.atributo, treinado: true, grau: st.grau, bonusExtra: Number(st.bonusExtra) || 0, bonus };
             });
 
-        return { nome: nome.trim(), trilha, nex, atributos, pericias };
+        return { nome: nome.trim(), trilha, nex, atributos, pericias, rituais };
     }
 
     async function handleSalvar() {
@@ -542,7 +588,11 @@ export default function CharacterFormPage() {
                 </section>
 
                 <section className="form-extra-section skills-section">
-                    <h3>Rituais</h3>
+                    <div className="rituals-section-header">
+                        <h3>Rituais</h3>
+                        <button type="button" className="btn-add-item" title="Adicionar ritual" onClick={() => { setFeedbackRitual(''); setModalRitualAberto(true); }}>+</button>
+                    </div>
+
                     {trilha === 'Ocultista' && (
                         <div className="rituais-info">
                             {circuloOcultista > 0
@@ -550,13 +600,65 @@ export default function CharacterFormPage() {
                                 : 'NEX ainda não libera nenhum círculo de rituais.'}
                         </div>
                     )}
-                    <p className="form-extra-hint">
-                        A escolha dos rituais em si agora é feita direto na ficha do personagem (seção "Rituais",
-                        com um catálogo filtrável por Elemento e Círculo) — esse formulário só cuida da identidade
-                        e dos atributos.
-                    </p>
+
+                    {feedbackRitual && <div className="modal-item-feedback tab-inline-feedback">{feedbackRitual}</div>}
+
+                    <div className="rituals-list">
+                        {rituais.length === 0 && (
+                            <div className="inventory-empty">Nenhum ritual conhecido ainda.</div>
+                        )}
+                        {rituais.map((ritual, index) => {
+                            const aberto = expandidosConhecidos.has(ritual.nome);
+                            return (
+                                <div className={`modal-item-card ritual-card elemento-${elementoSlug(ritual.elemento)}${aberto ? ' expanded' : ''}`} key={ritual.nome}>
+                                    <div className="modal-item-card-header" onClick={() => toggleExpandidoConhecido(ritual.nome)}>
+                                        <span className="modal-item-card-chevron">▶</span>
+                                        <div className="modal-item-card-info">
+                                            <div className="modal-item-card-title-row">
+                                                <span className="modal-item-card-nome">{ritual.nome}</span>
+                                                <span className={`modal-item-card-badge badge-elemento-${elementoSlug(ritual.elemento)}`}>{ritual.elemento}</span>
+                                                <span className="modal-item-card-badge badge-circulo">{ritual.circulo}º círc.</span>
+                                            </div>
+                                            <div className="modal-item-card-sub">{subtituloRitual(ritual)}</div>
+                                        </div>
+                                        <div className="ataque-card-actions">
+                                            <button
+                                                type="button"
+                                                className="modal-item-card-remove"
+                                                title="Esquecer ritual"
+                                                onClick={ev => { ev.stopPropagation(); handleRemoverRitual(index); }}
+                                            >
+                                                <TrashIcon />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className={`modal-item-card-body${aberto ? '' : ' hidden'}`}>
+                                        <div className="modal-item-stats-grid">
+                                            {statsDoRitual(ritual).map(({ label, valor }) => (
+                                                <div className="modal-item-stat" key={label}>
+                                                    <span className="modal-item-stat-label">{label}</span>
+                                                    <span className="modal-item-stat-value">{valor}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {ritual.descricao && <div className="modal-item-card-efeito">{ritual.descricao}</div>}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </section>
             </div>
+
+            <RitualCatalogModal
+                aberto={modalRitualAberto}
+                onFechar={() => setModalRitualAberto(false)}
+                trilha={trilha}
+                nex={nex}
+                rituaisConhecidos={rituais}
+                onAdicionar={adicionarRitual}
+                feedback={feedbackRitual}
+            />
         </div>
     );
 }

@@ -8,7 +8,7 @@
 body {
     background-color: #121212;
     color: #e0e0e0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     min-height: 100vh;
     overflow-y: auto;
 }
@@ -19,18 +19,21 @@ input, select, button, textarea {
     font-size: 1rem;
 }
 
-/* Uma única fonte pra todo botão do projeto — antes só as abas
-   COMBATE/RITUAIS/INVENTÁRIO e o pentagrama de atributos usavam Cinzel
-   (ver seletores específicos mais abaixo), e o resto (inclusive os
-   botões redondos de remover/conjurar dentro das abas) herdava a fonte
-   padrão do body (sans-serif), o que deixava a ficha com uma mistura de
-   2 fontes em botões. Regra base aqui pra cobrir todo `<button>`; os
-   seletores mais específicos que já declaravam Cinzel continuam
-   funcionando normalmente (mesma fonte, então não há conflito).
+/* Uma única fonte pra todo botão do projeto (ver também a fonte do
+   body, logo acima — o projeto inteiro usa Montserrat agora, ver
+   comentário em index.html). Antes as abas COMBATE/RITUAIS/INVENTÁRIO
+   e o pentagrama de atributos usavam Cinzel (serifada), e o resto
+   (inclusive os botões redondos de remover/conjurar dentro das abas)
+   herdava a fonte padrão do body — mistura de 2 fontes que motivou
+   trocar tudo pra uma fonte só. Regra base aqui pra cobrir todo
+   `<button>`; os seletores mais específicos abaixo (abas, pentagrama)
+   também declaram Montserrat explicitamente, então não há conflito.
    `input`/`select`/`textarea` ficam de fora de propósito — texto
-   digitado/editável é mais legível em sans-serif. */
+   digitado/editável continua herdando a mesma fonte do body de
+   qualquer forma (Montserrat também), então não faz diferença visual;
+   só não force um family diferente ali sem motivo. */
 button {
-    font-family: 'Cinzel', 'Segoe UI', serif;
+    font-family: 'Montserrat', 'Segoe UI', sans-serif;
 }
 
 /* --- TELAS (login, lista de personagens, formulário, ficha) --- */
@@ -289,7 +292,7 @@ h3 {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-family: 'Cinzel', 'Segoe UI', serif;
+    font-family: 'Montserrat', 'Segoe UI', sans-serif;
     font-weight: 700;
     font-size: 0.62rem;
     letter-spacing: 2px;
@@ -315,7 +318,7 @@ h3 {
 }
 
 .attr-label {
-    font-family: 'Cinzel', 'Segoe UI', serif;
+    font-family: 'Montserrat', 'Segoe UI', sans-serif;
     font-size: 0.78rem;
     font-weight: 700;
     letter-spacing: 1.5px;
@@ -327,11 +330,16 @@ h3 {
 .attr-btn {
     width: 50px;
     height: 50px;
+    /* Exceção proposital à regra geral de botões quadriculados: o
+       pentagrama de atributos é o único lugar do projeto em que o
+       círculo fica melhor que o quadrado (é literalmente o "nó" de um
+       pentagrama ritualístico desenhado em círculo, ver .pentagram-svg
+       acima) — mantido redondo por pedido explícito do usuário. */
     border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #2b2b2b, #0a0a0a 72%);
     border: 2px solid #5c1414;
     color: #e8d5d5;
-    font-family: 'Cinzel', 'Segoe UI', serif;
+    font-family: 'Montserrat', 'Segoe UI', sans-serif;
     font-size: 1.35rem;
     font-weight: 700;
     cursor: pointer;
@@ -371,11 +379,13 @@ h3 {
        vez de botão de rolar. */
     width: 50px;
     height: 50px;
+    /* Mesma exceção do .attr-btn logo acima: círculo mantido de
+       propósito no pentagrama, por pedido explícito do usuário. */
     border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #2b2b2b, #0a0a0a 72%);
     border: 2px solid #5c1414;
     color: #e8d5d5;
-    font-family: 'Cinzel', 'Segoe UI', serif;
+    font-family: 'Montserrat', 'Segoe UI', sans-serif;
     font-size: 1.25rem;
     font-weight: 700;
     text-align: center;
@@ -412,7 +422,7 @@ h3 {
 .attr-stepper-btn {
     width: 26px;
     height: 26px;
-    border-radius: 50%;
+    border-radius: 6px;
     flex-shrink: 0;
     background-color: #1a0808;
     border: 1px solid #5c1414;
@@ -837,7 +847,7 @@ h3 {
     border-bottom: 2px solid transparent;
     margin-bottom: -2px;
     color: #888;
-    font-family: 'Cinzel', 'Segoe UI', serif;
+    font-family: 'Montserrat', 'Segoe UI', sans-serif;
     font-size: 0.85rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -906,7 +916,7 @@ h3 {
     flex-shrink: 0;
     width: 28px;
     height: 28px;
-    border-radius: 50%;
+    border-radius: 8px;
     background-image: linear-gradient(145deg, #2b2b2b, #0a0a0a);
     border: 1px solid #5c1414;
     color: #e8d5d5;
@@ -936,7 +946,7 @@ h3 {
     font-size: 0.75rem;
     font-weight: bold;
     letter-spacing: 0.3px;
-    border-radius: 999px;
+    border-radius: 6px;
     cursor: pointer;
     box-shadow: 0 2px 6px rgba(74, 20, 140, 0.4);
     transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -986,7 +996,7 @@ h3 {
     width: 30px;
     height: 30px;
     flex-shrink: 0;
-    border-radius: 50%;
+    border-radius: 8px;
     background-image: linear-gradient(145deg, #6a1b9a, #4a148c);
     border: 1px solid #9c64d6;
     color: #fff;
@@ -1081,7 +1091,7 @@ h3 {
     background-image: linear-gradient(160deg, #2a2a2a, #161616);
     border: 1px solid #444;
     color: #ccc;
-    border-radius: 50%;
+    border-radius: 6px;
     cursor: pointer;
     line-height: 1;
     transition: transform 0.12s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
@@ -1103,7 +1113,7 @@ h3 {
     border: 1px solid #4caf50;
     color: #a5d6a7;
     padding: 4px 10px;
-    border-radius: 999px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 0.8rem;
     font-weight: 600;
@@ -1252,7 +1262,7 @@ h3 {
     height: 30px;
     background: transparent;
     border: 1px solid transparent;
-    border-radius: 50%;
+    border-radius: 8px;
     color: #aaa;
     font-size: 1.3rem;
     line-height: 1;
@@ -1384,7 +1394,7 @@ h3 {
     background-color: #121212;
     border: 1px solid #3a3a3a;
     color: #999;
-    border-radius: 999px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 0.78rem;
     white-space: nowrap;
@@ -1574,7 +1584,7 @@ h3 {
     flex-shrink: 0;
     width: 28px;
     height: 28px;
-    border-radius: 50%;
+    border-radius: 8px;
     background-image: linear-gradient(145deg, #6a1b9a, #4a148c);
     border: 1px solid #9c64d6;
     color: #fff;
@@ -1615,7 +1625,7 @@ h3 {
     flex-shrink: 0;
     width: 26px;
     height: 26px;
-    border-radius: 50%;
+    border-radius: 6px;
     background-image: linear-gradient(145deg, #c62828, #7f0000);
     border: 1px solid #e57373;
     color: #fff;
@@ -1714,6 +1724,22 @@ h3 {
 .control-group {
     display: flex;
     flex-direction: column;
+}
+
+/* As modais "Novo Ataque" e "Item Personalizado" empilham um
+   .control-group (ou a linha Dano/Crítico/Alcance, .ataque-form-row)
+   atrás do outro dentro de .modal-tab-content sem nenhum espaçamento
+   próprio — diferente da aba Catálogo, onde cada peça (subtabs, busca,
+   lista de cartões) já tem seu próprio margin-bottom. Isso fazia o
+   botão "Adicionar" (dentro de .modal-item-actions, sempre o último
+   filho) ficar colado no campo anterior, principalmente no textarea de
+   Observações/Descrição. Regra com combinador de filho direto (>) pra
+   não vazar pro .control-group da rolagem de dados (.dice-controls),
+   que fica numa linha (flex-end) onde um margin-bottom desalinharia os
+   campos com o botão ROLAR ao lado. */
+.modal-tab-content > .control-group,
+.modal-tab-content > .ataque-form-row {
+    margin-bottom: 14px;
 }
 
 .control-group label {
