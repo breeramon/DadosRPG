@@ -35,6 +35,7 @@ import * as OPI from '@/lib/itens';
 import * as OPR from '@/lib/rituais';
 import { origemPorNome, bonusNumericoDaOrigem } from '@/lib/origens';
 import OrigemCatalogModal from '@/components/OrigemCatalogModal';
+import { useLockBodyScroll } from '@/hooks/useLockBodyScroll';
 
 const ATTR_MAP = [
     { key: 'agi', nome: 'Agilidade', label: 'AGI', posClass: 'pos-agi' },
@@ -247,6 +248,12 @@ export default function CharacterSheetPage() {
     // Expandir/recolher os cartões da lista de "Rituais Conhecidos" na
     // própria ficha (Set separado do usado dentro da modal).
     const [expandidosConhecidos, setExpandidosConhecidos] = useState(() => new Set());
+
+    // Enquanto qualquer uma das modais desta tela estiver aberta: trava
+    // o scroll da página por trás dela (ver useLockBodyScroll). A
+    // OrigemCatalogModal cuida da própria trava sozinha (é um componente
+    // à parte), por isso não entra nesta lista.
+    useLockBodyScroll(modalAtaqueAberto || modalAberto || modalRitualAberto);
 
     // --- Rolagem personalizada ---
     const [dieSides, setDieSides] = useState(20);
@@ -1356,7 +1363,7 @@ export default function CharacterSheetPage() {
             </div>
 
             {modalAberto && (
-                <div className="modal-overlay" onClick={ev => { if (ev.target === ev.currentTarget) fecharModal(); }}>
+                <div className="modal-overlay">
                     <div className="modal-box">
                         <div className="modal-header">
                             <h3>Adicionar Item</h3>
@@ -1459,7 +1466,7 @@ export default function CharacterSheetPage() {
             )}
 
             {modalRitualAberto && (
-                <div className="modal-overlay" onClick={ev => { if (ev.target === ev.currentTarget) fecharModalRituais(); }}>
+                <div className="modal-overlay">
                     <div className="modal-box wide">
                         <div className="modal-header">
                             <h3>Adicionar Ritual</h3>
@@ -1562,7 +1569,7 @@ export default function CharacterSheetPage() {
             )}
 
             {modalAtaqueAberto && (
-                <div className="modal-overlay" onClick={ev => { if (ev.target === ev.currentTarget) fecharModalAtaque(); }}>
+                <div className="modal-overlay">
                     <div className="modal-box">
                         <div className="modal-header">
                             <h3>Novo Ataque</h3>

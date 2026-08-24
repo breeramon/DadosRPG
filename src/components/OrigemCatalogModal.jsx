@@ -19,10 +19,16 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { ORIGENS_CATALOGO } from '@/lib/origens';
+import { useLockBodyScroll } from '@/hooks/useLockBodyScroll';
 
 export default function OrigemCatalogModal({ aberto, onFechar, origemAtual, onEscolher }) {
     const [busca, setBusca] = useState('');
     const [expandidos, setExpandidos] = useState(() => new Set());
+
+    // Enquanto a modal está aberta: trava o scroll da página por trás
+    // dela, e só fecha pelo "X" ou Esc — clicar fora não fecha mais
+    // (era fácil fechar sem querer, ver .modal-overlay abaixo).
+    useLockBodyScroll(aberto);
 
     useEffect(() => {
         if (!aberto) return;
@@ -56,7 +62,7 @@ export default function OrigemCatalogModal({ aberto, onFechar, origemAtual, onEs
     if (!aberto) return null;
 
     return (
-        <div className="modal-overlay" onClick={ev => { if (ev.target === ev.currentTarget) onFechar(); }}>
+        <div className="modal-overlay">
             <div className="modal-box wide">
                 <div className="modal-header">
                     <h3>Escolher Origem</h3>

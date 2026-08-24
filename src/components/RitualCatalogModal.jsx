@@ -23,6 +23,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import * as OPR from '@/lib/rituais';
 import * as OP from '@/lib/pericias';
+import { useLockBodyScroll } from '@/hooks/useLockBodyScroll';
 
 // Os nomes dos elementos no catálogo (Conhecimento/Energia/Morte/
 // Sangue/Medo) não têm acento, mas a normalização fica aqui pra não
@@ -89,6 +90,11 @@ export default function RitualCatalogModal({ aberto, onFechar, trilha, nex, ritu
     const [busca, setBusca] = useState('');
     const [expandidos, setExpandidos] = useState(() => new Set());
 
+    // Enquanto a modal está aberta: trava o scroll da página por trás
+    // dela, e só fecha pelo "X" ou Esc — clicar fora não fecha mais
+    // (era fácil fechar sem querer, ver .modal-overlay abaixo).
+    useLockBodyScroll(aberto);
+
     // Reseta os filtros toda vez que a modal abre de novo.
     useEffect(() => {
         if (!aberto) return;
@@ -132,7 +138,7 @@ export default function RitualCatalogModal({ aberto, onFechar, trilha, nex, ritu
     if (!aberto) return null;
 
     return (
-        <div className="modal-overlay" onClick={ev => { if (ev.target === ev.currentTarget) onFechar(); }}>
+        <div className="modal-overlay">
             <div className="modal-box wide">
                 <div className="modal-header">
                     <h3>Adicionar Ritual</h3>
