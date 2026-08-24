@@ -33,6 +33,8 @@ import { playDiceRollSound, playRitualCastSound } from '@/lib/diceSound';
 import * as OP from '@/lib/pericias';
 import * as OPI from '@/lib/itens';
 import * as OPR from '@/lib/rituais';
+import { origemPorNome, bonusNumericoDaOrigem } from '@/lib/origens';
+import OrigemCatalogModal from '@/components/OrigemCatalogModal';
 
 const ATTR_MAP = [
     { key: 'agi', nome: 'Agilidade', label: 'AGI', posClass: 'pos-agi' },
@@ -65,6 +67,22 @@ function TrashIcon() {
 const GRAU_ABREV = { treinado: 'T', veterano: 'V', expert: 'E' };
 const MAX_LOG_ENTRIES = 4;
 let proximoLogId = 1;
+
+// Perícias que a Trilha atual concede sozinha (fixasSimples + a escolha já
+// feita de cada par de gruposFixos, ex: Luta/Pontaria do Combatente) — usado
+// só por handleEscolherOrigem, pra nunca remover uma perícia da Trilha ao
+// trocar de Origem (mesma checagem que o Formulário já faz via aplicarFixas,
+// só que aqui a Trilha não é editável, então dá pra derivar direto do que já
+// está salvo em vez de guardar estado à parte).
+function nomesPericiasProtegidasPelaTrilha(trilhaNome, periciasSalvas) {
+    const regra = OP.TRILHA_REGRAS[trilhaNome] || OP.TRILHA_REGRAS.Combatente;
+    const protegidos = new Set(regra.fixasSimples);
+    regra.gruposFixos.forEach(grupo => {
+        const escolhida = grupo.find(nome => periciasSalvas.some(p => p.nome === nome && p.treinado));
+        protegidos.add(escolhida || grupo[0]);
+    });
+    return protegidos;
+}
 
 // Monta o texto em itálico que aparece embaixo do nome de cada item no
 // cartão do catálogo — varia conforme o grupo do item.
@@ -172,16 +190,24 @@ export default function CharacterSheetPage() {
     // aba Combate).
     const [peFlash, setPeFlash] = useState(0);
     const [defesaOutros, setDefesaOutros] = useState(0);
-    // Origem e Resistências não têm nenhuma fonte estruturada no
-    // projeto (Origem nunca foi um campo da criação de personagem;
-    // Resistências dependeria de "ler" o texto livre de efeito de cada
-    // item/ritual, o que não é confiável) — por isso são campos de
-    // texto livre, editados direto na ficha e salvos como os outros
-    // campos (ver salvarCampos). Proteção, por outro lado, já tem uma
-    // fonte de verdade (o item de proteção equipado no Inventário), e
-    // por isso é só exibida (ver `protecaoTexto` mais abaixo), não
-    // editável aqui.
+    // Origem agora vem do catálogo oficial (ver src/lib/origens.js e
+    // OrigemCatalogModal) — guarda só o NOME oficial escolhido, trocado
+    // através da modal (nunca mais digitado à mão). Um personagem
+    // salvo antes dessa funcionalidade existir pode ter aqui um texto
+    // livre que não bate com nenhuma Origem oficial — nesse caso
+    // `origemEscolhida` (useMemo mais abaixo) fica null e a ficha só
+    // mostra esse texto como está, sem nenhum bônus/perícia aplicado,
+    // até o jogador trocar por uma Origem oficial.
+    //
+    // Resistências continua sem fonte estruturada (dependeria de "ler"
+    // o texto livre de efeito de cada item/ritual, o que não é
+    // confiável) — por isso continua um campo de texto livre, editado
+    // direto na ficha e salvo como os outros campos (ver salvarCampos).
+    // Proteção, por outro lado, já tem uma fonte de verdade (o item de
+    // proteção equipado no Inventário), e por isso é só exibida (ver
+    // `protecaoTexto` mais abaixo), não editável aqui.
     const [origem, setOrigem] = useState('');
+    const [modalOrigemAberto, setModalOrigemAberto] = useState(false);
     const [resistencias, setResistencias] = useState('');
     const [rollLog, setRollLog] = useState([]);
     // Só a rolagem mais recente, pra mostrar em cima do quadrado dos
@@ -254,8 +280,15 @@ export default function CharacterSheetPage() {
                 const atributos = p.atributos || {};
                 const trilha = p.trilha || 'Combatente';
                 const nex = Number(p.nex) || 5;
-                const vidaMax = OP.vidaMaxima(trilha, atributos.vig, nex);
-                const detMax = OP.determinacaoMaxima(trilha, atributos.pre, nex);
+                // Inclui o bônus numérico da Origem (ex: Desgarrado
+                // soma Vida, Universitário soma PE) no cálculo do
+                // máximo usado pra clampar — senão um personagem com
+                // uma dessas Origens teria seu Vida/PE atual salvo
+                // erroneamente rebaixado (e gravado de volta!) só por
+                // este efeito não saber do bônus.
+                const bonus = bonusNumericoDaOrigem(p.origem, nex);
+                const vidaMax = OP.vidaMaxima(trilha, atributos.vig, nex) + bonus.vida;
+                const detMax = OP.determinacaoMaxima(trilha, atributos.pre, nex) + bonus.pe;
                 const vida = (typeof p.vidaAtual === 'number') ? Math.min(p.vidaAtual, vidaMax) : vidaMax;
                 const det = (typeof p.determinacaoAtual === 'number') ? Math.min(p.determinacaoAtual, detMax) : detMax;
                 setVidaAtual(vida);
@@ -367,11 +400,26 @@ export default function CharacterSheetPage() {
     const atributos = personagem?.atributos || {};
     const trilha = personagem?.trilha || 'Combatente';
     const nex = Number(personagem?.nex) || 5;
-    const vidaMax = useMemo(() => OP.vidaMaxima(trilha, atributos.vig, nex), [trilha, atributos.vig, nex]);
-    const detMax = useMemo(() => OP.determinacaoMaxima(trilha, atributos.pre, nex), [trilha, atributos.pre, nex]);
+    // Bônus numéricos "limpos" do Poder de Origem (ver
+    // bonusNumericoDaOrigem em origens.js) — computados ao vivo a
+    // partir do nome salvo em `origem`, do mesmo jeito que vidaMaxima/
+    // determinacaoMaxima já são recalculadas ao vivo a partir de
+    // trilha/atributos/nex (nunca "assados" num número separado). Se
+    // `origem` não bater com nenhuma Origem oficial (personagem antigo,
+    // ou nenhuma escolhida ainda), todos os bônus ficam 0.
+    const bonusOrigem = useMemo(() => bonusNumericoDaOrigem(origem, nex), [origem, nex]);
+    const origemEscolhida = useMemo(() => origemPorNome(origem), [origem]);
+    const vidaMax = useMemo(
+        () => OP.vidaMaxima(trilha, atributos.vig, nex) + bonusOrigem.vida,
+        [trilha, atributos.vig, nex, bonusOrigem]
+    );
+    const detMax = useMemo(
+        () => OP.determinacaoMaxima(trilha, atributos.pre, nex) + bonusOrigem.pe,
+        [trilha, atributos.pre, nex, bonusOrigem]
+    );
     const defesaEquip = useMemo(() => OPI.defesaDoInventario(inventario), [inventario]);
-    const defesaTotal = OP.defesaTotal(atributos.agi, defesaEquip, defesaOutros);
-    const peRodada = useMemo(() => OP.peRodadaPorNex(nex), [nex]);
+    const defesaTotal = OP.defesaTotal(atributos.agi, defesaEquip, defesaOutros) + bonusOrigem.defesa;
+    const peRodada = useMemo(() => OP.peRodadaPorNex(nex) + bonusOrigem.peRodada, [nex, bonusOrigem]);
     // Texto do campo "Proteção" — nome(s) da(s) proteção(ões) equipada(s)
     // no Inventário agora mesmo (mesma fonte de verdade do bônus de
     // Defesa acima), não um campo digitado à parte que poderia ficar
@@ -381,9 +429,50 @@ export default function CharacterSheetPage() {
         return equipadas.length ? equipadas.join(', ') : 'Nenhuma';
     }, [inventario]);
 
-    function handleOrigemChange(valor) {
-        setOrigem(valor);
-        salvarCampos({ origem: valor });
+    function handleEscolherOrigem(origemDoCatalogo) {
+        const origemAntigaObj = origemEscolhida;
+        const periciasAtuais = personagem?.pericias || [];
+
+        // Sincroniza as Perícias Treinadas concedidas pela Origem (mesmo
+        // mecanismo do aplicarFixas no Formulário — ver CharacterFormPage.jsx):
+        // acrescenta as da nova Origem e remove as da Origem anterior que não
+        // sejam também da nova nem protegidas pela Trilha atual. Sem isto, uma
+        // troca de Origem direto por aqui deixava a ficha com perícias "órfãs"
+        // de uma Origem antiga presas pra sempre (e sem as da nova) — bug pego
+        // em teste (Policial -> Militar -> Criminoso) antes de entregar.
+        const protegidosPelaTrilha = nomesPericiasProtegidasPelaTrilha(trilha, periciasAtuais);
+        const nomesAntigos = new Set(origemAntigaObj ? origemAntigaObj.periciasTreinadas : []);
+        const nomesNovos = new Set(origemDoCatalogo.periciasTreinadas);
+
+        const porNome = new Map(periciasAtuais.map(p => [p.nome, p]));
+        nomesAntigos.forEach(nome => {
+            if (!nomesNovos.has(nome) && !protegidosPelaTrilha.has(nome)) {
+                porNome.delete(nome);
+            }
+        });
+        nomesNovos.forEach(nome => {
+            if (!porNome.has(nome)) {
+                const catalogo = OP.PERICIAS_CATALOGO.find(p => p.nome === nome);
+                porNome.set(nome, {
+                    nome,
+                    atributo: catalogo?.atributo,
+                    treinado: true,
+                    grau: 'treinado',
+                    bonusExtra: 0,
+                    bonus: OP.GRAU_BONUS.treinado,
+                });
+            }
+        });
+        const novasPericias = Array.from(porNome.values());
+
+        setOrigem(origemDoCatalogo.nome);
+        // `personagem` normalmente só é lido (é um retrato de quando a ficha
+        // carregou); atualizamos aqui também pra Lista de Perícias refletir
+        // a troca na hora, sem precisar recarregar a página.
+        setPersonagem(prev => (prev ? { ...prev, origem: origemDoCatalogo.nome, pericias: novasPericias } : prev));
+        salvarCampos({ origem: origemDoCatalogo.nome, pericias: novasPericias });
+        setModalOrigemAberto(false);
+        toast.success(`Origem "${origemDoCatalogo.nome}" escolhida.`);
     }
     function handleResistenciasChange(valor) {
         setResistencias(valor);
@@ -426,8 +515,41 @@ export default function CharacterSheetPage() {
             : it);
         atualizarInventario(next);
     }
+    // Vestir uma proteção de CORPO (Leve/Pesada — ver
+    // OPI.tipoProtecaoDoItem em itens.js) desequipa automaticamente
+    // qualquer outra proteção do mesmo slot: o livro não permite vestir
+    // Leve e Pesada ao mesmo tempo. Um Escudo (slot 'escudo') é um slot
+    // à parte e não entra nessa exclusão — continua acumulando com
+    // qualquer uma das duas, como já dizia o próprio efeito dele no
+    // catálogo.
+    //
+    // Usa OPI.tipoProtecaoDoItem(item) em vez de ler `item.tipoProtecao`
+    // direto: um personagem que já tinha essas proteções no inventário
+    // ANTES dessa regra existir foi salvo sem esse campo, então ler só o
+    // que está gravado deixaria a exclusividade sem efeito nenhum pra
+    // qualquer ficha criada antes de hoje. tipoProtecaoDoItem resolve
+    // isso re-consultando o catálogo pelo nome quando o campo não veio
+    // salvo, sem precisar migrar nada no Firestore.
     function handleEquiparToggle(index) {
-        const next = inventario.map((it, i) => i === index ? { ...it, equipado: !it.equipado } : it);
+        const alvo = inventario[index];
+        const indoParaEquipado = !alvo.equipado;
+        const slotAlvo = OPI.tipoProtecaoDoItem(alvo);
+        let next = inventario.map((it, i) => i === index ? { ...it, equipado: indoParaEquipado } : it);
+
+        if (indoParaEquipado && slotAlvo) {
+            let desequipou = null;
+            next = next.map((it, i) => {
+                if (i !== index && it.grupo === 'protecoes' && it.equipado && OPI.tipoProtecaoDoItem(it) === slotAlvo) {
+                    desequipou = it.nome;
+                    return { ...it, equipado: false };
+                }
+                return it;
+            });
+            if (desequipou) {
+                toast(`"${desequipou}" foi desequipada — só dá pra vestir uma proteção de corpo por vez.`);
+            }
+        }
+
         atualizarInventario(next);
     }
     function handleRemoverItem(index) {
@@ -606,15 +728,62 @@ export default function CharacterSheetPage() {
     // ---------------------------------------------------------------
     // Ataques (lista livre — cada mesa/personagem tem os seus, não
     // existe um "catálogo" pra escolher como em Itens/Rituais, então a
-    // modal de adicionar é sempre o formulário em branco).
+    // modal de adicionar é sempre o formulário em branco) + ataques
+    // AUTOMÁTICOS, gerados a partir das armas do Inventário (mesmo
+    // espírito do que já existia pra Defesa/Proteção — ver
+    // protecaoTexto acima: uma coisa derivada do inventário não deve
+    // virar um segundo dado editável à parte, senão os dois podem ficar
+    // "dessincronizados" — ex: usuário remove o revólver do inventário
+    // mas o ataque continua na lista). Cada arma (grupo === 'armas')
+    // que está no Inventário vira um cartão de ataque automaticamente,
+    // com Dano/Crítico/Alcance/Efeito puxados direto do catálogo
+    // (itens.js) — se o jogador remover a arma do inventário, o ataque
+    // correspondente desaparece sozinho daqui, sem precisar apagar duas
+    // vezes. Deduplicado por nome (uma arma com quantidade > 1, tipo
+    // "2 Facas", vira 1 cartão só — não faz sentido "atacar 2x" só por
+    // ter 2 no inventário).
     // ---------------------------------------------------------------
+    const ataquesAutomaticos = useMemo(() => {
+        const porNome = new Map();
+        for (const item of inventario) {
+            if (item.grupo === 'armas' && !porNome.has(item.nome)) {
+                porNome.set(item.nome, {
+                    nome: item.nome,
+                    dano: item.dano || '',
+                    critico: item.critico || '',
+                    // Só armas de distância têm `alcance` no catálogo (Curto/
+                    // Médio/Longo) — arma corpo a corpo não tem esse campo,
+                    // porque no livro o alcance dela é sempre "Corpo a Corpo".
+                    alcance: item.alcance || 'Corpo a corpo',
+                    observacoes: item.efeito || '',
+                    auto: true,
+                });
+            }
+        }
+        return Array.from(porNome.values());
+    }, [inventario]);
+
+    // Automáticos primeiro (sempre os mesmos enquanto durar aquela arma
+    // equipada), depois os cadastrados manualmente (armas de mesa
+    // caseiras, ataques desarmados, poderes, etc — o que já existia).
+    const ataquesCombinados = useMemo(
+        () => [...ataquesAutomaticos, ...ataques],
+        [ataquesAutomaticos, ataques]
+    );
+
     function atualizarAtaques(novosAtaques) {
         setAtaques(novosAtaques);
         salvarCampos({ ataques: novosAtaques });
     }
 
-    function handleRemoverAtaque(index) {
-        atualizarAtaques(ataques.filter((_, i) => i !== index));
+    // Recebe o objeto do ataque (não mais o índice): com automáticos e
+    // manuais misturados na mesma lista renderizada (e um filtro de
+    // busca por cima), o índice da linha na tela não bate mais com o
+    // índice real dentro de `ataques` — comparar pela referência do
+    // objeto evita remover o ataque errado (bug que existia antes,
+    // mascarado porque sem filtro ativo os índices coincidiam).
+    function handleRemoverAtaque(ataque) {
+        atualizarAtaques(ataques.filter(a => a !== ataque));
     }
 
     function toggleExpandidoAtaque(nome) {
@@ -676,9 +845,9 @@ export default function CharacterSheetPage() {
 
     const ataquesFiltrados = useMemo(() => {
         const termo = buscaAtaque.trim().toLowerCase();
-        if (!termo) return ataques;
-        return ataques.filter(a => a.nome.toLowerCase().includes(termo));
-    }, [ataques, buscaAtaque]);
+        if (!termo) return ataquesCombinados;
+        return ataquesCombinados.filter(a => a.nome.toLowerCase().includes(termo));
+    }, [ataquesCombinados, buscaAtaque]);
 
     // ---------------------------------------------------------------
     // Perícias
@@ -738,14 +907,17 @@ export default function CharacterSheetPage() {
                     <div className="identity-block">
                         <div className="identity-row">
                             <div className="identity-field">
-                                <label className="identity-field-label" htmlFor="campo-origem">Origem</label>
-                                <input
-                                    id="campo-origem"
-                                    type="text"
-                                    placeholder="Ex: Policial"
-                                    value={origem}
-                                    onChange={e => handleOrigemChange(e.target.value)}
-                                />
+                                <span className="identity-field-label">Origem</span>
+                                <button
+                                    type="button"
+                                    className="identity-field-value identity-field-button"
+                                    title="Clique para escolher/trocar a Origem"
+                                    onClick={() => setModalOrigemAberto(true)}
+                                >
+                                    {origemEscolhida
+                                        ? origemEscolhida.nome
+                                        : (origem ? `${origem} (não reconhecida)` : 'Escolher Origem…')}
+                                </button>
                             </div>
                             <div className="identity-field">
                                 <span className="identity-field-label">Classe</span>
@@ -829,6 +1001,27 @@ export default function CharacterSheetPage() {
                                 />
                             </div>
                         </div>
+
+                        {origemEscolhida && (
+                            <div className="origem-resumo">
+                                <div className="origem-resumo-header">
+                                    <span className="origem-resumo-nome">{origemEscolhida.nome}</span>
+                                    <button type="button" className="btn-secondary" onClick={() => setModalOrigemAberto(true)}>Trocar Origem</button>
+                                </div>
+                                <div className="origem-resumo-detalhes">
+                                    <div className="origem-campo">
+                                        <span className="modal-item-stat-label">Perícias Treinadas</span>
+                                        <span className="modal-item-stat-value">
+                                            {origemEscolhida.periciasTreinadas.length ? origemEscolhida.periciasTreinadas.join(', ') : (origemEscolhida.notaPericias || '—')}
+                                        </span>
+                                    </div>
+                                    <div className="origem-campo">
+                                        <span className="modal-item-stat-label">Poder de Origem — {origemEscolhida.poder.nome}</span>
+                                        <span className="modal-item-stat-value">{origemEscolhida.poder.descricao}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </section>
 
@@ -920,7 +1113,7 @@ export default function CharacterSheetPage() {
                                 <div className="ataques-list">
                                     {ataquesFiltrados.length === 0 && (
                                         <div className="inventory-empty">
-                                            {ataques.length === 0 ? 'Nenhum ataque cadastrado ainda.' : 'Nenhum ataque encontrado.'}
+                                            {ataquesCombinados.length === 0 ? 'Nenhum ataque cadastrado ainda.' : 'Nenhum ataque encontrado.'}
                                         </div>
                                     )}
                                     {ataquesFiltrados.map((ataque, index) => {
@@ -934,6 +1127,11 @@ export default function CharacterSheetPage() {
                                                             <span className="modal-item-card-nome">{ataque.nome}</span>
                                                             {ataque.dano && <span className="modal-item-card-badge">Dano: {ataque.dano}</span>}
                                                             {ataque.critico && <span className="modal-item-card-badge">Crítico: {ataque.critico}</span>}
+                                                            {ataque.auto && (
+                                                                <span className="modal-item-card-badge badge-auto" title="Gerado automaticamente a partir da arma no Inventário">
+                                                                    Inventário
+                                                                </span>
+                                                            )}
                                                         </div>
                                                         {ataque.alcance && <div className="modal-item-card-sub">Alcance {ataque.alcance}</div>}
                                                     </div>
@@ -946,14 +1144,16 @@ export default function CharacterSheetPage() {
                                                         >
                                                             🎲
                                                         </button>
-                                                        <button
-                                                            type="button"
-                                                            className="modal-item-card-remove"
-                                                            title="Remover ataque"
-                                                            onClick={ev => { ev.stopPropagation(); handleRemoverAtaque(index); }}
-                                                        >
-                                                            <TrashIcon />
-                                                        </button>
+                                                        {!ataque.auto && (
+                                                            <button
+                                                                type="button"
+                                                                className="modal-item-card-remove"
+                                                                title="Remover ataque"
+                                                                onClick={ev => { ev.stopPropagation(); handleRemoverAtaque(ataque); }}
+                                                            >
+                                                                <TrashIcon />
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
                                                 {ataque.observacoes && (
@@ -1399,6 +1599,13 @@ export default function CharacterSheetPage() {
                     </div>
                 </div>
             )}
+
+            <OrigemCatalogModal
+                aberto={modalOrigemAberto}
+                onFechar={() => setModalOrigemAberto(false)}
+                origemAtual={origem}
+                onEscolher={handleEscolherOrigem}
+            />
         </div>
     );
 }

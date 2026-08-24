@@ -21,8 +21,10 @@ import { toast } from 'react-hot-toast';
 import { Characters } from '@/services/firebase';
 import AttributePentagram from '@/components/AttributePentagram';
 import RitualCatalogModal, { elementoSlug, subtituloRitual, statsDoRitual, TrashIcon } from '@/components/RitualCatalogModal';
+import OrigemCatalogModal from '@/components/OrigemCatalogModal';
 import * as OP from '@/lib/pericias';
 import * as OPR from '@/lib/rituais';
+import { origemPorNome } from '@/lib/origens';
 
 const ATRIBUTOS = [
     { key: 'agi', label: 'AGI', posClass: 'pos-agi' },
@@ -72,13 +74,17 @@ function periciasStateApartirDoPersonagem(personagem) {
 }
 
 // Porta de aplicarFixasNoEstado (vanilla): garante que as perícias
-// automáticas da trilha atual estejam marcadas, sem mexer nas
-// escolhidas manualmente. Versão pura — devolve um novo estado (e uma
-// nova lista de escolhas, com os slots vazios preenchidos) em vez de
-// mutar o de entrada.
-function aplicarFixas(periciasState, trilha, combatenteEscolhasFixas) {
+// automáticas da trilha atual (E da Origem escolhida — ver
+// origens.js) estejam marcadas, sem mexer nas escolhidas manualmente.
+// Versão pura — devolve um novo estado (e uma nova lista de escolhas,
+// com os slots vazios preenchidos) em vez de mutar o de entrada.
+function aplicarFixas(periciasState, trilha, combatenteEscolhasFixas, origemNome) {
     const regra = OP.TRILHA_REGRAS[trilha] || OP.TRILHA_REGRAS.Combatente;
     const desejado = new Set(regra.fixasSimples);
+    const origemAtual = origemPorNome(origemNome);
+    if (origemAtual) {
+        origemAtual.periciasTreinadas.forEach(nome => desejado.add(nome));
+    }
     const escolhas = [...combatenteEscolhasFixas];
     let escolhasMudou = false;
 
@@ -129,6 +135,18 @@ export default function CharacterFormPage() {
     const [periciasState, setPericiasState] = useState(catalogoInicial);
     const [combatenteEscolhasFixas, setCombatenteEscolhasFixas] = useState([null, null]);
 
+    // --- Origem (ver src/lib/origens.js) — guarda só o NOME oficial da
+    // Origem escolhida (mesmo campo de texto que já existia na ficha,
+    // agora preenchido só através da modal de catálogo, nunca digitado
+    // à mão). Um personagem salvo antes dessa funcionalidade existir
+    // pode ter um texto livre aqui que não bate com nenhuma Origem
+    // oficial — nesse caso `origemEscolhida` (useMemo mais abaixo) fica
+    // null e a tela mostra esse texto como está, sem nenhuma perícia/
+    // poder aplicado, até o jogador escolher uma Origem oficial pra
+    // substituir.
+    const [origem, setOrigem] = useState('');
+    const [modalOrigemAberto, setModalOrigemAberto] = useState(false);
+
     // --- Rituais conhecidos (mesma ideia da ficha — ver
     // CharacterSheetPage.jsx — só que aqui sem "Conjurar": nesta tela só
     // dá pra escolher quais o personagem já conhece, não gastar PE). ---
@@ -150,6 +168,7 @@ export default function CharacterFormPage() {
             const { estado, escolhas } = periciasStateApartirDoPersonagem(null);
             setPericiasState(estado);
             setCombatenteEscolhasFixas(escolhas);
+            setOrigem('');
             setRituais([]);
             setCarregando(false);
             return;
@@ -178,6 +197,7 @@ export default function CharacterFormPage() {
                 const { estado, escolhas } = periciasStateApartirDoPersonagem(personagem);
                 setPericiasState(estado);
                 setCombatenteEscolhasFixas(escolhas);
+                setOrigem(personagem.origem || '');
                 setRituais(Array.isArray(personagem.rituais) ? personagem.rituais : []);
             })
             .catch(err => {
@@ -226,14 +246,14 @@ export default function CharacterFormPage() {
     }, [nex, atributos, regraAtributos]);
 
     // ---------------------------------------------------------------
-    // Mantém as perícias automáticas da trilha em dia (aplicarFixas) e
-    // rebaixa o grau de qualquer perícia treinada cujo grau não seja
-    // mais permitido no NEX atual (ex: baixou o NEX de volta pra 30%
-    // com uma perícia em "veterano").
+    // Mantém as perícias automáticas da trilha E da Origem em dia
+    // (aplicarFixas) e rebaixa o grau de qualquer perícia treinada
+    // cujo grau não seja mais permitido no NEX atual (ex: baixou o NEX
+    // de volta pra 30% com uma perícia em "veterano").
     // ---------------------------------------------------------------
     useEffect(() => {
         const { periciasState: proximo, combatenteEscolhasFixas: proximasEscolhas, mudou, escolhasMudou } =
-            aplicarFixas(periciasState, trilha, combatenteEscolhasFixas);
+            aplicarFixas(periciasState, trilha, combatenteEscolhasFixas, origem);
         if (escolhasMudou) setCombatenteEscolhasFixas(proximasEscolhas);
         if (mudou) {
             setPericiasState(proximo);
@@ -252,7 +272,7 @@ export default function CharacterFormPage() {
         });
         if (rebaixou) setPericiasState(rebaixado);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [trilha, nex, combatenteEscolhasFixas, periciasState]);
+    }, [trilha, nex, combatenteEscolhasFixas, periciasState, origem]);
 
     // ---------------------------------------------------------------
     // Derivados pra exibição
@@ -268,6 +288,16 @@ export default function CharacterFormPage() {
     const cotaEsgotada = livresUsadas >= quotaLivre;
     const regraTrilha = OP.TRILHA_REGRAS[trilha] || OP.TRILHA_REGRAS.Combatente;
     const circuloOcultista = trilha === 'Ocultista' ? OP.circuloRitualLiberado(nex) : 0;
+    // null quando `origem` está vazio OU é um texto de personagem
+    // antigo que não bate com nenhuma Origem oficial do catálogo (ver
+    // comentário no state `origem` acima).
+    const origemEscolhida = useMemo(() => origemPorNome(origem), [origem]);
+
+    function handleEscolherOrigem(origemDoCatalogo) {
+        setOrigem(origemDoCatalogo.nome);
+        setModalOrigemAberto(false);
+        toast.success(`Origem "${origemDoCatalogo.nome}" escolhida.`);
+    }
 
     const catalogoAgrupado = useMemo(() => {
         return ATRIBUTOS.map(({ key, label }) => ({
@@ -386,7 +416,7 @@ export default function CharacterFormPage() {
                 return { nome: p.nome, atributo: p.atributo, treinado: true, grau: st.grau, bonusExtra: Number(st.bonusExtra) || 0, bonus };
             });
 
-        return { nome: nome.trim(), trilha, nex, atributos, pericias, rituais };
+        return { nome: nome.trim(), trilha, nex, atributos, pericias, origem, rituais };
     }
 
     async function handleSalvar() {
@@ -453,6 +483,42 @@ export default function CharacterFormPage() {
                         <input type="text" required value={nome} onChange={e => setNome(e.target.value)} />
                     </div>
 
+                    <div className="control-group full">
+                        <label>Origem</label>
+                        <div className="origem-resumo">
+                            {origemEscolhida ? (
+                                <>
+                                    <div className="origem-resumo-header">
+                                        <span className="origem-resumo-nome">{origemEscolhida.nome}</span>
+                                        <button type="button" className="btn-secondary" onClick={() => setModalOrigemAberto(true)}>Trocar Origem</button>
+                                    </div>
+                                    <div className="origem-resumo-descricao">{origemEscolhida.descricao}</div>
+                                    <div className="origem-resumo-detalhes">
+                                        <div className="origem-campo">
+                                            <span className="modal-item-stat-label">Perícias Treinadas</span>
+                                            <span className="modal-item-stat-value">
+                                                {origemEscolhida.periciasTreinadas.length ? origemEscolhida.periciasTreinadas.join(', ') : (origemEscolhida.notaPericias || '—')}
+                                            </span>
+                                        </div>
+                                        <div className="origem-campo">
+                                            <span className="modal-item-stat-label">Poder de Origem — {origemEscolhida.poder.nome}</span>
+                                            <span className="modal-item-stat-value">{origemEscolhida.poder.descricao}</span>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="origem-resumo-header">
+                                    <span className="origem-resumo-vazio">
+                                        {origem
+                                            ? `Origem salva ("${origem}") não corresponde a nenhuma Origem oficial do catálogo — escolha uma pra liberar Perícias Treinadas e Poder de Origem.`
+                                            : 'Nenhuma Origem escolhida ainda.'}
+                                    </span>
+                                    <button type="button" className="btn-action" onClick={() => setModalOrigemAberto(true)}>Escolher Origem</button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                     <div className="form-trilha-nex-grid">
                         <div className="control-group full">
                             <label>Trilha</label>
@@ -505,7 +571,7 @@ export default function CharacterFormPage() {
                         </span>
                     </div>
 
-                    {(regraTrilha.fixasSimples.length > 0 || regraTrilha.gruposFixos.length > 0) && (
+                    {(regraTrilha.fixasSimples.length > 0 || regraTrilha.gruposFixos.length > 0 || (origemEscolhida?.periciasTreinadas.length > 0)) && (
                         <div className="pericias-fixas">
                             <div className="pericias-fixas-titulo">Perícias automáticas da trilha</div>
 
@@ -514,6 +580,22 @@ export default function CharacterFormPage() {
                                 return (
                                     <div className="pericia-fixa-item" key={nomePericia}>
                                         {nomePericia} ({(catalogo?.atributo || '').toUpperCase()}) — automática
+                                    </div>
+                                );
+                            })}
+
+                            {/* Perícias treinadas concedidas pela Origem escolhida (ver
+                                aplicarFixas/origens.js) — mesmo mecanismo de "autoFixo" das
+                                perícias da Trilha, só que com fonte diferente. Sem isto, a
+                                perícia ficava marcada como treinada por baixo dos panos (e
+                                escondida da lista principal, ver catalogoAgrupado/nomesFixos)
+                                sem NENHUMA indicação visual de que isso aconteceu — bug pego
+                                em teste antes de entregar. */}
+                            {origemEscolhida?.periciasTreinadas.map(nomePericia => {
+                                const catalogo = OP.PERICIAS_CATALOGO.find(p => p.nome === nomePericia);
+                                return (
+                                    <div className="pericia-fixa-item pericia-fixa-origem" key={`origem-${nomePericia}`}>
+                                        {nomePericia} ({(catalogo?.atributo || '').toUpperCase()}) — automática (Origem: {origemEscolhida.nome})
                                     </div>
                                 );
                             })}
@@ -648,6 +730,13 @@ export default function CharacterFormPage() {
                 nex={nex}
                 rituaisConhecidos={rituais}
                 onAdicionar={adicionarRitual}
+            />
+
+            <OrigemCatalogModal
+                aberto={modalOrigemAberto}
+                onFechar={() => setModalOrigemAberto(false)}
+                origemAtual={origem}
+                onEscolher={handleEscolherOrigem}
             />
         </div>
     );

@@ -526,6 +526,22 @@ h3 {
     text-overflow: ellipsis;
 }
 
+/* Origem: mesmo visual do identity-field-value, mas clicável (abre a
+   modal de catálogo) — usado tanto na Ficha quanto em qualquer outro
+   campo que precise de um valor "somente catálogo" no futuro. */
+.identity-field-button {
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.identity-field-button:hover {
+    border-color: #a5d6a7;
+    color: #c8f0ca;
+}
+
 /* --- Proteção / Resistências — mesma "dupla de campos" do livro,
    agora empilhada em vez de lado a lado (nomes de proteção e
    descrições de resistência tendem a ser mais longos que Origem/NEX). */
@@ -1562,6 +1578,17 @@ h3 {
     color: #ffcc80;
 }
 
+/* Selo dos ataques gerados automaticamente a partir de uma arma no
+   Inventário (ver ataquesAutomaticos em CharacterSheetPage.jsx) — tom
+   verde discreto, mesma família de cor usada nos toasts de sucesso
+   (ver App.jsx), pra sinalizar "sincronizado automaticamente" sem
+   competir visualmente com os badges de Dano/Crítico ao lado. */
+.badge-auto {
+    background-color: rgba(102, 187, 106, 0.14);
+    border-color: #4a7c4e;
+    color: #a5d6a7;
+}
+
 .modal-item-card-sub {
     color: #888;
     font-size: 0.75rem;
@@ -1670,6 +1697,68 @@ h3 {
     font-size: 0.8rem;
     margin-top: 6px;
     line-height: 1.4;
+}
+
+/* --- OrigemCatalogModal: Perícias Treinadas / Poder de Origem dentro
+   do cartão expandido — mesma tipografia de .modal-item-stat, só que
+   empilhado (label em cima, texto corrido embaixo) em vez de grid,
+   porque a descrição do poder costuma ser longa demais pra caber numa
+   coluna estreita. */
+.origem-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.origem-campo + .origem-campo {
+    margin-top: 10px;
+}
+
+/* --- Cartão-resumo da Origem escolhida, mostrado no formulário de
+   Criar/Editar Personagem e na ficha (ver CharacterFormPage.jsx /
+   CharacterSheetPage.jsx) — mesmo visual de um .modal-item-card
+   "sempre aberto", sem precisar entrar na modal de novo só pra
+   lembrar o que a Origem atual faz. */
+.origem-resumo {
+    background-color: #1e1e1e;
+    background-image: linear-gradient(160deg, rgba(74, 20, 140, 0.1), transparent 55%);
+    border: 1px solid #3a3a3a;
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+
+.origem-resumo-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.origem-resumo-nome {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #e8d5d5;
+}
+
+.origem-resumo-descricao {
+    color: #999;
+    font-size: 0.8rem;
+    font-style: italic;
+    margin-top: 4px;
+}
+
+.origem-resumo-vazio {
+    color: #777;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+.origem-resumo-detalhes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
 }
 
 /* Container dos botões de dados */
@@ -2371,6 +2460,14 @@ h3 {
     margin-bottom: 6px;
     font-size: 0.9rem;
     color: #d1c4e9;
+}
+
+/* Mesma "pílula" da Trilha, mas em tom âmbar — só pra deixar visualmente
+   claro que esta perícia veio da Origem, não da Trilha. */
+.pericia-fixa-origem {
+    background-color: #2f2717;
+    border-color: #8c5e14;
+    color: #e1c48a;
 }
 
 .pericia-fixa-grupo {

@@ -95,10 +95,18 @@ export const ITENS_CATALOGO = [
 
     // ============================================================
     // PROTEÇÕES (alimentam o bônus de Equipamento da Defesa)
+    //
+    // `tipoProtecao` marca o "slot" de equipar, separado de `categoria`
+    // (que já é usada pro treino/proficiência — 'Leve'/'Pesada' —, e
+    // pro Escudo continuar contando como Pesada nesse sentido, como diz
+    // o próprio efeito dele). 'corpo' = Proteção Leve/Pesada, que se
+    // excluem entre si (só dá pra vestir uma por vez — ver
+    // handleEquiparToggle em CharacterSheetPage.jsx); 'escudo' = um slot
+    // à parte, que acumula com qualquer proteção de corpo equipada.
     // ============================================================
-    { nome: 'Proteção Leve', grupo: 'protecoes', categoria: 'Leve', espacos: 2, defesaBonus: 5, efeito: 'Jaqueta de couro pesada ou colete de kevlar, usada por seguranças e policiais. Sem penalidade de carga.', confianca: 2 },
-    { nome: 'Proteção Pesada', grupo: 'protecoes', categoria: 'Pesada', espacos: 5, defesaBonus: 10, efeito: 'Capacete, ombreiras, joelheiras, caneleiras e colete de kevlar. Resistência a balístico, corte, impacto e perfuração 2. Penalidade: -5 em testes de perícia afetados por carga. ⚠ Espaços: uma fonte (guia rápido, resumido) diz 2 em vez de 5 — mantido 5 por vir da fonte mais detalhada (livro completo), mas não é 100% certo.', confianca: 1 },
-    { nome: 'Escudo', grupo: 'protecoes', categoria: 'Pesada', espacos: 1, defesaBonus: 2, efeito: 'Empunhado em uma mão. Conta como proteção pesada para efeitos de proficiência. Bônus acumula com o de outra proteção equipada.', confianca: 1 },
+    { nome: 'Proteção Leve', grupo: 'protecoes', categoria: 'Leve', tipoProtecao: 'corpo', espacos: 2, defesaBonus: 5, efeito: 'Jaqueta de couro pesada ou colete de kevlar, usada por seguranças e policiais. Sem penalidade de carga.', confianca: 2 },
+    { nome: 'Proteção Pesada', grupo: 'protecoes', categoria: 'Pesada', tipoProtecao: 'corpo', espacos: 5, defesaBonus: 10, efeito: 'Capacete, ombreiras, joelheiras, caneleiras e colete de kevlar. Resistência a balístico, corte, impacto e perfuração 2. Penalidade: -5 em testes de perícia afetados por carga. ⚠ Espaços: uma fonte (guia rápido, resumido) diz 2 em vez de 5 — mantido 5 por vir da fonte mais detalhada (livro completo), mas não é 100% certo.', confianca: 1 },
+    { nome: 'Escudo', grupo: 'protecoes', categoria: 'Pesada', tipoProtecao: 'escudo', espacos: 1, defesaBonus: 2, efeito: 'Empunhado em uma mão. Conta como proteção pesada para efeitos de proficiência. Bônus acumula com o de outra proteção equipada.', confianca: 1 },
 
     // ============================================================
     // ITENS GERAIS / TÁTICOS / EXPLOSIVOS / NÃO LETAIS
@@ -157,13 +165,44 @@ export function estadoCarga(usados, forca) {
     return 'excesso';
 }
 
-// Soma o bônus de Defesa de todos os itens de Proteção marcados como
-// "equipado" no inventário (normalmente só um por vez, mas soma
-// qualquer combinação que o usuário deixar marcada). Usa `grupo` (não
-// `categoria`) porque a categoria de uma proteção agora é o treino
-// dela ('Leve'/'Pesada'), não mais o rótulo fixo 'Proteção'.
+// Descobre o "slot" de uma proteção (`'corpo'` pra Leve/Pesada,
+// `'escudo'` pro Escudo) sem depender cegamente do campo `tipoProtecao`
+// já GRAVADO no item do inventário. Isso importa porque um personagem
+// que já tinha "Proteção Leve"/"Proteção Pesada" no inventário ANTES
+// dessa regra existir foi salvo no Firestore sem esse campo (ele só
+// passou a existir em ITENS_CATALOGO depois) — se a gente confiasse só
+// no que já está salvo, a exclusividade simplesmente não funcionaria
+// pra nenhum personagem criado antes de hoje (o `if (alvo.tipoProtecao)`
+// nunca seria verdadeiro). Em vez de migrar/reescrever o dado salvo
+// (evolução não-destrutiva — ver PRODUCT.md), sempre re-consultamos o
+// catálogo atual pelo NOME do item, que é a fonte de verdade de
+// verdade. `item.tipoProtecao` só é usado como atalho quando já vem
+// preenchido (ex: itens adicionados a partir de agora).
+export function tipoProtecaoDoItem(item) {
+    if (item.tipoProtecao) return item.tipoProtecao;
+    const doCatalogo = ITENS_CATALOGO.find(c => c.grupo === 'protecoes' && c.nome === item.nome);
+    return doCatalogo ? doCatalogo.tipoProtecao : undefined;
+}
+
+// Soma o bônus de Defesa dos itens de Proteção marcados como
+// "equipado" no inventário. Usa `grupo` (não `categoria`) porque a
+// categoria de uma proteção agora é o treino dela ('Leve'/'Pesada'),
+// não mais o rótulo fixo 'Proteção'.
+//
+// Regra do livro: só dá pra vestir UMA proteção de corpo por vez
+// (Leve OU Pesada, nunca as duas) — um Escudo é um slot à parte e
+// acumula com qualquer uma das duas (ver `tipoProtecaoDoItem` acima).
+// O toggle de equipar em CharacterSheetPage.jsx já impede marcar duas
+// proteções de corpo como equipadas ao mesmo tempo, mas essa função
+// soma com segurança mesmo que o dado salvo esteja "sujo" por outro
+// motivo (personagem criado antes dessa regra existir, ou editado
+// direto no Firestore): entre as de corpo equipadas, conta só a de
+// maior bônus — nunca a soma das duas.
 export function defesaDoInventario(itens) {
-    return (itens || [])
-        .filter(item => item.grupo === 'protecoes' && item.equipado)
-        .reduce((total, item) => total + (Number(item.defesaBonus) || 0), 0);
+    const equipadas = (itens || []).filter(item => item.grupo === 'protecoes' && item.equipado);
+    const corpo = equipadas.filter(item => tipoProtecaoDoItem(item) === 'corpo');
+    const resto = equipadas.filter(item => tipoProtecaoDoItem(item) !== 'corpo');
+    const bonusCorpo = corpo.reduce((max, item) => Math.max(max, Number(item.defesaBonus) || 0), 0);
+    const bonusResto = resto.reduce((total, item) => total + (Number(item.defesaBonus) || 0), 0);
+    return bonusCorpo + bonusResto;
 }
