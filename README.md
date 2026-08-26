@@ -3,8 +3,7 @@
 Ficha de personagem web para o RPG de mesa **Ordem Paranormal** — feita
 pra substituir a ficha de papel durante a própria sessão de jogo.
 
-Feito em **React + Vite** (migrado a partir de uma versão anterior em
-HTML/CSS/JS puro).
+Feito em **React + Vite**.
 
 ## Funcionalidades
 
