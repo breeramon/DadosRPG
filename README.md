@@ -1,4 +1,4 @@
-# Ficha Ordem Paranormal
+# BreusRPG - Fichas de Ordem Paranormal
 
 Ficha de personagem web para o RPG de mesa **Ordem Paranormal** — feita
 pra substituir a ficha de papel durante a própria sessão de jogo.
