@@ -2367,6 +2367,14 @@ h3 {
     display: flex;
     flex-direction: column;
     align-items: center;
+    /* Sem isso, Nome / Origem / Trilha+NEX ficavam grudados um no outro
+       (a section é flex-column sem gap nenhum) — passava despercebido
+       enquanto o cartão da Origem era só uma linha ("Nenhuma Origem
+       escolhida ainda"), mas com uma Origem escolhida (nome + descrição
+       + Perícias Treinadas + Poder de Origem, bem mais alto) ficava
+       visualmente colado tanto no campo Nome acima quanto em Trilha/NEX
+       abaixo. */
+    gap: 18px;
 }
 
 .form-identity-section .control-group.full,
