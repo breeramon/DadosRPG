@@ -1,4 +1,4 @@
-# Ficha Ordem Paranormal
+# BreusRPG - Fichas de Ordem Paranormal
 
 Ficha de personagem web para o RPG de mesa **Ordem Paranormal**, com login,
 personagens salvos na nuvem (Firebase), pentagrama ritualístico de
