@@ -260,7 +260,7 @@ export default function CharacterSheetPage() {
     const [diceQty, setDiceQty] = useState(1);
     const [diceMod, setDiceMod] = useState(0);
 
-    const rollDiceAnimated = useDiceBox('#dice-box');
+    const { rollDiceAnimated, animacao3dPronta } = useDiceBox('#dice-box');
 
     // ---------------------------------------------------------------
     // Carrega o personagem
@@ -890,20 +890,6 @@ export default function CharacterSheetPage() {
                 <button className="btn-secondary" onClick={() => navigate(`/form/${encodeURIComponent(id)}`)}>Editar</button>
             </div>
 
-            <div className="dice-box-wrap">
-                <div id="dice-box"></div>
-                {ultimoResultado && (
-                    <div
-                        className={`dice-box-result${ultimoResultado.tipo === 'crit' ? ' crit-success' : ''}${ultimoResultado.tipo === 'fail' ? ' crit-fail' : ''}`}
-                        key={ultimoResultado.id}
-                        aria-hidden="true"
-                    >
-                        <span className="dice-box-result-titulo">{ultimoResultado.titulo}</span>
-                        <span className="dice-box-result-valor">{ultimoResultado.valor}</span>
-                    </div>
-                )}
-            </div>
-
             <div className="character-sheet">
                 <section className="attributes-section">
                     <AttributePentagram gradientId="opRitualGlow" nodes={pentagramNodes} />
@@ -1027,6 +1013,44 @@ export default function CharacterSheetPage() {
                                         <span className="modal-item-stat-value">{origemEscolhida.poder.descricao}</span>
                                     </div>
                                 </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Em telas largas (.dice-box-wrap fica "fixed" no canto
+                        inferior direito, ver index.css) a posição no JSX não
+                        importa nada. Já em telas estreitas (.dice-box-wrap
+                        vira "relative", fluxo normal) ela passa a valer — por
+                        isso mora aqui, depois de todos os dados do personagem
+                        (Origem/Classe/Vida/PE/Defesa/etc.) e antes de
+                        Perícias, não lá no topo da página nem logo abaixo do
+                        pentagrama: assim o resultado da rolagem fica pertinho
+                        de onde o jogador vai rolar uma perícia, sem precisar
+                        ficar subindo e descendo a tela toda hora pra ver o
+                        resultado. */}
+                    <div className="dice-box-wrap">
+                        <div id="dice-box"></div>
+                        {ultimoResultado && (
+                            <div
+                                className={`dice-box-result${ultimoResultado.tipo === 'crit' ? ' crit-success' : ''}${ultimoResultado.tipo === 'fail' ? ' crit-fail' : ''}`}
+                                key={ultimoResultado.id}
+                                aria-hidden="true"
+                            >
+                                <span className="dice-box-result-titulo">{ultimoResultado.titulo}</span>
+                                <span className="dice-box-result-valor">{ultimoResultado.valor}</span>
+                            </div>
+                        )}
+                        {/* Quando a animação 3D não consegue inicializar (sem
+                            aceleração de GPU/WebGL disponível no navegador,
+                            timeout, etc.) o hook cai pro gerador local — o
+                            resultado continua certinho, só que sem nenhum
+                            dado desenhado, e antes disso acontecia sem
+                            nenhuma pista na tela do porquê (só um aviso no
+                            console, que quase ninguém abre). Este aviso
+                            deixa isso visível em vez de silencioso. */}
+                        {animacao3dPronta === false && (
+                            <div className="dice-box-aviso-fallback">
+                                Animação 3D indisponível neste navegador — mostrando só o resultado.
                             </div>
                         )}
                     </div>

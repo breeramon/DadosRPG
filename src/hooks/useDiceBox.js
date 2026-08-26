@@ -25,7 +25,7 @@
 // própria lib toma conta do que acontece dentro dela.
 // ============================================================
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import DiceBox from '@3d-dice/dice-box';
 
 // #dice-box só existe no DOM (e só ganha um tamanho real na tela)
@@ -95,6 +95,17 @@ export function useDiceBox(containerSelector) {
     const readyPromiseRef = useRef(null);
     const initStartedRef = useRef(false);
 
+    // Estado exposto pra quem usa o hook — antes o "caiu pro gerador
+    // local" só aparecia num console.warn (ninguém olha o console em
+    // produção), então quando a lib falhava silenciosamente pra
+    // inicializar (sem GPU/WebGL disponível, timeout, exceção etc.) o
+    // resultado da rolagem aparecia certinho mas nenhum dado 3D era
+    // desenhado, e não tinha nenhuma pista na tela do porquê — parecia
+    // bug sem dar nenhuma dica de onde olhar. null = ainda inicializando,
+    // true = animação 3D ativa, false = indisponível (usando só o
+    // gerador local, resultado continua correto).
+    const [animacao3dPronta, setAnimacao3dPronta] = useState(null);
+
     useEffect(() => {
         // Guarda contra o StrictMode do React (dev) rodando o efeito duas
         // vezes na mesma montagem — sem isso, criaríamos dois canvases 3D
@@ -125,16 +136,24 @@ export function useDiceBox(containerSelector) {
                     settleTimeout: 6000,
                 });
 
-                const resultado = await comPrazo(box.init(), 8000);
+                // 15s (era 8s) — a primeira inicialização envolve compilar
+                // shaders WebGL de verdade (Babylon.js) e carregar o wasm da
+                // física (Ammo), o que pode demorar bem mais que 8s em GPUs
+                // integradas mais fracas ou notebooks — 8s era rápido demais
+                // e podia derrubar a animação em máquinas só um pouco mais
+                // lentas, não só em quem não tem GPU nenhuma.
+                const resultado = await comPrazo(box.init(), 15000);
                 if (resultado === PRAZO_ESTOUROU) {
                     console.warn(
-                        '[dice-box] A animação 3D não terminou de carregar a tempo (8s) — ' +
+                        '[dice-box] A animação 3D não terminou de carregar a tempo (15s) — ' +
                         'provavelmente sem aceleração de GPU disponível. Usando o gerador local.'
                     );
                     diceBoxRef.current = null;
+                    setAnimacao3dPronta(false);
                     return false;
                 }
                 diceBoxRef.current = box;
+                setAnimacao3dPronta(true);
                 return true;
             } catch (err) {
                 console.warn(
@@ -143,6 +162,7 @@ export function useDiceBox(containerSelector) {
                     err
                 );
                 diceBoxRef.current = null;
+                setAnimacao3dPronta(false);
                 return false;
             }
         })();
@@ -176,9 +196,10 @@ export function useDiceBox(containerSelector) {
             return values;
         } catch (err) {
             console.warn('[dice-box] Falha ao animar a rolagem, usando gerador local.', err);
+            setAnimacao3dPronta(false);
             return rollLocally(qty, sides);
         }
     }, []);
 
-    return rollDiceAnimated;
+    return { rollDiceAnimated, animacao3dPronta };
 }

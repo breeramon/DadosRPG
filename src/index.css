@@ -134,6 +134,23 @@ button {
     to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* Aviso discreto de fallback — some com o resultado, mas fica sempre
+   ancorado embaixo do quadrado (não sobrepõe o número/título de cima).
+   Some sozinho junto com o resto do .dice-box-wrap quando a tela
+   encolhe (ver media queries abaixo), então não precisa de regra extra
+   pros breakpoints estreitos. */
+.dice-box-aviso-fallback {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+    text-align: center;
+    font-size: 0.7rem;
+    line-height: 1.3;
+    color: #999;
+    pointer-events: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .dice-box-result {
         animation: none;
@@ -145,8 +162,13 @@ button {
    caixa "fixed" no canto acabaria flutuando por cima do conteúdo (a
    coluna de Perícias, as abas) ao rolar a página. Em vez disso, ela
    passa a fazer parte do fluxo normal — uma faixa no topo da ficha —
-   assim que a coluna única entra em ação, não só em celular. */
-@media (max-width: 1000px) {
+   assim que a coluna única entra em ação, não só em celular. MESMO
+   ponto de corte do .character-sheet mais abaixo (1400px) — os dois
+   têm que mudar juntos, senão sobra uma faixa de largura (entre este
+   valor e o do .character-sheet) onde a ficha já virou uma coluna só
+   mas a caixa dos dados continua "fixed" no canto, flutuando solta por
+   cima do conteúdo em vez de ficar no fluxo normal da página. */
+@media (max-width: 1400px) {
     .dice-box-wrap {
         /* "relative", não "static": ainda entra no fluxo normal da
            página (o que importa aqui), mas continua sendo o ponto de
@@ -2679,9 +2701,20 @@ h3 {
    senão o bug de perícias/log somem em celular volta.
    ============================================================ */
 
-/* Tablet: ainda 2 colunas dá pra usar, mas a 3ª coluna fica estreita
-   demais — melhor empilhar tudo numa coluna só e deixar a página rolar. */
-@media (max-width: 1000px) {
+/* Empilha tudo numa coluna só bem mais cedo do que antes (era 1000px).
+   A coluna de Perícias (grid de 5 colunas: Nome/Dados/Bônus/Treino/Ação)
+   é a mais larga das 3, e o grid principal (.character-sheet) tem as
+   colunas 1 e 3 em px fixo (320px + 440px + 40px de gap = 800px) — sobra
+   pouco pra ela. Medido na prática: com viewport de 1024px a coluna de
+   Perícias fica com só 184px, estreita o bastante pra CORTAR o botão
+   "Rolar" de vez (##overflow:hidden do .skills-section## esconde o que
+   não cabe, sem nem rolar até lá) — e até 1300px ela ainda fica presa no
+   mínimo (~56px de botão, número e "Rolar" espremidos). Isso pega em
+   cheio quem usa a ficha numa tela "em pé" (monitor girado, ~1080px de
+   largura) ou num notebook comum — não é só celular. 1400px de corte
+   garante que a coluna nunca renderize mais estreita que a tela toda
+   (menos padding), que já é confortável pro grid de 5 colunas. */
+@media (max-width: 1400px) {
     .character-sheet {
         grid-template-columns: 1fr;
         height: auto;
