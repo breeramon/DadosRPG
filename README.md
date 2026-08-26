@@ -1,11 +1,34 @@
 # Ficha Ordem Paranormal
 
-Ficha de personagem web para o RPG de mesa **Ordem Paranormal**, com login,
-personagens salvos na nuvem (Firebase), pentagrama ritualístico de
-atributos, catálogo de perícias e itens, e rolagem de dados 3D animada.
+Ficha de personagem web para o RPG de mesa **Ordem Paranormal** — feita
+pra substituir a ficha de papel durante a própria sessão de jogo.
 
 Feito em **React + Vite** (migrado a partir de uma versão anterior em
 HTML/CSS/JS puro).
+
+## Funcionalidades
+
+- Login e personagens salvos na nuvem (Firebase Auth + Firestore) — cada
+  jogador só vê e edita os próprios personagens.
+- Pentagrama ritualístico de atributos, com rolagem de teste direto no
+  número de cada atributo.
+- Catálogos de Perícias, Itens e Rituais fiéis às regras do sistema
+  (filtráveis por busca, Elemento, Círculo etc.), com controle de
+  Vida, PE (Pontos de Esforço), Defesa, Proteção e Resistências.
+- Rolagem de dados 3D animada (`@3d-dice/dice-box`), com log de
+  rolagens e rolagem personalizada (Nd + bônus). Caso o navegador não
+  consiga rodar a animação 3D (sem aceleração de GPU/WebGL
+  disponível), a ficha detecta isso sozinha, mostra um aviso discreto
+  e usa um gerador de números comum — o resultado da rolagem nunca
+  fica errado, só a animação em si que pode não aparecer.
+- Layout responsivo: funciona tanto em telas largas (desktop) quanto
+  em janelas mais estreitas, monitores em pé/retrato, tablet e
+  celular — o conteúdo se reorganiza em uma coluna só e a caixa de
+  rolagem de dados se move pra perto das Perícias em vez de flutuar no
+  topo da tela.
+- Modais (catálogos, novo ataque etc.) travam o scroll da página por
+  trás enquanto abertas, e só fecham pelo "X" ou Esc — não saem mais
+  clicando fora sem querer.
 
 ## Rodando o projeto
 
@@ -57,14 +80,15 @@ só muda onde as chaves ficam guardadas.
 - `npm run dev:e2e` — servidor de desenvolvimento usando um Firebase
   "falso" (guardado no localStorage do navegador, sem tocar no banco de
   dados real) — usado só pra testes automatizados.
+- `npm run lint` — roda o [oxlint](https://oxc.rs/docs/guide/usage/linter.html) no projeto.
 
 ## Estrutura do projeto
 
 ```
 src/
-  components/   Componentes de UI reutilizados entre telas (ex: pentagrama de atributos)
-  hooks/        Hooks React (autenticação, integração com a animação de dados 3D)
-  lib/          Regras do sistema Ordem Paranormal (perícias, itens, NEX) e som dos dados
+  components/   Componentes de UI reutilizados entre telas (pentagrama de atributos, modais de catálogo, RequireAuth)
+  hooks/        Hooks React (autenticação, trava de scroll das modais, integração com a animação de dados 3D)
+  lib/          Regras do sistema Ordem Paranormal (perícias, itens, rituais, origens, NEX) e som dos dados
   pages/        Uma página por rota (Login, Personagens, Criar/Editar, Ficha)
   services/     Integração com o Firebase (Auth + Firestore)
 ```
