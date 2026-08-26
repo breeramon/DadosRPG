@@ -178,10 +178,31 @@ button {
            aparece flutuando sobre a barra superior em vez de dentro do
            quadrado dos dados. */
         position: relative;
+        /* A regra de tela larga (mais acima) define "bottom: 16px" e
+           "right: 16px" pra grudar a caixa no canto da tela quando ela é
+           "fixed" — como aqui ela vira "relative", esses dois valores
+           continuam ativos e, pra position:relative, "bottom: 16px" quer
+           dizer "suba a caixa 16px da posição normal", empurrando-a por
+           cima do fim do cartão de Origem (ou de Resistências, quando
+           não tem Origem escolhida) em vez de deixá-la no lugar certo,
+           entre eles e a lista de Perícias. Resetando os dois aqui a
+           caixa passa a ficar exatamente onde o fluxo normal da página
+           já a posiciona (encontrado testando com uma Origem
+           escolhida, onde o cartão de detalhes fica alto o bastante pra
+           expor a sobreposição). */
+        top: auto;
+        bottom: auto;
+        right: auto;
         width: 100%;
         max-width: 340px;
         height: 240px;
-        margin: 0 auto 16px auto;
+        /* "margin: 0 ..." zerava o espaço ACIMA da caixa — resolveu a
+           sobreposição, mas deixou a caixa colada (0px) no fim do cartão
+           de Origem/Resistências acima dela. 22px aqui segue o mesmo
+           ritmo do ".vitals-block" (que já usa 22px de margin-top em
+           relação ao ".identity-block" logo acima), então a caixa fica
+           com uma respiração parecida com o resto dessa coluna. */
+        margin: 22px auto 16px auto;
     }
 
     .dice-box-result-valor {
