@@ -201,5 +201,45 @@ export function useDiceBox(containerSelector) {
         }
     }, []);
 
-    return { rollDiceAnimated, animacao3dPronta };
+    // Troca o tema/cor dos dados sem precisar recriar a cena 3D inteira
+    // (o que seria lento — recompilar shaders, recarregar a física
+    // etc). A própria DiceBox já cuida de baixar e cachear os assets de
+    // um tema novo na primeira vez que ele é usado (updateConfig ->
+    // loadTheme). Chamado tanto quando a preferência salva termina de
+    // carregar (useDicePreferences) quanto quando a pessoa confirma uma
+    // troca no DiceThemeModal.
+    //
+    // CUIDADO: "themeColor" só entra no objeto quando existe uma cor de
+    // verdade (if abaixo) — nunca declarar a chave com valor undefined
+    // (tipo "{ theme, themeColor: undefined }"). Por dentro, a DiceBox
+    // faz "{ ...this.config, ...configNovo }" pra mesclar — e em
+    // JavaScript, uma chave presente com valor "undefined" SOBRESCREVE
+    // a anterior no spread (diferente de simplesmente omitir a chave).
+    // Isso apagava a cor padrão da própria lib (this.config.themeColor
+    // virava undefined de vez) e quebrava a rolagem inteira na vez
+    // seguinte: a DiceBox tenta converter esse "undefined" pra RGB
+    // (função interna que já assume uma string e chama ".slice(...)"
+    // nela) e lança "Cannot read properties of undefined (reading
+    // 'slice')" — um erro que escapa pro console sem cair no try/catch
+    // daqui (acontece dentro de uma Promise "solta", sem await, lá
+    // dentro da lib), então a rolagem trava e cai pro gerador local
+    // depois de alguns segundos, sem nenhuma pista visível do motivo.
+    // Reproduzido e confirmado: é exatamente esse o bug que fazia os
+    // dados pararem de rodar (só aparecia o resultado) assim que a
+    // preferência de tema/cor era aplicada pela primeira vez, mesmo pra
+    // quem nunca abriu a modal de aparência.
+    const updateDiceTheme = useCallback(async (theme, themeColor) => {
+        if (!theme) return;
+        const ready = readyPromiseRef.current ? await readyPromiseRef.current : false;
+        if (!ready || !diceBoxRef.current) return; // sem animação 3D disponível, nada a fazer
+        try {
+            const novaConfig = { theme };
+            if (themeColor) novaConfig.themeColor = themeColor;
+            await diceBoxRef.current.updateConfig(novaConfig);
+        } catch (err) {
+            console.warn('[dice-box] Não foi possível trocar o tema/cor dos dados.', err);
+        }
+    }, []);
+
+    return { rollDiceAnimated, animacao3dPronta, updateDiceTheme };
 }

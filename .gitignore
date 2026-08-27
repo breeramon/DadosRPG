@@ -12,15 +12,11 @@ dist
 dist-ssr
 *.local
 
-# public/assets (modelos/texturas dos dados 3D, @3d-dice/dice-box) NÃO
-# fica mais aqui de propósito: esses arquivos são copiados por um
-# script "postinstall" (copyAssets.js) que depende de um prompt
-# interativo no terminal — funciona local, mas não é confiável em build
-# não-interativo (ex: Vercel), mesmo com o script explicitamente
-# aprovado via "allowScripts" no package.json. Pra garantir que a
-# animação 3D sempre funcione em produção, esses ~600KB são versionados
-# de propósito. Só precisa recriar/re-commitar essa pasta se atualizar
-# a versão do @3d-dice/dice-box no futuro.
+# Assets binários dos dados 3D (@3d-dice/dice-box + os temas extras
+# @3d-dice/theme-*) — copiados automaticamente pro projeto por scripts
+# "postinstall" que rodam sozinhos depois de "npm install" (ver README
+# e scripts/copy-dice-themes.mjs), não precisa versionar.
+public/assets
 
 # Editor directories and files
 .vscode/*

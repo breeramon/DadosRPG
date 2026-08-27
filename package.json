@@ -3,21 +3,19 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "// allowScripts": "Aprova explicitamente os scripts de postinstall dessas 3 dependências (npm >= 11.16 passou a exigir isso, senão eles são pulados em silêncio — inclusive no build do Vercel). @3d-dice/dice-box precisa rodar o dela (copyAssets.js) pra copiar os modelos/texturas dos dados 3D pra public/assets; sem isso o build de produção fica sem esses arquivos e a animação 3D não funciona em lugar nenhum, mesmo funcionando local (onde o postinstall já rodou antes, manualmente).",
-  "allowScripts": {
-    "@3d-dice/dice-box@1.1.4": true,
-    "@firebase/util@1.15.2": true,
-    "protobufjs@7.6.5": true
-  },
   "scripts": {
     "dev": "vite",
     "dev:e2e": "vite --mode e2e",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postinstall": "node scripts/copy-dice-themes.mjs"
   },
   "dependencies": {
     "@3d-dice/dice-box": "^1.1.4",
+    "@3d-dice/theme-dice-of-rolling": "^0.2.1",
+    "@3d-dice/theme-gemstone": "^0.2.0",
+    "@3d-dice/theme-rust": "^0.2.0",
     "firebase": "^12.17.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

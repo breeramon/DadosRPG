@@ -67,12 +67,21 @@ personagens, nunca os de outra pessoa.
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    match /usuarios/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
     match /usuarios/{userId}/personagens/{personagemId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
 ```
+
+(O primeiro bloco, pro documento `usuarios/{userId}` em si — não a
+subcoleção de personagens —, guarda preferências da conta que valem
+pra todos os personagens, como o tema/cor escolhida pros dados 3D. Se
+você já tinha as regras antigas publicadas antes dessa funcionalidade
+existir, volte aqui e cole essa versão atualizada.)
 
 3. Clique em **"Publish"**.
 

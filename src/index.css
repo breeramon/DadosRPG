@@ -151,6 +151,38 @@ button {
     pointer-events: none;
 }
 
+/* Botão de engrenagem no canto do quadrado dos dados — abre a modal
+   "Aparência dos Dados" (DiceThemeModal). ".dice-box-wrap" tem
+   "pointer-events: none" (pra nunca bloquear cliques na ficha por trás
+   dela quando "fixed" no canto da tela), então precisa reativar aqui,
+   senão o botão fica visível mas não clicável. */
+.dice-box-settings-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(18, 18, 18, 0.6);
+    border: 1px solid #4a148c;
+    border-radius: 50%;
+    color: #ce93d8;
+    font-size: 0.95rem;
+    line-height: 1;
+    cursor: pointer;
+    pointer-events: auto;
+    z-index: 1;
+    transition: transform 0.2s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.dice-box-settings-btn:hover {
+    background-color: rgba(74, 20, 140, 0.35);
+    border-color: #9c64d6;
+    transform: rotate(45deg);
+}
+
 @media (prefers-reduced-motion: reduce) {
     .dice-box-result {
         animation: none;
@@ -1740,6 +1772,138 @@ h3 {
     font-size: 0.8rem;
     margin-top: 6px;
     line-height: 1.4;
+}
+
+/* --- DiceThemeModal: escolha de tema/cor dos dados 3D --- */
+.dice-theme-modal-intro {
+    color: #999;
+    font-size: 0.82rem;
+    margin-bottom: 14px;
+}
+
+.dice-theme-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+/* Cada opção é o próprio <button>, não um cartão com um botão dentro
+   (como o .modal-item-card-add da OrigemCatalogModal) — aqui a
+   escolha é única e simples o bastante (sem expandir/colapsar
+   detalhes) pra não precisar separar "área clicável" de "ação". */
+.dice-theme-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    text-align: left;
+    background-color: #242424;
+    border: 1px solid #3a3a3a;
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+}
+
+.dice-theme-card:hover {
+    border-color: #7c43bd;
+    transform: translateY(-1px);
+}
+
+.dice-theme-card.selected {
+    background-color: rgba(74, 20, 140, 0.22);
+    border-color: #9c64d6;
+    box-shadow: 0 0 0 1px rgba(156, 100, 214, 0.4);
+}
+
+.dice-theme-card-nome {
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #f0f0f0;
+}
+
+.dice-theme-card-desc {
+    font-size: 0.75rem;
+    color: #999;
+    line-height: 1.35;
+}
+
+.dice-color-section {
+    margin-bottom: 18px;
+}
+
+.dice-color-section-label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #999;
+    margin-bottom: 8px;
+}
+
+.dice-color-section-aviso {
+    color: #999;
+    font-size: 0.8rem;
+    font-style: italic;
+    margin-bottom: 18px;
+}
+
+.dice-color-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.dice-color-swatch {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.dice-color-swatch:hover {
+    transform: scale(1.12);
+}
+
+.dice-color-swatch.selected {
+    border-color: #fff;
+    box-shadow: 0 0 0 2px #7c43bd;
+}
+
+/* Seletor de cor nativo do navegador — disfarçado de mais um "swatch"
+   redondo (mesmo tamanho/formato dos presets acima) em vez de mostrar
+   o quadrado feio que o <input type="color"> tem por padrão. */
+.dice-color-custom {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px dashed #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.dice-color-custom input[type="color"] {
+    width: 40px;
+    height: 40px;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    background: none;
+}
+
+.dice-theme-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
 }
 
 /* --- OrigemCatalogModal: Perícias Treinadas / Poder de Origem dentro

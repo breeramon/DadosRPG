@@ -33,6 +33,11 @@
 //   Characters.update(uid, id, dados) -> Promise<void>
 //   Characters.remove(uid, id)        -> Promise<void>
 //
+//   Preferences.get(uid)         -> Promise<Object|null> (preferências
+//                                    da CONTA, não do personagem — ex:
+//                                    tema/cor dos dados 3D)
+//   Preferences.save(uid, dados) -> Promise<void>
+//
 // Se as variáveis de ambiente ainda não foram preenchidas, ou o
 // Firebase não conseguir inicializar (sem internet, chaves erradas
 // etc.), todas as chamadas acima rejeitam com um erro — quem chama
@@ -55,6 +60,7 @@ import {
     getDocs,
     addDoc,
     updateDoc,
+    setDoc,
     deleteDoc,
     serverTimestamp,
 } from 'firebase/firestore';
@@ -189,5 +195,40 @@ export const Characters = {
         checarPronto();
         const ref = doc(db, 'usuarios', uid, 'personagens', id);
         return deleteDoc(ref);
+    },
+};
+
+// ---------------------------------------------------------------
+// PREFERÊNCIAS DA CONTA (Firestore: usuarios/{uid} — o documento "pai"
+// da subcoleção de personagens acima, não um personagem)
+//
+// Hoje só guarda o tema/cor escolhido pros dados 3D (ver
+// DiceThemeModal.jsx) — vale pra TODOS os personagens da conta, por
+// isso mora aqui e não dentro de cada personagem. Usa "setDoc(...,
+// {merge:true})" em vez de "updateDoc" de propósito: esse documento
+// nunca foi criado antes de existir esta funcionalidade (só a
+// subcoleção "personagens" era escrita), então "updateDoc" falharia
+// com "No document to update" na primeira vez pra quem já tinha conta
+// antes dessa mudança — "setDoc" com merge cria o documento se não
+// existir, e só mescla os campos novos se já existir.
+//
+// IMPORTANTE: as regras do Firestore (ver GUIA_FIREBASE.md, passo 5)
+// precisam de um match extra pra "usuarios/{userId}" (o documento em
+// si, não só a subcoleção "personagens") pra isso funcionar — sem
+// isso, get/save aqui falham com "Missing or insufficient
+// permissions", mesmo com as regras antigas publicadas certinho.
+// ---------------------------------------------------------------
+export const Preferences = {
+    async get(uid) {
+        checarPronto();
+        const ref = doc(db, 'usuarios', uid);
+        const snap = await getDoc(ref);
+        return snap.exists() ? snap.data() : null;
+    },
+
+    async save(uid, dados) {
+        checarPronto();
+        const ref = doc(db, 'usuarios', uid);
+        return setDoc(ref, dados, { merge: true });
     },
 };

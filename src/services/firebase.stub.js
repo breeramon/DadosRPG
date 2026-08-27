@@ -2,7 +2,7 @@
 // firebase.stub.js
 //
 // Versão "de mentira" do serviço de Firebase (mesma API pública de
-// firebase.js: exporta Auth e Characters), usada SÓ pelos testes
+// firebase.js: exporta Auth, Characters e Preferences), usada SÓ pelos testes
 // automatizados (npm run dev -- --mode e2e / npm run test:e2e). Guarda
 // tudo no localStorage do navegador em vez de falar com o Firebase de
 // verdade — assim os testes rodam sem internet e sem tocar em dados
@@ -17,6 +17,7 @@
 const LS_USERS = 'e2e_stub_users';       // [{ uid, email, senha }]
 const LS_SESSION = 'e2e_stub_session';   // { uid, email } | null
 const LS_CHARS_PREFIX = 'e2e_stub_chars_'; // e2e_stub_chars_<uid> -> [personagem]
+const LS_PREFS_PREFIX = 'e2e_stub_prefs_'; // e2e_stub_prefs_<uid> -> { dadosTema, dadosCor }
 
 function lerJSON(chave, padrao) {
     try {
@@ -128,5 +129,19 @@ export const Characters = {
     async remove(uid, id) {
         const lista = lerJSON(LS_CHARS_PREFIX + uid, []);
         salvarJSON(LS_CHARS_PREFIX + uid, lista.filter(p => p.id !== id));
+    },
+};
+
+// ---------------------------------------------------------------
+// PREFERÊNCIAS DA CONTA (fake, em localStorage)
+// ---------------------------------------------------------------
+export const Preferences = {
+    async get(uid) {
+        return lerJSON(LS_PREFS_PREFIX + uid, null);
+    },
+
+    async save(uid, dados) {
+        const atual = lerJSON(LS_PREFS_PREFIX + uid, {});
+        salvarJSON(LS_PREFS_PREFIX + uid, { ...atual, ...dados });
     },
 };

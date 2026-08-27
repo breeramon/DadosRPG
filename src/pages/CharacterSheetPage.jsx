@@ -29,12 +29,14 @@ import { toast } from 'react-hot-toast';
 import { Characters } from '@/services/firebase';
 import AttributePentagram from '@/components/AttributePentagram';
 import { useDiceBox } from '@/hooks/useDiceBox';
+import { useDicePreferences } from '@/hooks/useDicePreferences';
 import { playDiceRollSound, playRitualCastSound } from '@/lib/diceSound';
 import * as OP from '@/lib/pericias';
 import * as OPI from '@/lib/itens';
 import * as OPR from '@/lib/rituais';
 import { origemPorNome, bonusNumericoDaOrigem } from '@/lib/origens';
 import OrigemCatalogModal from '@/components/OrigemCatalogModal';
+import DiceThemeModal from '@/components/DiceThemeModal';
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll';
 
 const ATTR_MAP = [
@@ -260,7 +262,32 @@ export default function CharacterSheetPage() {
     const [diceQty, setDiceQty] = useState(1);
     const [diceMod, setDiceMod] = useState(0);
 
-    const { rollDiceAnimated, animacao3dPronta } = useDiceBox('#dice-box');
+    const { rollDiceAnimated, animacao3dPronta, updateDiceTheme } = useDiceBox('#dice-box');
+
+    // --- Tema/cor dos dados (preferência da conta, ver DiceThemeModal) ---
+    const { prefs: dicePrefs, carregado: dicePrefsCarregado, salvar: salvarDicePrefs } = useDicePreferences(user.uid);
+    const [modalTemaDadoAberto, setModalTemaDadoAberto] = useState(false);
+
+    // Assim que a preferência salva termina de carregar do Firestore
+    // (dicePrefsCarregado vira true), aplica ela na DiceBox já
+    // inicializada — sem isso a caixa ficaria sempre no tema "default"
+    // até a pessoa abrir a modal e trocar de novo. Também reaplica se
+    // "dicePrefs" mudar por outro motivo (ex: acabou de salvar uma
+    // escolha nova na modal).
+    useEffect(() => {
+        if (!dicePrefsCarregado) return;
+        updateDiceTheme(dicePrefs.tema, dicePrefs.cor);
+    }, [dicePrefsCarregado, dicePrefs.tema, dicePrefs.cor, updateDiceTheme]);
+
+    async function handleSalvarTemaDado(tema, cor) {
+        try {
+            await salvarDicePrefs(tema, cor);
+            toast.success('Aparência dos dados atualizada.');
+            setModalTemaDadoAberto(false);
+        } catch {
+            toast.error('Não foi possível salvar a aparência dos dados agora.');
+        }
+    }
 
     // ---------------------------------------------------------------
     // Carrega o personagem
@@ -1030,6 +1057,15 @@ export default function CharacterSheetPage() {
                         resultado. */}
                     <div className="dice-box-wrap">
                         <div id="dice-box"></div>
+                        <button
+                            type="button"
+                            className="dice-box-settings-btn"
+                            title="Escolher tema/cor dos dados"
+                            aria-label="Escolher tema/cor dos dados"
+                            onClick={() => setModalTemaDadoAberto(true)}
+                        >
+                            ⚙
+                        </button>
                         {ultimoResultado && (
                             <div
                                 className={`dice-box-result${ultimoResultado.tipo === 'crit' ? ' crit-success' : ''}${ultimoResultado.tipo === 'fail' ? ' crit-fail' : ''}`}
@@ -1636,6 +1672,14 @@ export default function CharacterSheetPage() {
                 onFechar={() => setModalOrigemAberto(false)}
                 origemAtual={origem}
                 onEscolher={handleEscolherOrigem}
+            />
+
+            <DiceThemeModal
+                aberto={modalTemaDadoAberto}
+                onFechar={() => setModalTemaDadoAberto(false)}
+                temaAtual={dicePrefs.tema}
+                corAtual={dicePrefs.cor}
+                onSalvar={handleSalvarTemaDado}
             />
         </div>
     );
