@@ -420,6 +420,13 @@ export default function CharacterSheetPage() {
             pendenteRef.current = {};
             Characters.update(user.uid, id, aEnviar).catch(err => {
                 console.error('[character-sheet] Erro ao salvar vida/determinação/defesa/inventário:', err);
+                // Sem isso, uma falha aqui só aparecia no console — numa
+                // sessão ao vivo, se a conexão cair na hora errada, o
+                // jogador podia achar que uma mudança de Vida/PE foi salva
+                // quando na verdade não foi. `id` fixo faz toasts repetidos
+                // (ex: internet caiu e cada campo alterado tenta salvar de
+                // novo) substituírem o anterior em vez de empilhar.
+                toast.error('Não foi possível salvar — verifique sua conexão.', { id: 'sheet-autosave-error' });
             });
         }, 400);
     }, [user.uid, id]);

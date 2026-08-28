@@ -385,7 +385,7 @@ export default function CharacterFormPage() {
 
     function validarECollectar() {
         if (!nome.trim()) {
-            window.alert('Dê um nome para o personagem.');
+            toast.error('Dê um nome para o personagem.');
             return null;
         }
 
@@ -395,16 +395,16 @@ export default function CharacterFormPage() {
             return v < regraAtributos.minPorAtributo || v > regraAtributos.maxPorAtributo;
         });
         if (atributoForaDoLimite) {
-            window.alert(`${atributoForaDoLimite.label} está fora do limite permitido pelo NEX ${nex}% (entre ${regraAtributos.minPorAtributo} e ${regraAtributos.maxPorAtributo}).`);
+            toast.error(`${atributoForaDoLimite.label} está fora do limite permitido pelo NEX ${nex}% (entre ${regraAtributos.minPorAtributo} e ${regraAtributos.maxPorAtributo}).`);
             return null;
         }
         if (somaAtributos > regraAtributos.total) {
-            window.alert(`Esse personagem tem ${somaAtributos} pontos de atributo distribuídos, mas o NEX ${nex}% só libera ${regraAtributos.total}. Ajuste os atributos antes de salvar.`);
+            toast.error(`Esse personagem tem ${somaAtributos} pontos de atributo distribuídos, mas o NEX ${nex}% só libera ${regraAtributos.total}. Ajuste os atributos antes de salvar.`);
             return null;
         }
 
         if (livresUsadas > quotaLivre) {
-            window.alert(`Esse personagem tem ${livresUsadas} perícias treinadas à escolha, mas o NEX ${nex}% só permite ${quotaLivre}. Desmarque algumas perícias ou aumente o NEX.`);
+            toast.error(`Esse personagem tem ${livresUsadas} perícias treinadas à escolha, mas o NEX ${nex}% só permite ${quotaLivre}. Desmarque algumas perícias ou aumente o NEX.`);
             return null;
         }
 
@@ -433,7 +433,7 @@ export default function CharacterFormPage() {
             navigate('/characters');
         } catch (err) {
             console.error('[character-form] Erro ao salvar personagem:', err);
-            window.alert('Não foi possível salvar: ' + (err.message || err));
+            toast.error('Não foi possível salvar: ' + (err.message || err));
             setSalvando(false);
         }
     }

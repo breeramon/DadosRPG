@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { Auth, Characters } from '@/services/firebase';
 
 export default function CharactersPage() {
@@ -18,6 +19,14 @@ export default function CharactersPage() {
     const [personagens, setPersonagens] = useState([]);
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState(null);
+
+    // Modal de confirmação de exclusão (substitui o window.confirm nativo —
+    // ver excluirPersonagem/confirmarExclusao/fecharModalExcluir abaixo).
+    // Guarda o personagem inteiro (não só o id) porque a modal precisa do
+    // nome pra mostrar contexto e pro campo de "digite o nome pra
+    // confirmar".
+    const [personagemParaExcluir, setPersonagemParaExcluir] = useState(null);
+    const [confirmText, setConfirmText] = useState('');
 
     const carregarPersonagens = useCallback(async () => {
         setCarregando(true);
@@ -37,17 +46,41 @@ export default function CharactersPage() {
         carregarPersonagens();
     }, [carregarPersonagens]);
 
-    async function excluirPersonagem(personagem) {
-        const ok = window.confirm(`Excluir "${personagem.nome}"? Essa ação não pode ser desfeita.`);
-        if (!ok) return;
+    function pedirExclusao(personagem) {
+        setPersonagemParaExcluir(personagem);
+        setConfirmText('');
+    }
+
+    function fecharModalExcluir() {
+        setPersonagemParaExcluir(null);
+        setConfirmText('');
+    }
+
+    async function confirmarExclusao() {
+        const personagem = personagemParaExcluir;
+        if (!personagem) return;
         try {
             await Characters.remove(user.uid, personagem.id);
+            fecharModalExcluir();
+            toast.success(`"${personagem.nome || 'Personagem'}" foi excluído.`);
             await carregarPersonagens();
         } catch (err) {
             console.error('[characters-list] Erro ao excluir personagem:', err);
-            window.alert('Não foi possível excluir: ' + (err.message || err));
+            toast.error('Não foi possível excluir: ' + (err.message || err));
         }
     }
+
+    // Fecha a modal de exclusão com Esc, mesmo padrão das modais da ficha
+    // (ver fecharModal/fecharModalRituais/fecharModalAtaque em
+    // CharacterSheetPage.jsx).
+    useEffect(() => {
+        if (!personagemParaExcluir) return;
+        function onKeyDown(ev) {
+            if (ev.key === 'Escape') fecharModalExcluir();
+        }
+        document.addEventListener('keydown', onKeyDown);
+        return () => document.removeEventListener('keydown', onKeyDown);
+    }, [personagemParaExcluir]);
 
     async function handleLogout() {
         await Auth.signOut();
@@ -99,7 +132,7 @@ export default function CharactersPage() {
                                     >
                                         Editar
                                     </button>
-                                    <button className="btn-danger" onClick={() => excluirPersonagem(personagem)}>
+                                    <button className="btn-danger" onClick={() => pedirExclusao(personagem)}>
                                         Excluir
                                     </button>
                                 </div>
@@ -108,6 +141,47 @@ export default function CharactersPage() {
                     })}
                 </div>
             </div>
+
+            {personagemParaExcluir && (
+                <div className="modal-overlay">
+                    <div className="modal-box modal-box-danger">
+                        <div className="modal-header">
+                            <h3>Excluir personagem</h3>
+                            <button type="button" className="modal-close" title="Fechar" onClick={fecharModalExcluir}>&times;</button>
+                        </div>
+
+                        <p className="modal-confirm-text">
+                            Isso vai excluir <strong>{personagemParaExcluir.nome || '(sem nome)'}</strong> pra
+                            sempre, junto com atributos, perícias, itens e rituais dele — não dá pra desfazer.
+                        </p>
+
+                        {personagemParaExcluir.nome ? (
+                            <div className="control-group full">
+                                <label>Digite "{personagemParaExcluir.nome}" pra confirmar</label>
+                                <input
+                                    type="text"
+                                    autoFocus
+                                    value={confirmText}
+                                    onChange={e => setConfirmText(e.target.value)}
+                                    placeholder={personagemParaExcluir.nome}
+                                />
+                            </div>
+                        ) : null}
+
+                        <div className="modal-item-actions">
+                            <button type="button" className="btn-secondary" onClick={fecharModalExcluir}>Cancelar</button>
+                            <button
+                                type="button"
+                                className="btn-danger"
+                                disabled={!!personagemParaExcluir.nome && confirmText.trim() !== personagemParaExcluir.nome.trim()}
+                                onClick={confirmarExclusao}
+                            >
+                                Excluir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
