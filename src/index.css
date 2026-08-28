@@ -310,19 +310,43 @@ button {
 }
 
 /* --- LAYOUT PRINCIPAL (GRID) --- */
-.character-sheet {
+/* Base compartilhada entre os dois grids de 3 colunas da ficha: este
+   (.character-sheet, tela de visualizar) e o do formulário
+   (.character-form-grid, tela de criar/editar, mais abaixo). A única
+   diferença de verdade entre os dois é a largura das colunas laterais
+   (cada um define seu próprio grid-template-columns); display, gap,
+   padding, max-width e margin eram repetidos idênticos nos dois — daqui
+   pra frente qualquer ajuste nesse espaçamento vale pros dois só
+   mudando aqui. */
+.character-sheet,
+.character-form-grid {
     display: grid;
+    gap: 20px;
+    padding: 20px;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.character-sheet {
     /* Coluna 1 (atributos/vida/PE/defesa) volta a ficar mais enxuta
        agora que o Inventário saiu dela; coluna 3 cresceu bastante
        (300px -> 440px) porque virou uma seção com abas de verdade
        (Combate/Rituais/Inventário — ver .sheet-tabs-section), que
        precisa de espaço pra cartões, rolagem personalizada e log. */
-    grid-template-columns: 320px 1fr 440px;
-    gap: 20px;
-    padding: 20px;
+    /* Colunas laterais fluidas (clamp) em vez de px fixo: o teto
+       (320px / 440px) é o mesmo valor de antes e continua valendo
+       enquanto o grid ainda cabe no max-width de 1600px aqui embaixo
+       -- então em telas grandes nada muda visualmente. Abaixo disso,
+       em vez de ficarem travadas no teto e sobrar cada vez menos pra
+       coluna do meio (skills-section, ver o bug documentado mais
+       abaixo em @media (max-width: 1400px)), elas encolhem junto com
+       a viewport (20vw / 27.5vw = 320px e 440px / 1600px, a mesma
+       proporcao do layout largo) ate o piso, que é o valor que essas
+       mesmas contas dao em 1400px -- exatamente onde o layout colapsa
+       pra 1 coluna só. Reduz a chance de uma resolução intermediária
+       ainda não testada repetir essa classe de bug. */
+    grid-template-columns: clamp(280px, 20vw, 320px) 1fr clamp(385px, 27.5vw, 440px);
     height: 100%;
-    max-width: 1600px;
-    margin: 0 auto;
 }
 
 h3 {
@@ -948,7 +972,7 @@ h3 {
     .skill-dice { grid-area: dice; text-align: left; color: var(--color-text-muted); }
     .skill-bonus { grid-area: bonus; text-align: left; color: var(--color-text-muted); }
     .skill-treino { grid-area: treino; text-align: left; color: var(--color-text-muted); }
-    .btn-roll-skill {
+    .skill-item .btn-roll-skill {
         grid-area: action;
         justify-self: end;
         align-self: start;
@@ -956,13 +980,31 @@ h3 {
 }
 
 .btn-roll-skill {
+    /* Só o ícone (d20) agora, sem o texto "Rolar" -- por isso virou um
+       quadradinho fixo em vez de crescer com o conteúdo. O nome da
+       perícia (ex: "Rolar Ocultismo") vai só no title/aria-label, não
+       aparece na tela -- a coluna "Nome" já mostra a perícia do lado.
+       "justify-self: center" é necessário aqui: sem isso, um item de
+       grid com largura fixa (menor que a coluna "Ação") gruda no início
+       da coluna em vez de centralizar, ficando desalinhado com o
+       cabeçalho "Ação" (que é centralizado). A regra do breakpoint de
+       700px (mais abaixo) usa o seletor ".skill-item .btn-roll-skill"
+       de propósito -- com mais especificidade que esta regra -- pra
+       continuar vencendo em telas estreitas mesmo com "justify-self"
+       definido aqui também. */
+    width: 36px;
+    height: 36px;
+    justify-self: center;
     background-color: transparent;
     border: 1px solid var(--color-primary-900);
     color: var(--color-primary-300);
-    padding: 4px 8px;
+    padding: 0;
     border-radius: 4px;
     cursor: pointer;
     transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-roll-skill:hover {
@@ -1086,8 +1128,12 @@ h3 {
 .btn-conjurar {
     flex-shrink: 0;
     padding: 5px 12px;
-    background-image: linear-gradient(135deg, var(--color-primary-700), var(--color-primary-900));
-    border: 1px solid var(--color-primary-400);
+    /* Antes usava o mesmo degrade claro->escuro (700->900) de outros
+       botões (ROLAR, +) -- ficou pedido mais escuro que eles aqui, então
+       virou sólido no tom mais escuro do roxo, com a borda também um
+       degrau mais escura (700 em vez de 400). */
+    background-color: var(--color-primary-900);
+    border: 1px solid var(--color-primary-700);
     color: var(--color-text);
     font-size: 0.75rem;
     font-weight: bold;
@@ -1096,6 +1142,9 @@ h3 {
     cursor: pointer;
     box-shadow: 0 2px 6px rgba(74, 20, 140, 0.4);
     transition: transform 0.15s ease, box-shadow 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .btn-conjurar:hover {
@@ -1255,9 +1304,14 @@ h3 {
 .inventory-item-qty span { min-width: 18px; text-align: center; font-size: 0.85rem; }
 
 .btn-equipar {
-    background-color: transparent;
+    /* Antes era só contorno (fundo transparente + texto na variação
+       clara do verde, --color-success-light) -- ganhou um fundo verde
+       bem sutil e o texto passou pro verde mais cheio (--color-success),
+       pra não ficar mais claro que os outros botões da ficha. O estado
+       ".equipado" logo abaixo (já preenchido sólido) não mudou. */
+    background-color: rgba(76, 175, 80, 0.14);
     border: 1px solid var(--color-success);
-    color: var(--color-success-light);
+    color: var(--color-success);
     padding: 4px 10px;
     border-radius: 6px;
     cursor: pointer;
@@ -1777,8 +1831,11 @@ h3 {
     width: 26px;
     height: 26px;
     border-radius: 6px;
-    background-image: linear-gradient(145deg, #c62828, #7f0000);
-    border: 1px solid #e57373;
+    /* Escurecido: usa a mesma familia "vermelho paranormal" (blood-*)
+       do resto da ficha em vez dos tons soltos de antes -- gradiente
+       e borda mais escuros e menos "pastel". */
+    background-image: linear-gradient(145deg, var(--color-blood-700), var(--color-blood-500));
+    border: 1px solid var(--color-blood-600);
     color: var(--color-text);
     font-size: 0.85rem;
     line-height: 1;
@@ -2600,12 +2657,15 @@ h3 {
 }
 
 .character-form-grid {
-    display: grid;
-    grid-template-columns: 360px 1fr 300px;
-    gap: 20px;
-    padding: 20px;
-    max-width: 1600px;
-    margin: 0 auto;
+    /* Mesma lógica de coluna fluida do .character-sheet (ver
+       comentário lá): teto = valor fixo de antes (360px/300px,
+       válido até o grid bater no max-width de 1600px logo abaixo),
+       proporção 22.5vw/18.75vw = 360px/300px em 1600px de viewport,
+       e piso = o que essa mesma conta dá em 1400px, onde o
+       .character-form-grid também colapsa pra 1 coluna (ver
+       @media max-width: 1400px). display/gap/padding/max-width/margin
+       ficam na regra compartilhada com .character-sheet, lá em cima. */
+    grid-template-columns: clamp(315px, 22.5vw, 360px) 1fr clamp(263px, 18.75vw, 300px);
 }
 
 .form-identity-section {

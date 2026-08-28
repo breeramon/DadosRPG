@@ -67,6 +67,64 @@ function TrashIcon() {
     );
 }
 
+// Dado de 6 faces (face "5") -- substitui o emoji 🎲 do botao "Rolar dano"
+// (mesmo estilo de contorno do TrashIcon acima, mas com as bolinhas
+// preenchidas em vez de vazadas, pra ficar legivel no tamanho pequeno do
+// botao).
+function DiceIcon() {
+    return (
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="4" />
+            <circle cx="8" cy="8" r="1.6" fill="currentColor" stroke="none" />
+            <circle cx="16" cy="8" r="1.6" fill="currentColor" stroke="none" />
+            <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
+            <circle cx="8" cy="16" r="1.6" fill="currentColor" stroke="none" />
+            <circle cx="16" cy="16" r="1.6" fill="currentColor" stroke="none" />
+        </svg>
+    );
+}
+
+// Engrenagem -- substitui o emoji ⚙ do botao "Aparencia dos Dados".
+function GearIcon() {
+    return (
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" />
+            <line x1="12" y1="2" x2="12" y2="5" />
+            <line x1="12" y1="19" x2="12" y2="22" />
+            <line x1="19" y1="12" x2="22" y2="12" />
+            <line x1="2" y1="12" x2="5" y2="12" />
+            <line x1="16.9" y1="7.1" x2="19.1" y2="4.9" />
+            <line x1="7.1" y1="7.1" x2="4.9" y2="4.9" />
+            <line x1="16.9" y1="16.9" x2="19.1" y2="19.1" />
+            <line x1="7.1" y1="16.9" x2="4.9" y2="19.1" />
+        </svg>
+    );
+}
+
+// d20 simplificado (hexagono + facetas) -- usado ao lado do texto "Rolar"
+// nas linhas da tabela de Pericias.
+function D20Icon() {
+    return (
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M12 3L19.8 7.5V16.5L12 21L4.2 16.5V7.5Z" />
+            <path d="M12 12L12 3M12 12L19.8 16.5M12 12L4.2 16.5" />
+        </svg>
+    );
+}
+
+// Centelha ritualistica -- usada ao lado do texto "Conjurar". De proposito
+// NAO e um dado: conjurar desconta PE mas nao e uma rolagem de quem
+// conjura (a resistencia, quando existe, e rolada pelo alvo -- ver
+// rituais.js), entao um icone de dado aqui sugeriria uma rolagem que nao
+// acontece.
+function RitualSparkIcon() {
+    return (
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" stroke="none" aria-hidden="true">
+            <path d="M12 3L14.1 9.9L21 12L14.1 14.1L12 21L9.9 14.1L3 12L9.9 9.9Z" />
+        </svg>
+    );
+}
+
 const GRAU_ABREV = { treinado: 'T', veterano: 'V', expert: 'E' };
 const MAX_LOG_ENTRIES = 4;
 let proximoLogId = 1;
@@ -580,7 +638,7 @@ export default function CharacterSheetPage() {
                 return it;
             });
             if (desequipou) {
-                toast(`"${desequipou}" foi desequipada — só dá pra vestir uma proteção de corpo por vez.`);
+                toast(`"${desequipou}" foi desequipada — só dá pra equipar uma proteção de corpo por vez.`);
             }
         }
 
@@ -1064,7 +1122,7 @@ export default function CharacterSheetPage() {
                             aria-label="Escolher tema/cor dos dados"
                             onClick={() => setModalTemaDadoAberto(true)}
                         >
-                            ⚙
+                            <GearIcon />
                         </button>
                         {ultimoResultado && (
                             <div
@@ -1128,9 +1186,11 @@ export default function CharacterSheetPage() {
                                     <button
                                         className="btn-roll-skill"
                                         disabled={bloqueada}
+                                        title={`Rolar ${catItem.nome}`}
+                                        aria-label={`Rolar ${catItem.nome}`}
                                         onClick={() => rollSkill(catItem.nome, valorAtributo, bonus)}
                                     >
-                                        Rolar
+                                        <D20Icon />
                                     </button>
                                 </div>
                             );
@@ -1207,9 +1267,10 @@ export default function CharacterSheetPage() {
                                                             type="button"
                                                             className="btn-roll-icon"
                                                             title="Rolar dano"
+                                                            aria-label="Rolar dano"
                                                             onClick={ev => { ev.stopPropagation(); rollAtaque(ataque); }}
                                                         >
-                                                            🎲
+                                                            <DiceIcon />
                                                         </button>
                                                         {!ataque.auto && (
                                                             <button
@@ -1322,6 +1383,7 @@ export default function CharacterSheetPage() {
                                                             title={`Conjurar (-${custo} PE)`}
                                                             onClick={ev => { ev.stopPropagation(); conjurarRitual(ritual); }}
                                                         >
+                                                            <RitualSparkIcon />
                                                             Conjurar
                                                         </button>
                                                         <button
@@ -1400,7 +1462,7 @@ export default function CharacterSheetPage() {
                                                         className={`btn-equipar${item.equipado ? ' equipado' : ''}`}
                                                         onClick={() => handleEquiparToggle(index)}
                                                     >
-                                                        {item.equipado ? 'Vestida' : 'Vestir'}
+                                                        {item.equipado ? 'Equipado' : 'Equipar'}
                                                     </button>
                                                 )}
                                                 <button
