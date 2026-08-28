@@ -1,3 +1,63 @@
+/* ============================================================
+   DESIGN TOKENS
+   ------------------------------------------------------------
+   Extraidos das cores que ja apareciam repetidas pelo arquivo --
+   nenhum valor de cor mudou aqui, so passou a ter nome. Cobre por
+   enquanto: fundo, superficie, texto, roxo primario ("Ordem"),
+   vermelho de perigo/alerta, vermelho "paranormal" (pentagrama/
+   ataques -- familia visualmente distinta do vermelho de alerta),
+   verde de sucesso e as 5 cores de Elemento de ritual. Tons usados
+   só 1-2x (gradientes pontuais, sombras) ficaram de fora desta
+   primeira leva de proposito -- dá pra estender depois.
+   ============================================================ */
+:root {
+    /* Fundo e superficie */
+    --color-bg: #121212;
+    --color-surface: #1e1e1e;
+
+    /* Texto */
+    --color-text: #fff;
+    --color-text-body: #e0e0e0;
+    --color-text-muted: #aaa;
+    --color-text-faint: #999;
+    --color-text-subtle: #888;
+    --color-text-hint: #777;
+    --color-text-dim: #666;
+
+    /* Roxo primario ("Ordem") -- escala do mais escuro (900) ao mais claro (100) */
+    --color-primary-900: #4a148c;
+    --color-primary-700: #6a1b9a;
+    --color-primary-500: #7c43bd;
+    --color-primary-400: #9c64d6;
+    --color-primary-300: #b39ddb;
+    --color-primary-200: #ce93d8;
+    --color-primary-100: #d1c4e9;
+
+    /* Vermelho de perigo/alerta (validacao, exclusao, erro) */
+    --color-danger: #ff1744;
+    --color-danger-light: #ff8a80;
+
+    /* Vermelho "paranormal" (pentagrama, ataques, tema ritualistico --
+       mesma familia de "perigo", tom mais profundo e decorativo) */
+    --color-blood-700: #b71c1c;
+    --color-blood-600: #e53935;
+    --color-blood-500: #5c1414;
+    --color-blood-400: #4a0f0f;
+    --color-blood-200: #e8d5d5;
+
+    /* Verde de sucesso (treinado/equipado/acerto critico) */
+    --color-success: #4caf50;
+    --color-success-light: #a5d6a7;
+    --color-success-crit: #00e676;
+
+    /* Elementos de Ritual */
+    --color-elemento-conhecimento: #d4af37;
+    --color-elemento-energia: #ab47bc;
+    --color-elemento-morte: #546e7a;
+    --color-elemento-sangue: #d32f2f;
+    --color-elemento-medo: #1a4971;
+}
+
 /* --- RESET E GERAL --- */
 * {
     box-sizing: border-box;
@@ -6,8 +66,8 @@
 }
 
 body {
-    background-color: #121212;
-    color: #e0e0e0;
+    background-color: var(--color-bg);
+    color: var(--color-text-body);
     font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     min-height: 100vh;
     overflow-y: auto;
@@ -49,7 +109,7 @@ button {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #aaa;
+    color: var(--color-text-muted);
     font-size: 0.95rem;
 }
 
@@ -79,7 +139,7 @@ button {
     pointer-events: none; /* nunca bloqueia cliques na ficha */
     z-index: 9999;
     background-color: rgba(18, 18, 18, 0.55);
-    border: 1px solid #4a148c;
+    border: 1px solid var(--color-primary-900);
     border-radius: 12px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
     overflow: hidden;
@@ -123,11 +183,11 @@ button {
     font-size: 2.4rem;
     font-weight: 700;
     line-height: 1;
-    color: #b39ddb;
+    color: var(--color-primary-300);
 }
 
-.dice-box-result.crit-success .dice-box-result-valor { color: #00e676; }
-.dice-box-result.crit-fail .dice-box-result-valor { color: #ff1744; }
+.dice-box-result.crit-success .dice-box-result-valor { color: var(--color-success-crit); }
+.dice-box-result.crit-fail .dice-box-result-valor { color: var(--color-danger); }
 
 @keyframes diceResultPop {
     from { opacity: 0; transform: translateY(-6px) scale(0.92); }
@@ -147,7 +207,7 @@ button {
     text-align: center;
     font-size: 0.7rem;
     line-height: 1.3;
-    color: #999;
+    color: var(--color-text-faint);
     pointer-events: none;
 }
 
@@ -166,9 +226,9 @@ button {
     align-items: center;
     justify-content: center;
     background-color: rgba(18, 18, 18, 0.6);
-    border: 1px solid #4a148c;
+    border: 1px solid var(--color-primary-900);
     border-radius: 50%;
-    color: #ce93d8;
+    color: var(--color-primary-200);
     font-size: 0.95rem;
     line-height: 1;
     cursor: pointer;
@@ -179,7 +239,7 @@ button {
 
 .dice-box-settings-btn:hover {
     background-color: rgba(74, 20, 140, 0.35);
-    border-color: #9c64d6;
+    border-color: var(--color-primary-400);
     transform: rotate(45deg);
 }
 
@@ -266,8 +326,8 @@ button {
 }
 
 h3 {
-    color: #ffffff;
-    border-bottom: 2px solid #4a148c;
+    color: var(--color-text);
+    border-bottom: 2px solid var(--color-primary-900);
     padding-bottom: 10px;
     margin-bottom: 15px;
     text-transform: uppercase;
@@ -308,7 +368,7 @@ h3 {
 
 .op-ring-outer {
     fill: none;
-    stroke: #4a0f0f;
+    stroke: var(--color-blood-400);
     stroke-width: 1.5;
     opacity: 0.6;
 }
@@ -334,7 +394,7 @@ h3 {
 
 .op-ring-inner {
     fill: none;
-    stroke: #6a1b9a;
+    stroke: var(--color-primary-700);
     stroke-width: 1;
     opacity: 0.45;
 }
@@ -381,7 +441,7 @@ h3 {
 .pentagram-footer {
     margin-top: 30px;
     text-align: center;
-    color: #666;
+    color: var(--color-text-dim);
 }
 
 /* Botões do Pentagrama */
@@ -412,8 +472,8 @@ h3 {
        acima) — mantido redondo por pedido explícito do usuário. */
     border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #2b2b2b, #0a0a0a 72%);
-    border: 2px solid #5c1414;
-    color: #e8d5d5;
+    border: 2px solid var(--color-blood-500);
+    color: var(--color-blood-200);
     font-family: 'Montserrat', 'Segoe UI', sans-serif;
     font-size: 1.35rem;
     font-weight: 700;
@@ -421,18 +481,18 @@ h3 {
     transition: all 0.2s ease;
     box-shadow:
         0 0 0 3px #000,
-        0 0 0 4px #4a0f0f,
+        0 0 0 4px var(--color-blood-400),
         inset 0 0 8px rgba(0, 0, 0, 0.85),
         0 0 10px rgba(139, 0, 0, 0.35);
 }
 
 .attr-btn:hover {
     background: radial-gradient(circle at 35% 30%, #4a1414, #170505 72%);
-    border-color: #e53935;
-    color: #fff;
+    border-color: var(--color-blood-600);
+    color: var(--color-text);
     box-shadow:
         0 0 0 3px #000,
-        0 0 0 4px #b71c1c,
+        0 0 0 4px var(--color-blood-700),
         inset 0 0 8px rgba(0, 0, 0, 0.7),
         0 0 22px rgba(255, 23, 23, 0.55);
     transform: scale(1.1);
@@ -458,8 +518,8 @@ h3 {
        propósito no pentagrama, por pedido explícito do usuário. */
     border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #2b2b2b, #0a0a0a 72%);
-    border: 2px solid #5c1414;
-    color: #e8d5d5;
+    border: 2px solid var(--color-blood-500);
+    color: var(--color-blood-200);
     font-family: 'Montserrat', 'Segoe UI', sans-serif;
     font-size: 1.25rem;
     font-weight: 700;
@@ -468,7 +528,7 @@ h3 {
     transition: all 0.2s ease;
     box-shadow:
         0 0 0 3px #000,
-        0 0 0 4px #4a0f0f,
+        0 0 0 4px var(--color-blood-400),
         inset 0 0 8px rgba(0, 0, 0, 0.85),
         0 0 10px rgba(139, 0, 0, 0.35);
     /* Remove as setinhas nativas do input number — os botões −/+ ao
@@ -486,10 +546,10 @@ h3 {
 
 .attr-value-input:focus {
     outline: none;
-    border-color: #e53935;
+    border-color: var(--color-blood-600);
     box-shadow:
         0 0 0 3px #000,
-        0 0 0 4px #b71c1c,
+        0 0 0 4px var(--color-blood-700),
         inset 0 0 8px rgba(0, 0, 0, 0.7),
         0 0 16px rgba(255, 23, 23, 0.45);
 }
@@ -500,7 +560,7 @@ h3 {
     border-radius: 6px;
     flex-shrink: 0;
     background-color: #1a0808;
-    border: 1px solid #5c1414;
+    border: 1px solid var(--color-blood-500);
     color: #d3a3a3;
     font-size: 1rem;
     line-height: 1;
@@ -510,8 +570,8 @@ h3 {
 
 .attr-stepper-btn:hover {
     background-color: #4a1414;
-    border-color: #e53935;
-    color: #fff;
+    border-color: var(--color-blood-600);
+    color: var(--color-text);
 }
 
 .attr-stepper-btn:active {
@@ -562,16 +622,16 @@ h3 {
     font-size: 0.65rem;
     font-weight: bold;
     letter-spacing: 0.5px;
-    color: #aaa;
+    color: var(--color-text-muted);
     text-transform: uppercase;
 }
 
 .identity-field input[type="text"] {
     width: 100%;
     box-sizing: border-box;
-    background-color: #121212;
+    background-color: var(--color-bg);
     border: 1px solid #444;
-    color: #fff;
+    color: var(--color-text);
     border-radius: 4px;
     padding: 7px 9px;
     font-size: 0.85rem;
@@ -580,7 +640,7 @@ h3 {
 
 .identity-field input[type="text"]:focus {
     outline: none;
-    border-color: #7c43bd;
+    border-color: var(--color-primary-500);
     box-shadow: 0 0 0 3px rgba(124, 67, 189, 0.22);
 }
 
@@ -592,7 +652,7 @@ h3 {
     display: block;
     background-color: #0d0d0d;
     border: 1px solid #333;
-    color: #a5d6a7;
+    color: var(--color-success-light);
     border-radius: 4px;
     padding: 7px 9px;
     font-size: 0.85rem;
@@ -613,7 +673,7 @@ h3 {
 }
 
 .identity-field-button:hover {
-    border-color: #a5d6a7;
+    border-color: var(--color-success-light);
     color: #c8f0ca;
 }
 
@@ -649,7 +709,7 @@ h3 {
     font-size: 0.75rem;
     font-weight: bold;
     letter-spacing: 0.5px;
-    color: #aaa;
+    color: var(--color-text-muted);
     display: flex;
     align-items: baseline;
     gap: 6px;
@@ -659,7 +719,7 @@ h3 {
     font-weight: normal;
     font-size: 0.65rem;
     letter-spacing: 0.3px;
-    color: #666;
+    color: var(--color-text-dim);
     text-transform: none;
 }
 
@@ -684,8 +744,8 @@ h3 {
 }
 
 .vital-btn:hover {
-    border-color: #7c43bd;
-    color: #fff;
+    border-color: var(--color-primary-500);
+    color: var(--color-text);
     box-shadow: 0 0 8px rgba(124, 67, 189, 0.35);
     transform: translateY(-1px);
 }
@@ -715,7 +775,7 @@ h3 {
 }
 
 .vida-fill {
-    background-color: #b71c1c;
+    background-color: var(--color-blood-700);
 }
 
 .det-fill {
@@ -746,7 +806,7 @@ h3 {
     height: 100%;
     font-size: 0.8rem;
     font-weight: bold;
-    color: #fff;
+    color: var(--color-text);
     text-shadow: 0 1px 2px rgba(0,0,0,0.8);
 }
 
@@ -764,26 +824,26 @@ h3 {
     justify-content: center;
     width: 56px;
     height: 56px;
-    border: 2px solid #fff;
+    border: 2px solid var(--color-text);
     border-radius: 8px;
     flex-shrink: 0;
 }
 
 .defesa-label {
     font-size: 0.6rem;
-    color: #aaa;
+    color: var(--color-text-muted);
     letter-spacing: 0.5px;
 }
 
 .defesa-total {
     font-size: 1.3rem;
     font-weight: bold;
-    color: #fff;
+    color: var(--color-text);
 }
 
 .defesa-formula {
     font-size: 0.75rem;
-    color: #888;
+    color: var(--color-text-subtle);
     display: flex;
     align-items: center;
     flex-wrap: wrap;
@@ -793,7 +853,7 @@ h3 {
 .defesa-input {
     width: 42px;
     padding: 3px;
-    background-color: #121212;
+    background-color: var(--color-bg);
     border: 1px solid #444;
     color: white;
     border-radius: 4px;
@@ -802,17 +862,17 @@ h3 {
 
 .defesa-equip-readonly {
     display: inline-block;
-    color: #a5d6a7;
+    color: var(--color-success-light);
     cursor: default;
 }
 
 .defesa-formula small {
-    color: #666;
+    color: var(--color-text-dim);
 }
 
 /* --- COLUNA 2: PERÍCIAS --- */
 .skills-section {
-    background-color: #1e1e1e;
+    background-color: var(--color-surface);
     border-radius: 8px;
     padding: 15px;
     display: flex;
@@ -827,7 +887,7 @@ h3 {
     background-color: #2c2c2c;
     font-weight: bold;
     font-size: 0.85rem;
-    color: #aaa;
+    color: var(--color-text-muted);
     border-radius: 4px;
     margin-bottom: 10px;
     text-align: center;
@@ -842,8 +902,8 @@ h3 {
 }
 
 .skills-list::-webkit-scrollbar { width: 8px; }
-.skills-list::-webkit-scrollbar-track { background: #121212; }
-.skills-list::-webkit-scrollbar-thumb { background: #4a148c; border-radius: 4px; }
+.skills-list::-webkit-scrollbar-track { background: var(--color-bg); }
+.skills-list::-webkit-scrollbar-thumb { background: var(--color-primary-900); border-radius: 4px; }
 
 .skill-item {
     display: grid;
@@ -858,10 +918,10 @@ h3 {
 .skill-item:hover { background-color: #252525; }
 
 .skill-name { text-align: left; font-weight: 500; }
-.skill-attr-ref { color: #888; font-size: 0.8rem; margin-left: 5px; }
+.skill-attr-ref { color: var(--color-text-subtle); font-size: 0.8rem; margin-left: 5px; }
 
 /* Perícia treinada: nome em verde, igual à ficha oficial. */
-.skill-item.treinada .skill-name { color: #4caf50; }
+.skill-item.treinada .skill-name { color: var(--color-success); }
 
 /* Perícia "só treinada" (não dá pra tentar sem treino) que o personagem
    ainda não tem: cinza/apagada e sem botão de rolar. */
@@ -885,9 +945,9 @@ h3 {
     }
 
     .skill-name { grid-area: name; }
-    .skill-dice { grid-area: dice; text-align: left; color: #aaa; }
-    .skill-bonus { grid-area: bonus; text-align: left; color: #aaa; }
-    .skill-treino { grid-area: treino; text-align: left; color: #aaa; }
+    .skill-dice { grid-area: dice; text-align: left; color: var(--color-text-muted); }
+    .skill-bonus { grid-area: bonus; text-align: left; color: var(--color-text-muted); }
+    .skill-treino { grid-area: treino; text-align: left; color: var(--color-text-muted); }
     .btn-roll-skill {
         grid-area: action;
         justify-self: end;
@@ -897,8 +957,8 @@ h3 {
 
 .btn-roll-skill {
     background-color: transparent;
-    border: 1px solid #4a148c;
-    color: #b39ddb;
+    border: 1px solid var(--color-primary-900);
+    color: var(--color-primary-300);
     padding: 4px 8px;
     border-radius: 4px;
     cursor: pointer;
@@ -906,7 +966,7 @@ h3 {
 }
 
 .btn-roll-skill:hover {
-    background-color: #4a148c;
+    background-color: var(--color-primary-900);
     color: white;
 }
 
@@ -917,7 +977,7 @@ h3 {
    navegação por abas, no espírito da referência que o usuário mandou —
    só uma aba de conteúdo fica montada por vez. */
 .sheet-tabs-section {
-    background-color: #1e1e1e;
+    background-color: var(--color-surface);
     border-radius: 8px;
     padding: 15px;
     display: flex;
@@ -937,7 +997,7 @@ h3 {
     border: none;
     border-bottom: 2px solid transparent;
     margin-bottom: -2px;
-    color: #888;
+    color: var(--color-text-subtle);
     font-family: 'Montserrat', 'Segoe UI', sans-serif;
     font-size: 0.85rem;
     font-weight: 700;
@@ -949,12 +1009,12 @@ h3 {
 }
 
 .sheet-tab-btn:hover {
-    color: #d1c4e9;
+    color: var(--color-primary-100);
 }
 
 .sheet-tab-btn.active {
-    color: #ce93d8;
-    border-bottom-color: #9c64d6;
+    color: var(--color-primary-200);
+    border-bottom-color: var(--color-primary-400);
     text-shadow: 0 0 10px rgba(156, 100, 214, 0.5);
 }
 
@@ -1004,8 +1064,8 @@ h3 {
     height: 28px;
     border-radius: 8px;
     background-image: linear-gradient(145deg, #2b2b2b, #0a0a0a);
-    border: 1px solid #5c1414;
-    color: #e8d5d5;
+    border: 1px solid var(--color-blood-500);
+    color: var(--color-blood-200);
     font-size: 0.95rem;
     line-height: 1;
     cursor: pointer;
@@ -1016,7 +1076,7 @@ h3 {
 }
 
 .btn-roll-icon:hover {
-    border-color: #e53935;
+    border-color: var(--color-blood-600);
     transform: scale(1.1);
     box-shadow: 0 0 12px rgba(255, 23, 23, 0.45);
 }
@@ -1026,9 +1086,9 @@ h3 {
 .btn-conjurar {
     flex-shrink: 0;
     padding: 5px 12px;
-    background-image: linear-gradient(135deg, #6a1b9a, #4a148c);
-    border: 1px solid #9c64d6;
-    color: #fff;
+    background-image: linear-gradient(135deg, var(--color-primary-700), var(--color-primary-900));
+    border: 1px solid var(--color-primary-400);
+    color: var(--color-text);
     font-size: 0.75rem;
     font-weight: bold;
     letter-spacing: 0.3px;
@@ -1067,7 +1127,7 @@ h3 {
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    border-bottom: 2px solid #4a148c;
+    border-bottom: 2px solid var(--color-primary-900);
     padding-bottom: 10px;
     margin-bottom: 15px;
 }
@@ -1083,9 +1143,9 @@ h3 {
     height: 30px;
     flex-shrink: 0;
     border-radius: 8px;
-    background-image: linear-gradient(145deg, #6a1b9a, #4a148c);
-    border: 1px solid #9c64d6;
-    color: #fff;
+    background-image: linear-gradient(145deg, var(--color-primary-700), var(--color-primary-900));
+    border: 1px solid var(--color-primary-400);
+    color: var(--color-text);
     font-size: 1.2rem;
     line-height: 1;
     cursor: pointer;
@@ -1108,7 +1168,7 @@ h3 {
     flex-wrap: wrap;
     align-items: center;
     gap: 6px 18px;
-    background-color: #121212;
+    background-color: var(--color-bg);
     border: 1px solid #333;
     border-radius: 6px;
     padding: 10px 14px;
@@ -1117,7 +1177,7 @@ h3 {
     color: #ccc;
 }
 
-.inventory-carga-info strong { color: #fff; }
+.inventory-carga-info strong { color: var(--color-text); }
 .inventory-carga-bar {
     flex: 1;
     min-width: 120px;
@@ -1129,13 +1189,13 @@ h3 {
 }
 .inventory-carga-bar-fill {
     height: 100%;
-    background-color: #4caf50;
+    background-color: var(--color-success);
     transition: width 0.2s ease, background-color 0.2s ease;
 }
 .inventory-carga-bar-fill.sobrecarregado { background-color: #ffb300; }
-.inventory-carga-bar-fill.excesso { background-color: #ff1744; }
+.inventory-carga-bar-fill.excesso { background-color: var(--color-danger); }
 .inventory-carga-aviso { color: #ffb300; font-weight: bold; }
-.inventory-carga-aviso.excesso { color: #ff1744; }
+.inventory-carga-aviso.excesso { color: var(--color-danger); }
 
 .inventory-list {
     display: flex;
@@ -1157,17 +1217,17 @@ h3 {
     row-gap: 6px;
     column-gap: 10px;
     padding: 8px 10px;
-    background-color: #121212;
+    background-color: var(--color-bg);
     border: 1px solid #333;
     border-radius: 6px;
 }
 
-.inventory-item.equipado { border-color: #4caf50; }
+.inventory-item.equipado { border-color: var(--color-success); }
 
 .inventory-item-nome { grid-area: nome; font-weight: 500; }
-.inventory-item-categoria { grid-area: categoria; color: #888; font-size: 0.8rem; }
-.inventory-item-espacos { grid-area: espacos; color: #aaa; font-size: 0.85rem; text-align: right; }
-.inventory-item-efeito { grid-area: efeito; color: #999; font-size: 0.8rem; }
+.inventory-item-categoria { grid-area: categoria; color: var(--color-text-subtle); font-size: 0.8rem; }
+.inventory-item-espacos { grid-area: espacos; color: var(--color-text-muted); font-size: 0.85rem; text-align: right; }
+.inventory-item-efeito { grid-area: efeito; color: var(--color-text-faint); font-size: 0.8rem; }
 .inventory-item-qty { grid-area: qty; display: flex; align-items: center; gap: 4px; }
 .inventory-item-acoes { grid-area: acoes; display: flex; justify-content: flex-end; gap: 6px; }
 
@@ -1184,8 +1244,8 @@ h3 {
 }
 
 .inventory-item-qty button:hover {
-    border-color: #7c43bd;
-    color: #fff;
+    border-color: var(--color-primary-500);
+    color: var(--color-text);
     box-shadow: 0 0 8px rgba(124, 67, 189, 0.35);
     transform: scale(1.08);
 }
@@ -1196,8 +1256,8 @@ h3 {
 
 .btn-equipar {
     background-color: transparent;
-    border: 1px solid #4caf50;
-    color: #a5d6a7;
+    border: 1px solid var(--color-success);
+    color: var(--color-success-light);
     padding: 4px 10px;
     border-radius: 6px;
     cursor: pointer;
@@ -1213,12 +1273,12 @@ h3 {
 }
 
 .btn-equipar.equipado {
-    background-color: #4caf50;
+    background-color: var(--color-success);
     color: #0a0a0a;
 }
 
 .inventory-empty {
-    color: #888;
+    color: var(--color-text-subtle);
     font-size: 0.85rem;
     padding: 10px 0;
     text-align: center;
@@ -1238,7 +1298,7 @@ h3 {
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    border-bottom: 2px solid #4a148c;
+    border-bottom: 2px solid var(--color-primary-900);
     padding-bottom: 10px;
     margin-bottom: 15px;
 }
@@ -1251,12 +1311,12 @@ h3 {
 
 .rituals-nex-info {
     background-color: rgba(74, 20, 140, 0.18);
-    border: 1px solid #4a148c;
+    border: 1px solid var(--color-primary-900);
     border-radius: 6px;
     padding: 8px 14px;
     margin-bottom: 14px;
     font-size: 0.85rem;
-    color: #d1c4e9;
+    color: var(--color-primary-100);
 }
 
 .rituals-list {
@@ -1295,7 +1355,7 @@ h3 {
 
 .modal-box {
     position: relative;
-    background-color: #1e1e1e;
+    background-color: var(--color-surface);
     background-image: linear-gradient(160deg, rgba(74, 20, 140, 0.14), transparent 55%);
     border: 1px solid #3a3a3a;
     border-radius: 12px;
@@ -1319,7 +1379,7 @@ h3 {
     right: 12px;
     height: 3px;
     border-radius: 0 0 3px 3px;
-    background: linear-gradient(90deg, transparent, #7c43bd, #ce93d8, #7c43bd, transparent);
+    background: linear-gradient(90deg, transparent, var(--color-primary-500), var(--color-primary-200), var(--color-primary-500), transparent);
     opacity: 0.85;
 }
 
@@ -1349,7 +1409,7 @@ h3 {
     background: transparent;
     border: 1px solid transparent;
     border-radius: 8px;
-    color: #aaa;
+    color: var(--color-text-muted);
     font-size: 1.3rem;
     line-height: 1;
     cursor: pointer;
@@ -1357,7 +1417,7 @@ h3 {
 }
 
 .modal-close:hover {
-    color: #fff;
+    color: var(--color-text);
     background-color: rgba(229, 57, 53, 0.18);
     border-color: rgba(229, 57, 53, 0.4);
     transform: rotate(90deg);
@@ -1372,9 +1432,9 @@ h3 {
 .modal-tab {
     flex: 1;
     padding: 9px 8px;
-    background-color: #121212;
+    background-color: var(--color-bg);
     border: 1px solid #333;
-    color: #aaa;
+    color: var(--color-text-muted);
     border-radius: 8px;
     cursor: pointer;
     font-size: 0.85rem;
@@ -1383,14 +1443,14 @@ h3 {
 }
 
 .modal-tab:hover {
-    border-color: #7c43bd;
-    color: #d1c4e9;
+    border-color: var(--color-primary-500);
+    color: var(--color-primary-100);
 }
 
 .modal-tab.active {
-    background-image: linear-gradient(135deg, #4a148c, #6a1b9a);
-    border-color: #9c64d6;
-    color: #fff;
+    background-image: linear-gradient(135deg, var(--color-primary-900), var(--color-primary-700));
+    border-color: var(--color-primary-400);
+    color: var(--color-text);
     box-shadow: 0 3px 12px rgba(124, 67, 189, 0.45);
     transform: translateY(-1px);
 }
@@ -1399,9 +1459,9 @@ h3 {
 
 .modal-item-list {
     width: 100%;
-    background-color: #121212;
+    background-color: var(--color-bg);
     border: 1px solid #444;
-    color: #fff;
+    color: var(--color-text);
     border-radius: 6px;
     padding: 4px;
     margin-bottom: 12px;
@@ -1411,7 +1471,7 @@ h3 {
 .modal-item-list option { padding: 5px 4px; }
 
 .modal-item-detalhes {
-    background-color: #121212;
+    background-color: var(--color-bg);
     border: 1px solid #333;
     border-radius: 6px;
     padding: 12px;
@@ -1421,19 +1481,19 @@ h3 {
     color: #ccc;
 }
 
-.modal-item-hint { color: #777; font-style: italic; margin: 0; }
+.modal-item-hint { color: var(--color-text-hint); font-style: italic; margin: 0; }
 
 .modal-item-detalhes h4 {
     margin: 0 0 8px 0;
-    color: #fff;
+    color: var(--color-text);
     font-size: 1rem;
 }
 
 .modal-item-tag {
     display: inline-block;
     background-color: #23172f;
-    border: 1px solid #4a148c;
-    color: #ce93d8;
+    border: 1px solid var(--color-primary-900);
+    color: var(--color-primary-200);
     font-size: 0.75rem;
     padding: 2px 8px;
     border-radius: 10px;
@@ -1442,12 +1502,12 @@ h3 {
 
 .modal-item-tag.buff {
     background-color: #1b3a1f;
-    border-color: #4caf50;
-    color: #a5d6a7;
+    border-color: var(--color-success);
+    color: var(--color-success-light);
 }
 
 .modal-item-detalhes .modal-item-efeito-titulo {
-    color: #aaa;
+    color: var(--color-text-muted);
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -1471,9 +1531,9 @@ h3 {
 
 .modal-subtab {
     padding: 5px 12px;
-    background-color: #121212;
+    background-color: var(--color-bg);
     border: 1px solid #3a3a3a;
-    color: #999;
+    color: var(--color-text-faint);
     border-radius: 8px;
     cursor: pointer;
     font-size: 0.78rem;
@@ -1482,15 +1542,15 @@ h3 {
 }
 
 .modal-subtab:hover {
-    border-color: #7c43bd;
-    color: #d1c4e9;
+    border-color: var(--color-primary-500);
+    color: var(--color-primary-100);
     transform: translateY(-1px);
 }
 
 .modal-subtab.active {
-    background-image: linear-gradient(135deg, #4a148c, #6a1b9a);
-    border-color: #9c64d6;
-    color: #fff;
+    background-image: linear-gradient(135deg, var(--color-primary-900), var(--color-primary-700));
+    border-color: var(--color-primary-400);
+    color: var(--color-text);
     box-shadow: 0 2px 8px rgba(124, 67, 189, 0.4);
 }
 
@@ -1498,11 +1558,11 @@ h3 {
    de destaque dele (ver .badge-elemento-* mais abaixo) quando ativo,
    em vez do roxo genérico, pra reforçar visualmente qual elemento está
    sendo navegado. */
-.modal-subtab.elemento-conhecimento.active { background-image: linear-gradient(135deg, #a1811e, #d4af37); border-color: #e8cf7a; color: #241d04; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.45); }
-.modal-subtab.elemento-energia.active { background-image: linear-gradient(135deg, #6a1b9a, #ab47bc); border-color: #ce93d8; box-shadow: 0 2px 8px rgba(171, 71, 188, 0.45); }
-.modal-subtab.elemento-morte.active { background-image: linear-gradient(135deg, #37474f, #546e7a); border-color: #90a4ae; box-shadow: 0 2px 8px rgba(84, 110, 122, 0.45); }
-.modal-subtab.elemento-sangue.active { background-image: linear-gradient(135deg, #b71c1c, #d32f2f); border-color: #ef5350; box-shadow: 0 2px 8px rgba(211, 47, 47, 0.45); }
-.modal-subtab.elemento-medo.active { background-image: linear-gradient(135deg, #0d2b4e, #1a4971); border-color: #4a76a8; box-shadow: 0 2px 8px rgba(26, 73, 113, 0.5); }
+.modal-subtab.elemento-conhecimento.active { background-image: linear-gradient(135deg, #a1811e, var(--color-elemento-conhecimento)); border-color: #e8cf7a; color: #241d04; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.45); }
+.modal-subtab.elemento-energia.active { background-image: linear-gradient(135deg, var(--color-primary-700), var(--color-elemento-energia)); border-color: var(--color-primary-200); box-shadow: 0 2px 8px rgba(171, 71, 188, 0.45); }
+.modal-subtab.elemento-morte.active { background-image: linear-gradient(135deg, #37474f, var(--color-elemento-morte)); border-color: #90a4ae; box-shadow: 0 2px 8px rgba(84, 110, 122, 0.45); }
+.modal-subtab.elemento-sangue.active { background-image: linear-gradient(135deg, var(--color-blood-700), var(--color-elemento-sangue)); border-color: #ef5350; box-shadow: 0 2px 8px rgba(211, 47, 47, 0.45); }
+.modal-subtab.elemento-medo.active { background-image: linear-gradient(135deg, #0d2b4e, var(--color-elemento-medo)); border-color: #4a76a8; box-shadow: 0 2px 8px rgba(26, 73, 113, 0.5); }
 
 .modal-circulo-filtro {
     margin-top: -4px;
@@ -1511,9 +1571,9 @@ h3 {
 .modal-search-input {
     width: 100%;
     box-sizing: border-box;
-    background-color: #121212;
+    background-color: var(--color-bg);
     border: 1px solid #444;
-    color: #fff;
+    color: var(--color-text);
     border-radius: 6px;
     padding: 8px 10px;
     margin-bottom: 10px;
@@ -1523,7 +1583,7 @@ h3 {
 
 .modal-search-input:focus {
     outline: none;
-    border-color: #7c43bd;
+    border-color: var(--color-primary-500);
     box-shadow: 0 0 0 3px rgba(124, 67, 189, 0.22);
 }
 
@@ -1538,7 +1598,7 @@ h3 {
 }
 
 .modal-item-cards-empty {
-    color: #777;
+    color: var(--color-text-hint);
     font-style: italic;
     font-size: 0.85rem;
     text-align: center;
@@ -1546,7 +1606,7 @@ h3 {
 }
 
 .modal-item-card {
-    background-color: #121212;
+    background-color: var(--color-bg);
     border: 1px solid #333;
     border-radius: 8px;
     overflow: hidden;
@@ -1569,14 +1629,14 @@ h3 {
    lista de "Rituais Conhecidos" da ficha quanto nos cartões da modal
    de adicionar. */
 .ritual-card {
-    border-left: 3px solid #4a148c;
+    border-left: 3px solid var(--color-primary-900);
 }
 
-.ritual-card.elemento-conhecimento { border-left-color: #d4af37; }
-.ritual-card.elemento-energia { border-left-color: #ab47bc; }
-.ritual-card.elemento-morte { border-left-color: #546e7a; }
-.ritual-card.elemento-sangue { border-left-color: #d32f2f; }
-.ritual-card.elemento-medo { border-left-color: #1a4971; }
+.ritual-card.elemento-conhecimento { border-left-color: var(--color-elemento-conhecimento); }
+.ritual-card.elemento-energia { border-left-color: var(--color-elemento-energia); }
+.ritual-card.elemento-morte { border-left-color: var(--color-elemento-morte); }
+.ritual-card.elemento-sangue { border-left-color: var(--color-elemento-sangue); }
+.ritual-card.elemento-medo { border-left-color: var(--color-elemento-medo); }
 
 /* Cartão de ataque (aba Combate) — mesma base de .modal-item-card, com
    uma faixa vermelha à esquerda (cor do pentagrama de combate) em vez
@@ -1594,7 +1654,7 @@ h3 {
 }
 
 .modal-item-card-chevron {
-    color: #888;
+    color: var(--color-text-subtle);
     font-size: 0.7rem;
     width: 12px;
     flex-shrink: 0;
@@ -1618,15 +1678,15 @@ h3 {
 }
 
 .modal-item-card-nome {
-    color: #fff;
+    color: var(--color-text);
     font-weight: 600;
     font-size: 0.9rem;
 }
 
 .modal-item-card-badge {
     background-color: #23172f;
-    border: 1px solid #4a148c;
-    color: #ce93d8;
+    border: 1px solid var(--color-primary-900);
+    color: var(--color-primary-200);
     font-size: 0.68rem;
     padding: 1px 7px;
     border-radius: 10px;
@@ -1635,11 +1695,11 @@ h3 {
 
 /* Badges de elemento (mesma paleta usada em .ritual-card/.modal-subtab
    acima) e de círculo/aviso de NEX, usados nos cartões de ritual. */
-.badge-elemento-conhecimento { background-color: rgba(212, 175, 55, 0.16); border-color: #d4af37; color: #f0d98c; }
-.badge-elemento-energia { background-color: rgba(171, 71, 188, 0.16); border-color: #ab47bc; color: #e1bee7; }
-.badge-elemento-morte { background-color: rgba(84, 110, 122, 0.16); border-color: #546e7a; color: #cfd8dc; }
-.badge-elemento-sangue { background-color: rgba(211, 47, 47, 0.14); border-color: #d32f2f; color: #ef9a9a; }
-.badge-elemento-medo { background-color: rgba(26, 73, 113, 0.2); border-color: #1a4971; color: #90b8e0; }
+.badge-elemento-conhecimento { background-color: rgba(212, 175, 55, 0.16); border-color: var(--color-elemento-conhecimento); color: #f0d98c; }
+.badge-elemento-energia { background-color: rgba(171, 71, 188, 0.16); border-color: var(--color-elemento-energia); color: #e1bee7; }
+.badge-elemento-morte { background-color: rgba(84, 110, 122, 0.16); border-color: var(--color-elemento-morte); color: #cfd8dc; }
+.badge-elemento-sangue { background-color: rgba(211, 47, 47, 0.14); border-color: var(--color-elemento-sangue); color: #ef9a9a; }
+.badge-elemento-medo { background-color: rgba(26, 73, 113, 0.2); border-color: var(--color-elemento-medo); color: #90b8e0; }
 
 .badge-circulo {
     background-color: #181818;
@@ -1661,11 +1721,11 @@ h3 {
 .badge-auto {
     background-color: rgba(102, 187, 106, 0.14);
     border-color: #4a7c4e;
-    color: #a5d6a7;
+    color: var(--color-success-light);
 }
 
 .modal-item-card-sub {
-    color: #888;
+    color: var(--color-text-subtle);
     font-size: 0.75rem;
     font-style: italic;
     margin-top: 2px;
@@ -1676,9 +1736,9 @@ h3 {
     width: 28px;
     height: 28px;
     border-radius: 8px;
-    background-image: linear-gradient(145deg, #6a1b9a, #4a148c);
-    border: 1px solid #9c64d6;
-    color: #fff;
+    background-image: linear-gradient(145deg, var(--color-primary-700), var(--color-primary-900));
+    border: 1px solid var(--color-primary-400);
+    color: var(--color-text);
     font-size: 1.05rem;
     line-height: 1;
     cursor: pointer;
@@ -1719,7 +1779,7 @@ h3 {
     border-radius: 6px;
     background-image: linear-gradient(145deg, #c62828, #7f0000);
     border: 1px solid #e57373;
-    color: #fff;
+    color: var(--color-text);
     font-size: 0.85rem;
     line-height: 1;
     cursor: pointer;
@@ -1756,7 +1816,7 @@ h3 {
 }
 
 .modal-item-stat-label {
-    color: #777;
+    color: var(--color-text-hint);
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -1776,7 +1836,7 @@ h3 {
 
 /* --- DiceThemeModal: escolha de tema/cor dos dados 3D --- */
 .dice-theme-modal-intro {
-    color: #999;
+    color: var(--color-text-faint);
     font-size: 0.82rem;
     margin-bottom: 14px;
 }
@@ -1807,13 +1867,13 @@ h3 {
 }
 
 .dice-theme-card:hover {
-    border-color: #7c43bd;
+    border-color: var(--color-primary-500);
     transform: translateY(-1px);
 }
 
 .dice-theme-card.selected {
     background-color: rgba(74, 20, 140, 0.22);
-    border-color: #9c64d6;
+    border-color: var(--color-primary-400);
     box-shadow: 0 0 0 1px rgba(156, 100, 214, 0.4);
 }
 
@@ -1825,7 +1885,7 @@ h3 {
 
 .dice-theme-card-desc {
     font-size: 0.75rem;
-    color: #999;
+    color: var(--color-text-faint);
     line-height: 1.35;
 }
 
@@ -1838,12 +1898,12 @@ h3 {
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #999;
+    color: var(--color-text-faint);
     margin-bottom: 8px;
 }
 
 .dice-color-section-aviso {
-    color: #999;
+    color: var(--color-text-faint);
     font-size: 0.8rem;
     font-style: italic;
     margin-bottom: 18px;
@@ -1871,8 +1931,8 @@ h3 {
 }
 
 .dice-color-swatch.selected {
-    border-color: #fff;
-    box-shadow: 0 0 0 2px #7c43bd;
+    border-color: var(--color-text);
+    box-shadow: 0 0 0 2px var(--color-primary-500);
 }
 
 /* Seletor de cor nativo do navegador — disfarçado de mais um "swatch"
@@ -1882,7 +1942,7 @@ h3 {
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    border: 2px dashed #666;
+    border: 2px dashed var(--color-text-dim);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1927,7 +1987,7 @@ h3 {
    "sempre aberto", sem precisar entrar na modal de novo só pra
    lembrar o que a Origem atual faz. */
 .origem-resumo {
-    background-color: #1e1e1e;
+    background-color: var(--color-surface);
     background-image: linear-gradient(160deg, rgba(74, 20, 140, 0.1), transparent 55%);
     border: 1px solid #3a3a3a;
     border-radius: 10px;
@@ -1945,18 +2005,18 @@ h3 {
 .origem-resumo-nome {
     font-size: 1rem;
     font-weight: 700;
-    color: #e8d5d5;
+    color: var(--color-blood-200);
 }
 
 .origem-resumo-descricao {
-    color: #999;
+    color: var(--color-text-faint);
     font-size: 0.8rem;
     font-style: italic;
     margin-top: 4px;
 }
 
 .origem-resumo-vazio {
-    color: #777;
+    color: var(--color-text-hint);
     font-size: 0.85rem;
     font-style: italic;
 }
@@ -1981,7 +2041,7 @@ h3 {
     flex: 1 1 55px;
     background-color: #333;
     border: 1px solid #555;
-    color: #fff;
+    color: var(--color-text);
     padding: 8px 0;
     border-radius: 4px;
     cursor: pointer;
@@ -1993,8 +2053,8 @@ h3 {
 
 /* Estado Ativo (Dado Selecionado) */
 .die-btn.active {
-    background-color: #4a148c; /* Roxo Ordem */
-    border-color: #7c43bd;
+    background-color: var(--color-primary-900); /* Roxo Ordem */
+    border-color: var(--color-primary-500);
     box-shadow: 0 0 8px rgba(124, 67, 189, 0.5);
 }
 
@@ -2029,7 +2089,7 @@ h3 {
 
 .control-group label {
     font-size: 0.75rem;
-    color: #aaa;
+    color: var(--color-text-muted);
     margin-bottom: 4px;
 }
 
@@ -2037,7 +2097,7 @@ h3 {
 .control-group textarea {
     width: 60px;
     padding: 10px;
-    background-color: #121212;
+    background-color: var(--color-bg);
     border: 1px solid #444;
     color: white;
     border-radius: 4px;
@@ -2051,7 +2111,7 @@ h3 {
 }
 
 .custom-roller {
-    background-color: #1e1e1e;
+    background-color: var(--color-surface);
     padding: 15px;
     border-radius: 8px;
 }
@@ -2064,7 +2124,7 @@ h3 {
 .input-group input {
     flex: 1;
     padding: 10px;
-    background-color: #121212;
+    background-color: var(--color-bg);
     border: 1px solid #444;
     color: white;
     border-radius: 4px;
@@ -2073,9 +2133,9 @@ h3 {
 
 .btn-action {
     padding: 10px 20px;
-    background-image: linear-gradient(135deg, #6a1b9a, #4a148c);
+    background-image: linear-gradient(135deg, var(--color-primary-700), var(--color-primary-900));
     color: white;
-    border: 1px solid #9c64d6;
+    border: 1px solid var(--color-primary-400);
     border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
@@ -2121,18 +2181,18 @@ h3 {
 .log-entry {
     margin-bottom: 8px;
     padding: 8px;
-    border-left: 3px solid #4a148c;
+    border-left: 3px solid var(--color-primary-900);
     background-color: #1a1a1a;
     font-size: 0.9rem;
     animation: fadeIn 0.3s ease;
 }
 
-.system-msg { border-left-color: #fff; }
-.crit-success { border-left-color: #00e676; color: #00e676; }
-.crit-fail { border-left-color: #ff1744; color: #ff1744; }
+.system-msg { border-left-color: var(--color-text); }
+.crit-success { border-left-color: var(--color-success-crit); color: var(--color-success-crit); }
+.crit-fail { border-left-color: var(--color-danger); color: var(--color-danger); }
 
 .result-highlight {
-    color: #b39ddb;
+    color: var(--color-primary-300);
     font-weight: bold;
     font-size: 1.1rem;
 }
@@ -2170,7 +2230,7 @@ h3 {
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    background: radial-gradient(ellipse at 50% 30%, #1a1030 0%, #121212 55%, #0a0a0a 100%);
+    background: radial-gradient(ellipse at 50% 30%, #1a1030 0%, var(--color-bg) 55%, #0a0a0a 100%);
 }
 
 .login-bg-glow {
@@ -2186,14 +2246,14 @@ h3 {
 .login-bg-glow-1 {
     top: -10%;
     left: -10%;
-    background: radial-gradient(circle, #7c43bd 0%, transparent 70%);
+    background: radial-gradient(circle, var(--color-primary-500) 0%, transparent 70%);
     animation: loginGlowDrift1 26s ease-in-out infinite alternate;
 }
 
 .login-bg-glow-2 {
     bottom: -15%;
     right: -12%;
-    background: radial-gradient(circle, #4a148c 0%, transparent 70%);
+    background: radial-gradient(circle, var(--color-primary-900) 0%, transparent 70%);
     animation: loginGlowDrift2 32s ease-in-out infinite alternate;
 }
 
@@ -2254,7 +2314,7 @@ h3 {
 .auth-selo-icon {
     width: 44px;
     height: 44px;
-    color: #b39ddb;
+    color: var(--color-primary-300);
     margin-bottom: 10px;
     filter: drop-shadow(0 0 6px rgba(179, 157, 219, 0.35));
     animation: authSeloPulse 4s ease-in-out infinite;
@@ -2272,7 +2332,7 @@ h3 {
 }
 
 .auth-subtitle {
-    color: #aaa;
+    color: var(--color-text-muted);
     font-size: 0.9rem;
     margin-bottom: 20px;
     animation: fadeIn 0.35s ease both;
@@ -2280,8 +2340,8 @@ h3 {
 
 .auth-error {
     background-color: rgba(255, 23, 68, 0.12);
-    border: 1px solid #ff1744;
-    color: #ff8a80;
+    border: 1px solid var(--color-danger);
+    color: var(--color-danger-light);
     padding: 10px;
     border-radius: 4px;
     margin-bottom: 15px;
@@ -2329,7 +2389,7 @@ h3 {
     justify-content: center;
     background: transparent;
     border: none;
-    color: #999;
+    color: var(--color-text-faint);
     cursor: pointer;
     padding: 0;
 }
@@ -2341,14 +2401,14 @@ h3 {
 
 .password-toggle:hover,
 .password-toggle:focus-visible {
-    color: #b39ddb;
+    color: var(--color-primary-300);
 }
 
 .form-hint {
     display: block;
     margin-top: 6px;
     font-size: 0.78rem;
-    color: #888;
+    color: var(--color-text-subtle);
     animation: fadeIn 0.3s ease both;
 }
 
@@ -2364,7 +2424,7 @@ h3 {
     width: 15px;
     height: 15px;
     border: 2px solid rgba(255, 255, 255, 0.35);
-    border-top-color: #fff;
+    border-top-color: var(--color-text);
     border-radius: 50%;
     animation: btnSpinnerRotate 0.7s linear infinite;
     flex-shrink: 0;
@@ -2378,11 +2438,11 @@ h3 {
     margin-top: 18px;
     text-align: center;
     font-size: 0.9rem;
-    color: #aaa;
+    color: var(--color-text-muted);
 }
 
 .auth-toggle a {
-    color: #b39ddb;
+    color: var(--color-primary-300);
     text-decoration: none;
     margin-left: 4px;
 }
@@ -2414,7 +2474,7 @@ h3 {
     padding: 10px 20px;
     background-color: transparent;
     border: 1px solid #555;
-    color: #e0e0e0;
+    color: var(--color-text-body);
     border-radius: 4px;
     cursor: pointer;
     font-weight: bold;
@@ -2428,8 +2488,8 @@ h3 {
 .btn-danger {
     padding: 8px 14px;
     background-color: transparent;
-    border: 1px solid #ff1744;
-    color: #ff8a80;
+    border: 1px solid var(--color-danger);
+    color: var(--color-danger-light);
     border-radius: 4px;
     cursor: pointer;
     font-weight: bold;
@@ -2437,7 +2497,7 @@ h3 {
 }
 
 .btn-danger:hover {
-    background-color: #ff1744;
+    background-color: var(--color-danger);
     color: white;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(255, 23, 68, 0.4);
@@ -2474,11 +2534,11 @@ h3 {
 }
 
 .characters-empty {
-    background-color: #1e1e1e;
+    background-color: var(--color-surface);
     border-radius: 8px;
     padding: 30px;
     text-align: center;
-    color: #888;
+    color: var(--color-text-subtle);
 }
 
 .characters-list {
@@ -2488,7 +2548,7 @@ h3 {
 }
 
 .character-card {
-    background-color: #1e1e1e;
+    background-color: var(--color-surface);
     border-radius: 8px;
     padding: 16px 20px;
     display: flex;
@@ -2496,7 +2556,7 @@ h3 {
     align-items: center;
     flex-wrap: wrap;
     gap: 10px;
-    border-left: 3px solid #4a148c;
+    border-left: 3px solid var(--color-primary-900);
 }
 
 .character-card-info {
@@ -2510,7 +2570,7 @@ h3 {
 }
 
 .character-card-trilha {
-    color: #b39ddb;
+    color: var(--color-primary-300);
     font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -2574,7 +2634,7 @@ h3 {
 
 .character-form-grid select {
     padding: 10px;
-    background-color: #121212;
+    background-color: var(--color-bg);
     border: 1px solid #444;
     color: white;
     border-radius: 4px;
@@ -2594,7 +2654,7 @@ h3 {
 }
 
 .form-extra-hint {
-    color: #888;
+    color: var(--color-text-subtle);
     font-size: 0.82rem;
     line-height: 1.5;
 }
@@ -2610,7 +2670,7 @@ h3 {
     display: flex;
     flex-wrap: wrap;
     gap: 6px 18px;
-    background-color: #1e1e1e;
+    background-color: var(--color-surface);
     border: 1px solid #333;
     border-radius: 6px;
     padding: 10px 14px;
@@ -2620,15 +2680,15 @@ h3 {
 }
 
 .atributos-info strong {
-    color: #fff;
+    color: var(--color-text);
 }
 
 .atributos-erro strong {
-    color: #ff8a80;
+    color: var(--color-danger-light);
 }
 
 .atributos-aviso {
-    color: #ce93d8;
+    color: var(--color-primary-200);
     flex-basis: 100%;
     font-size: 0.8rem;
 }
@@ -2638,7 +2698,7 @@ h3 {
     display: flex;
     flex-wrap: wrap;
     gap: 6px 18px;
-    background-color: #1e1e1e;
+    background-color: var(--color-surface);
     border: 1px solid #333;
     border-radius: 6px;
     padding: 10px 14px;
@@ -2648,11 +2708,11 @@ h3 {
 }
 
 .pericias-info strong {
-    color: #fff;
+    color: var(--color-text);
 }
 
 .pericias-cota-cheia strong {
-    color: #ff8a80;
+    color: var(--color-danger-light);
 }
 
 .pericias-fixas {
@@ -2663,18 +2723,18 @@ h3 {
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #aaa;
+    color: var(--color-text-muted);
     margin-bottom: 6px;
 }
 
 .pericia-fixa-item {
     background-color: #23172f;
-    border: 1px solid #4a148c;
+    border: 1px solid var(--color-primary-900);
     border-radius: 4px;
     padding: 6px 10px;
     margin-bottom: 6px;
     font-size: 0.9rem;
-    color: #d1c4e9;
+    color: var(--color-primary-100);
 }
 
 /* Mesma "pílula" da Trilha, mas em tom âmbar — só pra deixar visualmente
@@ -2690,7 +2750,7 @@ h3 {
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    background-color: #121212;
+    background-color: var(--color-bg);
     border: 1px solid #444;
     border-radius: 4px;
     padding: 6px 10px;
@@ -2700,7 +2760,7 @@ h3 {
 
 .pericia-fixa-grupo select {
     padding: 6px;
-    background-color: #1e1e1e;
+    background-color: var(--color-surface);
     border: 1px solid #444;
     color: white;
     border-radius: 4px;
@@ -2708,12 +2768,12 @@ h3 {
 
 .rituais-info {
     background-color: rgba(74, 20, 140, 0.18);
-    border: 1px solid #4a148c;
+    border: 1px solid var(--color-primary-900);
     border-radius: 6px;
     padding: 10px 14px;
     margin-bottom: 14px;
     font-size: 0.85rem;
-    color: #d1c4e9;
+    color: var(--color-primary-100);
 }
 
 .form-pericias-catalogo {
@@ -2735,7 +2795,7 @@ h3 {
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.8px;
-    color: #7c43bd;
+    color: var(--color-primary-500);
     font-weight: bold;
     border-bottom: 1px solid #333;
     padding-bottom: 4px;
@@ -2767,7 +2827,7 @@ h3 {
 
 .pericia-catalogo-grau {
     padding: 6px;
-    background-color: #121212;
+    background-color: var(--color-bg);
     border: 1px solid #444;
     color: white;
     border-radius: 4px;
@@ -2777,7 +2837,7 @@ h3 {
 .pericia-catalogo-bonus-extra {
     width: 56px;
     padding: 6px;
-    background-color: #121212;
+    background-color: var(--color-bg);
     border: 1px solid #444;
     color: white;
     border-radius: 4px;
@@ -2839,7 +2899,7 @@ h3 {
     justify-content: space-between;
     align-items: center;
     padding: 12px 20px;
-    background-color: #1e1e1e;
+    background-color: var(--color-surface);
     border-bottom: 1px solid #333;
 }
 
@@ -2852,14 +2912,14 @@ h3 {
 }
 
 .sheet-character-trilha {
-    color: #b39ddb;
+    color: var(--color-primary-300);
     font-weight: normal;
     font-size: 0.85rem;
     text-transform: uppercase;
 }
 
 .sheet-character-nex {
-    color: #888;
+    color: var(--color-text-subtle);
     font-weight: normal;
     font-size: 0.85rem;
 }
