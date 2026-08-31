@@ -217,11 +217,12 @@ button {
    dela quando "fixed" no canto da tela), então precisa reativar aqui,
    senão o botão fica visível mas não clicável. */
 .dice-box-settings-btn {
+    /* Alvo de toque -- mesmo piso de 30px do resto (ver .vital-btn). */
     position: absolute;
     top: 6px;
     right: 6px;
-    width: 26px;
-    height: 26px;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -591,8 +592,11 @@ h3 {
 }
 
 .attr-stepper-btn {
-    width: 26px;
-    height: 26px;
+    /* Alvo de toque -- mesmo piso de 30px do .vital-btn (ver comentário
+       lá). No mobile (@media max-width: 600px, mais abaixo) também sobe
+       pra 30px, igual aqui. */
+    width: 30px;
+    height: 30px;
     border-radius: 6px;
     flex-shrink: 0;
     background-color: #1a0808;
@@ -766,11 +770,14 @@ h3 {
 }
 
 .vital-btn {
+    /* Alvo de toque (WCAG 2.5.5 pede 44x44px; aqui um meio-termo
+       deliberado, ver conversa) -- 24px era pequeno demais, sobe pro
+       piso de 30px combinado. */
     background-image: linear-gradient(160deg, #2a2a2a, #161616);
     border: 1px solid #444;
     color: #ccc;
-    width: 24px;
-    height: 24px;
+    width: 30px;
+    height: 30px;
     border-radius: 6px;
     cursor: pointer;
     font-size: 0.85rem;
@@ -3218,8 +3225,13 @@ h3 {
     }
 
     .attr-stepper-btn {
-        width: 22px;
-        height: 22px;
+        /* Mesmo piso de 30px do resto (ver .attr-stepper-btn acima) --
+           antes encolhia pra 22px aqui só pra abrir espaço pro círculo
+           central, que já sobe pra 44px logo acima. Vale conferir numa
+           tela estreita de verdade se a linha inteira (botão + círculo
+           + botão) ainda cabe sem apertar. */
+        width: 30px;
+        height: 30px;
         font-size: 0.85rem;
     }
 
