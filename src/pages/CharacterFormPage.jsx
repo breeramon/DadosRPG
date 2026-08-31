@@ -127,6 +127,7 @@ export default function CharacterFormPage() {
 
     const [carregando, setCarregando] = useState(!!id);
     const [salvando, setSalvando] = useState(false);
+    const [tentouSalvar, setTentouSalvar] = useState(false);
 
     const [nome, setNome] = useState('');
     const [trilha, setTrilha] = useState('Ocultista');
@@ -245,6 +246,28 @@ export default function CharacterFormPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [nex, atributos, regraAtributos]);
 
+    // Validação inline (ver CSS .input-erro/.attr-value-input-erro/
+    // .info-aviso-erro): antes só existia como alert() no momento de
+    // salvar (validarECollectar mais abaixo, que continua sendo a
+    // fonte de verdade -- estes aqui só espelham a mesma regra pra
+    // destacar o campo problemático na hora, com mensagem por perto em
+    // vez de só a cor). Na prática o efeito de auto-clamp logo acima já
+    // evita a maioria destes casos ao vivo, mas ficam como reforço
+    // (ex: um personagem carregado com dados antigos que não valem mais
+    // pro NEX atual, antes desse efeito rodar).
+    const atributosForaDoLimite = useMemo(
+        () => ATRIBUTOS.filter(({ key }) => {
+            const v = atributos[key] || 0;
+            return v < regraAtributos.minPorAtributo || v > regraAtributos.maxPorAtributo;
+        }),
+        [atributos, regraAtributos]
+    );
+    const somaAtributosAtual = useMemo(
+        () => ATRIBUTOS.reduce((acc, { key }) => acc + (atributos[key] || 0), 0),
+        [atributos]
+    );
+    const somaAtributosExcedida = somaAtributosAtual > regraAtributos.total;
+
     // ---------------------------------------------------------------
     // Mantém as perícias automáticas da trilha E da Origem em dia
     // (aplicarFixas) e rebaixa o grau de qualquer perícia treinada
@@ -286,6 +309,12 @@ export default function CharacterFormPage() {
         [periciasState, nomesFixos]
     );
     const cotaEsgotada = livresUsadas >= quotaLivre;
+    // Diferente de cotaEsgotada (>=, só trava novas escolhas): aqui é
+    // >, o caso em que já passou do limite -- só acontece se a quota
+    // encolher DEPOIS de perícias já treinadas (trilha ou INT mudou),
+    // já que o checkbox (mais abaixo) trava novas escolhas em
+    // cotaEsgotada mas não destreina as que já estavam marcadas.
+    const quotaLivreExcedida = livresUsadas > quotaLivre;
     const regraTrilha = OP.TRILHA_REGRAS[trilha] || OP.TRILHA_REGRAS.Combatente;
     const circuloOcultista = trilha === 'Ocultista' ? OP.circuloRitualLiberado(nex) : 0;
     // null quando `origem` está vazio OU é um texto de personagem
@@ -420,6 +449,7 @@ export default function CharacterFormPage() {
     }
 
     async function handleSalvar() {
+        setTentouSalvar(true);
         const dados = validarECollectar();
         if (!dados) return;
 
@@ -455,7 +485,7 @@ export default function CharacterFormPage() {
                 <button type="button" className="attr-stepper-btn" onClick={() => handleAttrStepper(key, -1)} title="-1">{'−'}</button>
                 <input
                     type="number"
-                    className="attr-value-input"
+                    className={`attr-value-input${atributosForaDoLimite.some(a => a.key === key) ? ' attr-value-input-erro' : ''}`}
                     value={atributos[key]}
                     onChange={e => handleAttrChange(key, e.target.value)}
                 />
@@ -480,7 +510,16 @@ export default function CharacterFormPage() {
                 <section className="form-identity-section">
                     <div className="control-group full">
                         <label>Nome do Personagem</label>
-                        <input type="text" required value={nome} onChange={e => setNome(e.target.value)} />
+                        <input
+                            type="text"
+                            required
+                            className={tentouSalvar && !nome.trim() ? 'input-erro' : ''}
+                            value={nome}
+                            onChange={e => setNome(e.target.value)}
+                        />
+                        {tentouSalvar && !nome.trim() && (
+                            <span className="form-field-erro">Dê um nome pro personagem.</span>
+                        )}
                     </div>
 
                     <div className="control-group full">
@@ -558,6 +597,16 @@ export default function CharacterFormPage() {
                                 (ver comentário em src/lib/pericias.js) — ajuste com seu mestre se preferir outra convenção.
                             </div>
                         )}
+                        {somaAtributosExcedida && (
+                            <div className="info-aviso-erro">
+                                Você distribuiu {somaAtributosAtual} pontos, mas o NEX {nex}% só libera {regraAtributos.total} — tire pontos de algum atributo antes de salvar.
+                            </div>
+                        )}
+                        {atributosForaDoLimite.length > 0 && (
+                            <div className="info-aviso-erro">
+                                {atributosForaDoLimite.map(a => a.label).join(', ')} fora do limite permitido (entre {regraAtributos.minPorAtributo} e {regraAtributos.maxPorAtributo}).
+                            </div>
+                        )}
                     </div>
                 </section>
 
@@ -569,6 +618,11 @@ export default function CharacterFormPage() {
                         <span className={cotaEsgotada ? 'pericias-cota-cheia' : ''}>
                             Perícias treinadas à escolha: <strong>{livresUsadas} / {quotaLivre}</strong>
                         </span>
+                        {quotaLivreExcedida && (
+                            <div className="info-aviso-erro">
+                                Desmarque {livresUsadas - quotaLivre} perícia(s) treinada(s) à escolha — o NEX {nex}% atual só permite {quotaLivre}.
+                            </div>
+                        )}
                     </div>
 
                     {(regraTrilha.fixasSimples.length > 0 || regraTrilha.gruposFixos.length > 0 || (origemEscolhida?.periciasTreinadas.length > 0)) && (

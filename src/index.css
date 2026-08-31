@@ -578,6 +578,18 @@ h3 {
         0 0 16px rgba(255, 23, 23, 0.45);
 }
 
+/* Atributo fora do limite permitido pelo NEX atual -- ver
+   .info-aviso-erro mais abaixo pra mensagem explicando qual atributo
+   e por quê. */
+.attr-value-input-erro {
+    border: 3px solid var(--color-danger);
+    box-shadow:
+        0 0 0 3px #000,
+        0 0 0 4px var(--color-danger),
+        inset 0 0 8px rgba(0, 0, 0, 0.85),
+        0 0 14px rgba(255, 23, 68, 0.65);
+}
+
 .attr-stepper-btn {
     width: 26px;
     height: 26px;
@@ -2200,6 +2212,23 @@ h3 {
     resize: vertical;
 }
 
+/* Validação inline (CharacterFormPage) -- borda mais grossa e numa cor
+   bem diferente do cinza padrão (#444) em vez de só trocar o tom,
+   pra quem não distingue bem cores também notar o campo problemático;
+   a mensagem em .form-field-erro logo abaixo é o reforço em texto. */
+.control-group input.input-erro,
+.control-group textarea.input-erro {
+    border: 2px solid var(--color-danger);
+    box-shadow: 0 0 0 1px rgba(255, 23, 68, 0.35);
+}
+
+.form-field-erro {
+    display: block;
+    color: var(--color-danger-light);
+    font-size: 0.75rem;
+    margin-top: 4px;
+}
+
 .custom-roller {
     background-color: var(--color-surface);
     padding: 15px;
@@ -2782,6 +2811,16 @@ h3 {
 
 .atributos-aviso {
     color: var(--color-primary-200);
+    flex-basis: 100%;
+    font-size: 0.8rem;
+}
+
+/* Mesmo formato de .atributos-aviso acima, só que pra avisos de erro
+   de verdade (soma/atributo fora do limite, quota de perícias livres
+   excedida) -- usada tanto em .atributos-info quanto em
+   .pericias-info. */
+.info-aviso-erro {
+    color: var(--color-danger-light);
     flex-basis: 100%;
     font-size: 0.8rem;
 }
