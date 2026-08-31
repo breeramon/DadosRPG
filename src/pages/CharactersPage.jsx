@@ -100,7 +100,20 @@ export default function CharactersPage() {
                     </div>
                 </div>
 
-                {erro && <div className="characters-empty">{erro}</div>}
+                {/* Sem isso, entre a tela montar e a lista carregar do
+                    Firestore essa área ficava em branco -- podia passar a
+                    impressão de "não tenho nenhum personagem" por um
+                    instante antes de popular. Mesmo texto simples
+                    ("Carregando...") que .app-loading já usa em outras
+                    telas (ver RequireAuth/CharacterFormPage/
+                    CharacterSheetPage), só que escopado pra essa área em
+                    vez de substituir a tela inteira -- cabeçalho e botões
+                    continuam aparecendo na hora. */}
+                {carregando && (
+                    <div className="characters-empty">Carregando personagens...</div>
+                )}
+
+                {erro && <div className="characters-empty characters-erro">{erro}</div>}
 
                 {!erro && !carregando && personagens.length === 0 && (
                     <div className="characters-empty">

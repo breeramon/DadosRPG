@@ -501,8 +501,15 @@ export default function CharacterFormPage() {
                 <div className="sheet-topbar-title">
                     <span>{id ? 'Editar Personagem' : 'Novo Personagem'}</span>
                 </div>
-                <button type="button" className="btn-action" onClick={handleSalvar} disabled={salvando}>
-                    Salvar Personagem
+                <button
+                    type="button"
+                    className={`btn-action${salvando ? ' btn-action-busy' : ''}`}
+                    onClick={handleSalvar}
+                    disabled={salvando}
+                    aria-busy={salvando}
+                >
+                    {salvando && <span className="btn-spinner" />}
+                    <span>{salvando ? 'Salvando...' : 'Salvar Personagem'}</span>
                 </button>
             </div>
 

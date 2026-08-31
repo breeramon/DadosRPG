@@ -2531,8 +2531,27 @@ h3 {
     animation: fadeIn 0.3s ease both;
 }
 
+/* Volta a ser uma regra só (igual era antes) em vez de dividida em
+   duas -- não tinha problema nenhum pra cascata em CSS (propriedades
+   diferentes em cada uma não conflitam), mas não custa nada manter
+   simples igual era, principalmente depois do susto com os botões
+   sem estilo. */
 .btn-action.full {
     width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* .btn-action-busy (botão "Salvar Personagem" enquanto salva, ver
+   CharacterFormPage.jsx) precisa do mesmo layout flex que .full pra
+   alinhar o .btn-spinner com o texto -- sem isso, o span do spinner
+   (que só tem largura/altura fixas, sem display próprio) não vira um
+   item flex e o width/height dele é ignorado pelo navegador. Regra
+   própria em vez de dividir com .full -- só repete 3 linhas, mas fica
+   cada seletor com a sua regra inteira. */
+.btn-action.btn-action-busy {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2658,6 +2677,15 @@ h3 {
     padding: 30px;
     text-align: center;
     color: var(--color-text-subtle);
+}
+
+/* Erro de verdade ao carregar a lista (ver CharactersPage.jsx) --
+   mesma caixa de ".characters-empty" (usada pra "nenhum personagem
+   ainda"), mas com cor de texto E borda vermelhas, pra não confundir
+   as duas situações a partir de só um texto cinza neutro. */
+.characters-empty.characters-erro {
+    color: var(--color-danger-light);
+    border: 1px solid var(--color-danger);
 }
 
 .characters-list {
