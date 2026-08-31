@@ -86,7 +86,15 @@ export default function OrigemCatalogModal({ aberto, onFechar, origemAtual, onEs
                         const atual = origem.nome === origemAtual;
                         return (
                             <div className={`modal-item-card origem-card${abertoCard ? ' expanded' : ''}`} key={origem.nome}>
-                                <div className="modal-item-card-header" onClick={() => toggleExpandido(origem.nome)}>
+                                <div
+                                    className="modal-item-card-header"
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-expanded={abertoCard}
+                                    aria-label={`Detalhes de ${origem.nome}`}
+                                    onClick={() => toggleExpandido(origem.nome)}
+                                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpandido(origem.nome); } }}
+                                >
                                     <span className="modal-item-card-chevron">▶</span>
                                     <div className="modal-item-card-info">
                                         <div className="modal-item-card-title-row">

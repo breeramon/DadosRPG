@@ -1025,28 +1025,28 @@ export default function CharacterSheetPage() {
                         <div className="vital-row">
                             <div className="vital-label">VIDA</div>
                             <div className="vital-bar-wrap">
-                                <button className="vital-btn" title="-5" onClick={() => ajustarVida(-5)}>«</button>
-                                <button className="vital-btn" title="-1" onClick={() => ajustarVida(-1)}>‹</button>
+                                <button className="vital-btn" title="-5" aria-label="Diminuir vida em 5" onClick={() => ajustarVida(-5)}>«</button>
+                                <button className="vital-btn" title="-1" aria-label="Diminuir vida em 1" onClick={() => ajustarVida(-1)}>‹</button>
                                 <div className="vital-bar vida-bar">
                                     <div className="vital-bar-fill vida-fill" style={{ width: `${vidaMax > 0 ? Math.max(0, Math.min(100, (vidaAtual / vidaMax) * 100)) : 0}%` }}></div>
                                     <span className="vital-bar-text">{vidaAtual} / {vidaMax}</span>
                                 </div>
-                                <button className="vital-btn" title="+1" onClick={() => ajustarVida(1)}>&rsaquo;</button>
-                                <button className="vital-btn" title="+5" onClick={() => ajustarVida(5)}>&raquo;</button>
+                                <button className="vital-btn" title="+1" aria-label="Aumentar vida em 1" onClick={() => ajustarVida(1)}>&rsaquo;</button>
+                                <button className="vital-btn" title="+5" aria-label="Aumentar vida em 5" onClick={() => ajustarVida(5)}>&raquo;</button>
                             </div>
                         </div>
 
                         <div className="vital-row">
                             <div className="vital-label">PE <small className="vital-label-sub">Pontos de Esforço</small></div>
                             <div className="vital-bar-wrap">
-                                <button className="vital-btn" title="-5" onClick={() => ajustarDet(-5)}>«</button>
-                                <button className="vital-btn" title="-1" onClick={() => ajustarDet(-1)}>‹</button>
+                                <button className="vital-btn" title="-5" aria-label="Diminuir PE em 5" onClick={() => ajustarDet(-5)}>«</button>
+                                <button className="vital-btn" title="-1" aria-label="Diminuir PE em 1" onClick={() => ajustarDet(-1)}>‹</button>
                                 <div key={peFlash} className={`vital-bar det-bar${peFlash > 0 ? ' pe-spent-flash' : ''}`}>
                                     <div className="vital-bar-fill det-fill" style={{ width: `${detMax > 0 ? Math.max(0, Math.min(100, (detAtual / detMax) * 100)) : 0}%` }}></div>
                                     <span className="vital-bar-text">{detAtual} / {detMax}</span>
                                 </div>
-                                <button className="vital-btn" title="+1" onClick={() => ajustarDet(1)}>&rsaquo;</button>
-                                <button className="vital-btn" title="+5" onClick={() => ajustarDet(5)}>&raquo;</button>
+                                <button className="vital-btn" title="+1" aria-label="Aumentar PE em 1" onClick={() => ajustarDet(1)}>&rsaquo;</button>
+                                <button className="vital-btn" title="+5" aria-label="Aumentar PE em 5" onClick={() => ajustarDet(5)}>&raquo;</button>
                             </div>
                         </div>
 
@@ -1254,7 +1254,15 @@ export default function CharacterSheetPage() {
                                         const aberto = expandidosAtaques.has(ataque.nome);
                                         return (
                                             <div className={`modal-item-card ataque-card${aberto ? ' expanded' : ''}`} key={`${ataque.nome}-${index}`}>
-                                                <div className="modal-item-card-header" onClick={() => toggleExpandidoAtaque(ataque.nome)}>
+                                                <div
+                                                    className="modal-item-card-header"
+                                                    role="button"
+                                                    tabIndex={0}
+                                                    aria-expanded={aberto}
+                                                    aria-label={`Detalhes de ${ataque.nome}`}
+                                                    onClick={() => toggleExpandidoAtaque(ataque.nome)}
+                                                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpandidoAtaque(ataque.nome); } }}
+                                                >
                                                     <span className="modal-item-card-chevron">▶</span>
                                                     <div className="modal-item-card-info">
                                                         <div className="modal-item-card-title-row">
@@ -1373,7 +1381,15 @@ export default function CharacterSheetPage() {
                                         const custo = OPR.CUSTO_PE_POR_CIRCULO[ritual.circulo] || 0;
                                         return (
                                             <div className={`modal-item-card ritual-card elemento-${elementoSlug(ritual.elemento)}${aberto ? ' expanded' : ''}`} key={ritual.nome}>
-                                                <div className="modal-item-card-header" onClick={() => toggleExpandidoConhecido(ritual.nome)}>
+                                                <div
+                                                    className="modal-item-card-header"
+                                                    role="button"
+                                                    tabIndex={0}
+                                                    aria-expanded={aberto}
+                                                    aria-label={`Detalhes de ${ritual.nome}`}
+                                                    onClick={() => toggleExpandidoConhecido(ritual.nome)}
+                                                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpandidoConhecido(ritual.nome); } }}
+                                                >
                                                     <span className="modal-item-card-chevron">▶</span>
                                                     <div className="modal-item-card-info">
                                                         <div className="modal-item-card-title-row">
@@ -1535,7 +1551,15 @@ export default function CharacterSheetPage() {
                                         const aberto = expandidos.has(item.nome);
                                         return (
                                             <div className={`modal-item-card${aberto ? ' expanded' : ''}`} key={item.nome}>
-                                                <div className="modal-item-card-header" onClick={() => toggleExpandido(item.nome)}>
+                                                <div
+                                                    className="modal-item-card-header"
+                                                    role="button"
+                                                    tabIndex={0}
+                                                    aria-expanded={aberto}
+                                                    aria-label={`Detalhes de ${item.nome}`}
+                                                    onClick={() => toggleExpandido(item.nome)}
+                                                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpandido(item.nome); } }}
+                                                >
                                                     <span className="modal-item-card-chevron">▶</span>
                                                     <div className="modal-item-card-info">
                                                         <div className="modal-item-card-title-row">
@@ -1653,7 +1677,15 @@ export default function CharacterSheetPage() {
                                 const bloqueadoPorNex = trilha === 'Ocultista' && ritual.circulo > circuloLiberado;
                                 return (
                                     <div className={`modal-item-card ritual-card elemento-${elementoSlug(ritual.elemento)}${aberto ? ' expanded' : ''}`} key={ritual.nome}>
-                                        <div className="modal-item-card-header" onClick={() => toggleExpandidoRitual(ritual.nome)}>
+                                        <div
+                                            className="modal-item-card-header"
+                                            role="button"
+                                            tabIndex={0}
+                                            aria-expanded={aberto}
+                                            aria-label={`Detalhes de ${ritual.nome}`}
+                                            onClick={() => toggleExpandidoRitual(ritual.nome)}
+                                            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpandidoRitual(ritual.nome); } }}
+                                        >
                                             <span className="modal-item-card-chevron">▶</span>
                                             <div className="modal-item-card-info">
                                                 <div className="modal-item-card-title-row">

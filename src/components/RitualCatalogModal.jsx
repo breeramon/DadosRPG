@@ -196,7 +196,15 @@ export default function RitualCatalogModal({ aberto, onFechar, trilha, nex, ritu
                         const bloqueadoPorNex = trilha === 'Ocultista' && ritual.circulo > circuloLiberado;
                         return (
                             <div className={`modal-item-card ritual-card elemento-${elementoSlug(ritual.elemento)}${abertoCard ? ' expanded' : ''}`} key={ritual.nome}>
-                                <div className="modal-item-card-header" onClick={() => toggleExpandido(ritual.nome)}>
+                                <div
+                                    className="modal-item-card-header"
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-expanded={abertoCard}
+                                    aria-label={`Detalhes de ${ritual.nome}`}
+                                    onClick={() => toggleExpandido(ritual.nome)}
+                                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpandido(ritual.nome); } }}
+                                >
                                     <span className="modal-item-card-chevron">▶</span>
                                     <div className="modal-item-card-info">
                                         <div className="modal-item-card-title-row">

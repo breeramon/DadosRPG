@@ -96,6 +96,32 @@ button {
     font-family: 'Montserrat', 'Segoe UI', sans-serif;
 }
 
+/* Anel de foco genérico pra todo `<button>` do projeto (WCAG 2.3.7 --
+   antes só 4 seletores no arquivo inteiro tinham foco customizado, e
+   nenhum deles era botão: eram campos de texto/busca, que continuam
+   com o próprio anel deles mais abaixo). Sem isso, navegar por teclado
+   dependia só do outline padrão do navegador, que pode não ter
+   contraste suficiente sobre os fundos escuros do app.
+   - `:focus-visible` (não `:focus`) pra só aparecer em navegação por
+     teclado, não em todo clique de mouse.
+   - Duas camadas de box-shadow em vez de `outline` de verdade: a
+     primeira (cor de fundo) cria o "deslocamento" entre o botão e o
+     anel, a segunda é o anel roxo em si -- e diferente de `outline`,
+     box-shadow acompanha o border-radius de cada botão (vários aqui
+     são circulares: .attr-value-input, .dice-box-settings-btn, etc.).
+   - Botões que já têm o próprio box-shadow de hover/estado (ex.
+     .modal-item-card-remove:hover) continuam funcionando normalmente
+     no mouse; isso aqui só entra em jogo no foco por teclado. */
+button:focus-visible,
+[role="button"]:focus-visible {
+    /* [role="button"] cobre os cabeçalhos de cartão expansíveis
+       (.modal-item-card-header) -- não são <button> de verdade (já têm
+       botões de ação de verdade dentro, tipo Rolar/Remover), mas agora
+       são navegáveis por teclado, então precisam do mesmo anel. */
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-primary-300);
+}
+
 /* --- TELAS (login, lista de personagens, formulário, ficha) --- */
 .screen {
     min-height: 100vh;
