@@ -129,12 +129,20 @@ export function pontosAtributoPorNex(nex) {
     };
 }
 
-// Vida (PV) e Determinação, por trilha (comentário original preservado
-// — ver pericias.js vanilla pra detalhes de calibração).
+// Vida (PV), PE (Pontos de Esforço) e Sanidade (SAN), por trilha —
+// conferidos direto contra a Tabela de Características de cada classe
+// no livro de regras (confiança alta, todas as 3 trilhas conferidas
+// em 2026-09). PE do Combatente e do Especialista foram corrigidos
+// nessa conferência (valores antigos não batiam com o livro); PE do
+// Ocultista também estava errado (era 10/+5, o livro diz 4+Presença
+// inicial e +4 PE (+Pre) por nível). Sanidade é um recurso novo nesta
+// versão do app — ver sanidadeMaxima() logo abaixo, e a seção
+// "Sanidade" do livro (p.111) pras regras de dano mental/perturbado/
+// enlouquecendo/insano (ainda não modeladas, só o valor máximo).
 export const RECURSOS = {
-    Combatente: { pvInicial: 20, pvIncremento: 4, detInicial: 6, detIncremento: 3 },
-    Especialista: { pvInicial: 16, pvIncremento: 3, detInicial: 12, detIncremento: 6 },
-    Ocultista: { pvInicial: 12, pvIncremento: 2, detInicial: 10, detIncremento: 5 },
+    Combatente: { pvInicial: 20, pvIncremento: 4, detInicial: 2, detIncremento: 2, sanInicial: 12, sanIncremento: 3 },
+    Especialista: { pvInicial: 16, pvIncremento: 3, detInicial: 3, detIncremento: 3, sanInicial: 16, sanIncremento: 4 },
+    Ocultista: { pvInicial: 12, pvIncremento: 2, detInicial: 4, detIncremento: 4, sanInicial: 20, sanIncremento: 5 },
 };
 
 export function passosDeNex(nex) {
@@ -153,6 +161,16 @@ export function determinacaoMaxima(trilha, presenca, nex) {
     const pre = Number(presenca) || 0;
     const passos = passosDeNex(nex);
     return (r.detInicial + pre) + passos * (r.detIncremento + pre);
+}
+
+// Sanidade máxima = Sanidade Inicial da trilha + (passos de NEX acima
+// de 5% * Sanidade por nível de exposição da trilha) — ao contrário
+// de Vida/PE, não soma nenhum atributo (o livro só lista o valor fixo
+// por trilha, sem "+Atributo" na linha de Sanidade).
+export function sanidadeMaxima(trilha, nex) {
+    const r = RECURSOS[trilha] || RECURSOS.Combatente;
+    const passos = passosDeNex(nex);
+    return r.sanInicial + passos * r.sanIncremento;
 }
 
 // Quantos PE o personagem pode gastar POR RODADA, de acordo com o NEX —

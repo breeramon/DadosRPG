@@ -243,6 +243,14 @@ export default function CharacterSheetPage() {
     const [ataques, setAtaques] = useState([]);
     const [vidaAtual, setVidaAtual] = useState(0);
     const [detAtual, setDetAtual] = useState(0);
+    // Sanidade (SAN) — quarto recurso vital, opt-in por personagem (ver
+    // .vital-sanidade-toggle no JSX). `sanidadeAtiva` só controla se a
+    // barra aparece na ficha; o valor de `sanidadeAtual` continua sendo
+    // salvo mesmo com a barra oculta, pra não se perder se o jogador
+    // reativar depois. Cálculo do máximo em OP.sanidadeMaxima
+    // (src/lib/pericias.js), com fonte no livro (p.111/25/29/33).
+    const [sanidadeAtual, setSanidadeAtual] = useState(0);
+    const [sanidadeAtiva, setSanidadeAtiva] = useState(false);
     // Contador que só serve pra forçar o React a "trocar" o key do bloco
     // de Vida/PE (ver JSX mais abaixo) toda vez que um ritual é
     // conjurado, re-disparando a animação CSS .pe-spent-flash mesmo que
@@ -381,14 +389,18 @@ export default function CharacterSheetPage() {
                 const bonus = bonusNumericoDaOrigem(p.origem, nex);
                 const vidaMax = OP.vidaMaxima(trilha, atributos.vig, nex) + bonus.vida;
                 const detMax = OP.determinacaoMaxima(trilha, atributos.pre, nex) + bonus.pe;
+                const sanMax = OP.sanidadeMaxima(trilha, nex);
                 const vida = (typeof p.vidaAtual === 'number') ? Math.min(p.vidaAtual, vidaMax) : vidaMax;
                 const det = (typeof p.determinacaoAtual === 'number') ? Math.min(p.determinacaoAtual, detMax) : detMax;
+                const san = (typeof p.sanidadeAtual === 'number') ? Math.min(p.sanidadeAtual, sanMax) : sanMax;
                 setVidaAtual(vida);
                 setDetAtual(det);
+                setSanidadeAtual(san);
+                setSanidadeAtiva(!!p.sanidadeAtiva);
                 // Se o máximo mudou desde a última vez salva (edição de NEX/
                 // atributos), já grava os valores clampados de volta.
-                if (p.vidaAtual !== vida || p.determinacaoAtual !== det) {
-                    Characters.update(user.uid, id, { vidaAtual: vida, determinacaoAtual: det }).catch(() => {});
+                if (p.vidaAtual !== vida || p.determinacaoAtual !== det || p.sanidadeAtual !== san) {
+                    Characters.update(user.uid, id, { vidaAtual: vida, determinacaoAtual: det, sanidadeAtual: san }).catch(() => {});
                 }
 
                 setRollLog([{ id: proximoLogId++, system: true, title: `Sessão iniciada — ${p.nome || ''}.` }]);
@@ -451,21 +463,34 @@ export default function CharacterSheetPage() {
         return rollDiceAnimated(`${qty}d${sides}`);
     }
 
+    // Monta "1, 2, 18" com o dado vencedor em <b> -- usado no log das
+    // rolagens de atributo (vantagem/desvantagem), ver rollSystemDice
+    // logo abaixo. Nós JSX de verdade em vez de montar uma string com
+    // "<b>" colado (que exigia dangerouslySetInnerHTML pra renderizar).
+    function destacarVencedor(rolls, vencedor) {
+        return rolls.map((r, i) => (
+            <span key={i}>
+                {i > 0 && ', '}
+                {r === vencedor ? <b>{r}</b> : r}
+            </span>
+        ));
+    }
+
     async function rollSystemDice(attrName, diceCount) {
-        let rolls, finalResult, detailsString;
+        let rolls, finalResult, detailsNode;
         if (diceCount > 0) {
             rolls = await rollDice(diceCount, 20);
             finalResult = Math.max(...rolls);
-            detailsString = `[${rolls.map(r => r === finalResult ? `<b>${r}</b>` : r).join(', ')}]`;
+            detailsNode = <>[{destacarVencedor(rolls, finalResult)}]</>;
         } else {
             rolls = await rollDice(2, 20);
             finalResult = Math.min(...rolls);
-            detailsString = `Desvantagem (0): [${rolls.map(r => r === finalResult ? `<b>${r}</b>` : r).join(', ')}]`;
+            detailsNode = <>Desvantagem (0): [{destacarVencedor(rolls, finalResult)}]</>;
         }
         let type = 'normal';
         if (finalResult === 20) type = 'crit';
         if (finalResult === 1) type = 'fail';
-        logMessage(attrName, detailsString, finalResult, type);
+        logMessage(attrName, detailsNode, finalResult, type);
     }
 
     async function rollSkill(skillName, attrDice, bonus) {
@@ -515,6 +540,15 @@ export default function CharacterSheetPage() {
     const detMax = useMemo(
         () => OP.determinacaoMaxima(trilha, atributos.pre, nex) + bonusOrigem.pe,
         [trilha, atributos.pre, nex, bonusOrigem]
+    );
+    // Sanidade não tem bônus numérico de Origem ainda — nenhuma Origem
+    // do catálogo tem um efeito de Sanidade "limpo" o bastante pra
+    // entrar em bonusNumericoDaOrigem (ex: Cicatrizes Psicológicas do
+    // Vítima é "+1 de Sanidade a cada 5% de NEX", mas continua só
+    // texto — ver comentário em origens.js).
+    const sanidadeMax = useMemo(
+        () => OP.sanidadeMaxima(trilha, nex),
+        [trilha, nex]
     );
     const defesaEquip = useMemo(() => OPI.defesaDoInventario(inventario), [inventario]);
     const defesaTotal = OP.defesaTotal(atributos.agi, defesaEquip, defesaOutros) + bonusOrigem.defesa;
@@ -587,6 +621,16 @@ export default function CharacterSheetPage() {
         const novo = Math.max(0, Math.min(detMax, detAtual + delta));
         setDetAtual(novo);
         salvarCampos({ determinacaoAtual: novo });
+    }
+    function ajustarSanidade(delta) {
+        const novo = Math.max(0, Math.min(sanidadeMax, sanidadeAtual + delta));
+        setSanidadeAtual(novo);
+        salvarCampos({ sanidadeAtual: novo });
+    }
+    function alternarSanidade() {
+        const novo = !sanidadeAtiva;
+        setSanidadeAtiva(novo);
+        salvarCampos({ sanidadeAtiva: novo });
     }
     function handleDefesaOutrosChange(valor) {
         const v = parseInt(valor, 10) || 0;
@@ -1050,6 +1094,35 @@ export default function CharacterSheetPage() {
                             </div>
                         </div>
 
+                        {sanidadeAtiva && (
+                            <div className="vital-row">
+                                <div className="vital-label">SANIDADE <small className="vital-label-sub">SAN</small></div>
+                                <div className="vital-bar-wrap">
+                                    <button className="vital-btn" title="-5" aria-label="Diminuir sanidade em 5" onClick={() => ajustarSanidade(-5)}>«</button>
+                                    <button className="vital-btn" title="-1" aria-label="Diminuir sanidade em 1" onClick={() => ajustarSanidade(-1)}>‹</button>
+                                    <div className="vital-bar san-bar">
+                                        <div className="vital-bar-fill san-fill" style={{ width: `${sanidadeMax > 0 ? Math.max(0, Math.min(100, (sanidadeAtual / sanidadeMax) * 100)) : 0}%` }}></div>
+                                        <span className="vital-bar-text">{sanidadeAtual} / {sanidadeMax}</span>
+                                    </div>
+                                    <button className="vital-btn" title="+1" aria-label="Aumentar sanidade em 1" onClick={() => ajustarSanidade(1)}>&rsaquo;</button>
+                                    <button className="vital-btn" title="+5" aria-label="Aumentar sanidade em 5" onClick={() => ajustarSanidade(5)}>&raquo;</button>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="vital-sanidade-toggle-row">
+                            <button
+                                type="button"
+                                className="vital-sanidade-toggle"
+                                onClick={alternarSanidade}
+                                aria-pressed={sanidadeAtiva}
+                                aria-label={sanidadeAtiva ? 'Ocultar recurso de Sanidade desta ficha' : 'Ativar recurso de Sanidade nesta ficha'}
+                                title={sanidadeAtiva ? 'Ocultar Sanidade' : 'Ativar Sanidade'}
+                            >
+                                {sanidadeAtiva ? '− Ocultar Sanidade' : '+ Ativar Sanidade'}
+                            </button>
+                        </div>
+
                         <div className="defesa-row">
                             <div className="defesa-box">
                                 <span className="defesa-label">DEFESA</span>
@@ -1349,7 +1422,7 @@ export default function CharacterSheetPage() {
                                                 key={entry.id}
                                             >
                                                 <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{entry.title}</div>
-                                                <div style={{ color: '#aaa', fontSize: '0.85em' }} dangerouslySetInnerHTML={{ __html: entry.details }}></div>
+                                                <div style={{ color: '#aaa', fontSize: '0.85em' }}>{entry.details}</div>
                                                 <div className="result-highlight">{entry.result}</div>
                                             </div>
                                         ))

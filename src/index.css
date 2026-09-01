@@ -851,6 +851,14 @@ h3 {
     background-color: #00695c;
 }
 
+.san-bar {
+    background-color: #14001f;
+}
+
+.san-fill {
+    background-color: var(--color-primary-500);
+}
+
 /* Pisca a barra de PE quando um ritual é conjurado (ver conjurarRitual em
    CharacterSheetPage.jsx) — sinal visual de que o PE foi gasto, visível
    mesmo se o usuário não estiver olhando pro log da aba Combate. O key
@@ -877,6 +885,37 @@ h3 {
     font-weight: bold;
     color: var(--color-text);
     text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.vital-sanidade-toggle-row {
+    display: flex;
+}
+
+.vital-sanidade-toggle {
+    width: 100%;
+    min-height: 30px;
+    padding: 6px 10px;
+    background: transparent;
+    border: 1px dashed var(--color-primary-400);
+    border-radius: 6px;
+    color: var(--color-primary-300);
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.vital-sanidade-toggle:hover {
+    border-style: solid;
+    border-color: var(--color-primary-300);
+    color: var(--color-text);
+    background-color: rgba(124, 67, 189, 0.12);
+}
+
+.vital-sanidade-toggle[aria-pressed="true"] {
+    border-style: solid;
+    color: var(--color-text-muted);
 }
 
 .defesa-row {
