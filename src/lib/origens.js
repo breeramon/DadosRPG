@@ -36,7 +36,7 @@
 //     confiável) — não usadas em nada abaixo.
 // ============================================================
 
-import { passosDeNex } from './pericias';
+import { passosDeNex, RECURSOS } from './pericias';
 
 // As 28 perícias válidas (mesmos nomes de PERICIAS_CATALOGO em
 // pericias.js) que as Origens abaixo podem treinar.
@@ -95,7 +95,13 @@ export const ORIGENS_CATALOGO = [
         descricao: 'Fez parte de um culto paranormal, mas teve os olhos abertos e agora luta pelo lado certo.',
         periciasTreinadas: ['Ocultismo', 'Religião'],
         poder: { nome: 'Traços do Outro Lado', descricao: 'Possui um poder paranormal à sua escolha; porém, começa o jogo com metade da Sanidade normal para sua classe.' },
-        efeitos: [],
+        // "Metade da Sanidade normal" é lido aqui como metade só da
+        // Sanidade INICIAL da trilha (o termo fixo de sanidadeMaxima),
+        // não do total já somado com os incrementos por NEX — ver
+        // sanidadeMetadeInicial em bonusNumericoDaOrigem.
+        efeitos: [
+            { tipo: 'sanidadeMetadeInicial' },
+        ],
         confianca: 2,
     },
     {
@@ -174,9 +180,11 @@ export const ORIGENS_CATALOGO = [
         descricao: 'Encontrou o paranormal numa experiência traumática (infância/juventude) e decidiu lutar pra impedir que outros passem pelo mesmo.',
         periciasTreinadas: ['Reflexos', 'Vontade'],
         poder: { nome: 'Cicatrizes Psicológicas', descricao: '+1 de Sanidade para cada 5% de NEX.' },
-        // Escala com Sanidade, um recurso que este app ainda não
-        // modela na ficha (só Vida/PE/Defesa) — fica só como texto.
-        efeitos: [],
+        // Efeito numérico limpo — mesmo padrão de passosNex já usado
+        // em vidaPorPassoNex (Sanidade agora é modelada na ficha).
+        efeitos: [
+            { tipo: 'sanidadePorPassoNex', valor: 1 },
+        ],
         confianca: 2,
     },
 
@@ -285,15 +293,22 @@ const NEX_IMPAR_MARCOS = [15, 25, 35, 45, 55, 65, 75, 85, 95];
 // Soma todos os efeitos NUMÉRICOS (estruturados) da Origem escolhida,
 // prontos pra somar direto nas contas que já existem em
 // CharacterSheetPage.jsx (vidaMaxima, determinacaoMaxima, defesaTotal,
-// peRodadaPorNex) — nunca substituem essas contas, só entram como mais
-// um termo somado, do mesmo jeito que o bônus de Equipamento já soma
-// na Defesa. Poderes que não têm um efeito numérico "limpo" (ver
-// `efeitos: []` no catálogo acima) simplesmente não contribuem aqui —
-// o poder continua sendo mostrado como texto na ficha, só não vira
-// número sozinho.
-export function bonusNumericoDaOrigem(nomeOrigem, nex) {
+// peRodadaPorNex, sanidadeMaxima) — nunca substituem essas contas, só
+// entram como mais um termo somado, do mesmo jeito que o bônus de
+// Equipamento já soma na Defesa. Poderes que não têm um efeito
+// numérico "limpo" (ver `efeitos: []` no catálogo acima) simplesmente
+// não contribuem aqui — o poder continua sendo mostrado como texto na
+// ficha, só não vira número sozinho. Ex: "Acalentar" (concede Sanidade
+// a OUTRA pessoa, 1d6+Presença, sob demanda) e "Eu Já Sabia"
+// (resistência a dano mental = Intelecto) não têm um jeito limpo de
+// virar um termo somado aqui — continuam só texto.
+//
+// `trilha` só é necessário pro efeito 'sanidadeMetadeInicial' (precisa
+// saber a Sanidade Inicial da classe pra calcular a metade) — passar
+// undefined é seguro pros personagens sem essa Origem.
+export function bonusNumericoDaOrigem(nomeOrigem, nex, trilha) {
     const origem = origemPorNome(nomeOrigem);
-    const resultado = { defesa: 0, vida: 0, pe: 0, peRodada: 0 };
+    const resultado = { defesa: 0, vida: 0, pe: 0, peRodada: 0, sanidade: 0 };
     if (!origem) return resultado;
 
     const passosNex = passosDeNex(nex);
@@ -316,6 +331,20 @@ export function bonusNumericoDaOrigem(nomeOrigem, nex) {
             case 'peRodadaBonus':
                 resultado.peRodada += efeito.valor;
                 break;
+            case 'sanidadePorPassoNex':
+                resultado.sanidade += efeito.valor * passosNex;
+                break;
+            case 'sanidadeMetadeInicial': {
+                // "Começa o jogo com metade da Sanidade normal para sua
+                // classe" — reduz só o termo Inicial da fórmula (não o
+                // total já com incrementos de NEX). Sem trilha (Origem
+                // escolhida antes de escolher a trilha, ou dado antigo),
+                // não dá pra saber o Inicial da classe ainda — não
+                // aplica o desconto até a trilha ser definida.
+                const r = RECURSOS[trilha];
+                if (r) resultado.sanidade -= r.sanInicial / 2;
+                break;
+            }
             default:
                 break;
         }

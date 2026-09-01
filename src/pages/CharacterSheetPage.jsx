@@ -386,10 +386,10 @@ export default function CharacterSheetPage() {
                 // uma dessas Origens teria seu Vida/PE atual salvo
                 // erroneamente rebaixado (e gravado de volta!) só por
                 // este efeito não saber do bônus.
-                const bonus = bonusNumericoDaOrigem(p.origem, nex);
+                const bonus = bonusNumericoDaOrigem(p.origem, nex, trilha);
                 const vidaMax = OP.vidaMaxima(trilha, atributos.vig, nex) + bonus.vida;
                 const detMax = OP.determinacaoMaxima(trilha, atributos.pre, nex) + bonus.pe;
-                const sanMax = OP.sanidadeMaxima(trilha, nex);
+                const sanMax = Math.max(0, OP.sanidadeMaxima(trilha, nex) + bonus.sanidade);
                 const vida = (typeof p.vidaAtual === 'number') ? Math.min(p.vidaAtual, vidaMax) : vidaMax;
                 const det = (typeof p.determinacaoAtual === 'number') ? Math.min(p.determinacaoAtual, detMax) : detMax;
                 const san = (typeof p.sanidadeAtual === 'number') ? Math.min(p.sanidadeAtual, sanMax) : sanMax;
@@ -531,7 +531,7 @@ export default function CharacterSheetPage() {
     // trilha/atributos/nex (nunca "assados" num número separado). Se
     // `origem` não bater com nenhuma Origem oficial (personagem antigo,
     // ou nenhuma escolhida ainda), todos os bônus ficam 0.
-    const bonusOrigem = useMemo(() => bonusNumericoDaOrigem(origem, nex), [origem, nex]);
+    const bonusOrigem = useMemo(() => bonusNumericoDaOrigem(origem, nex, trilha), [origem, nex, trilha]);
     const origemEscolhida = useMemo(() => origemPorNome(origem), [origem]);
     const vidaMax = useMemo(
         () => OP.vidaMaxima(trilha, atributos.vig, nex) + bonusOrigem.vida,
@@ -541,14 +541,15 @@ export default function CharacterSheetPage() {
         () => OP.determinacaoMaxima(trilha, atributos.pre, nex) + bonusOrigem.pe,
         [trilha, atributos.pre, nex, bonusOrigem]
     );
-    // Sanidade não tem bônus numérico de Origem ainda — nenhuma Origem
-    // do catálogo tem um efeito de Sanidade "limpo" o bastante pra
-    // entrar em bonusNumericoDaOrigem (ex: Cicatrizes Psicológicas do
-    // Vítima é "+1 de Sanidade a cada 5% de NEX", mas continua só
-    // texto — ver comentário em origens.js).
+    // Bônus/penalidade de Sanidade da Origem (Cicatrizes Psicológicas do
+    // Vítima soma, Traços do Outro Lado do Cultista Arrependido
+    // subtrai metade do Inicial da trilha) — ver bonusNumericoDaOrigem
+    // em origens.js. Clampado em 0 pra nunca desenhar um máximo
+    // negativo (não deveria acontecer com as Origens atuais, mas é
+    // barato garantir).
     const sanidadeMax = useMemo(
-        () => OP.sanidadeMaxima(trilha, nex),
-        [trilha, nex]
+        () => Math.max(0, OP.sanidadeMaxima(trilha, nex) + bonusOrigem.sanidade),
+        [trilha, nex, bonusOrigem]
     );
     const defesaEquip = useMemo(() => OPI.defesaDoInventario(inventario), [inventario]);
     const defesaTotal = OP.defesaTotal(atributos.agi, defesaEquip, defesaOutros) + bonusOrigem.defesa;
