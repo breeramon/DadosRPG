@@ -297,6 +297,13 @@ export default function CharacterSheetPage() {
     const [trilhaCombatenteEscolhida, setTrilhaCombatenteEscolhida] = useState('');
     const [poderesCombatenteEscolhidos, setPoderesCombatenteEscolhidos] = useState([]);
 
+    // --- Poderes de Trilha (Especialista, mesmo esquema acima —
+    // trilhaEspecialistaEscolhida = nome de uma das
+    // TRILHAS_ESPECIALISTA, poderesEspecialistaEscolhidos = array de
+    // nomes de PODERES_ESPECIALISTA por slot). ---
+    const [trilhaEspecialistaEscolhida, setTrilhaEspecialistaEscolhida] = useState('');
+    const [poderesEspecialistaEscolhidos, setPoderesEspecialistaEscolhidos] = useState([]);
+
     // --- Modal "Novo Ataque" ---
     const [modalAtaqueAberto, setModalAtaqueAberto] = useState(false);
     const [ataqueNome, setAtaqueNome] = useState('');
@@ -389,6 +396,8 @@ export default function CharacterSheetPage() {
                 setResistencias(p.resistencias || '');
                 setTrilhaCombatenteEscolhida(p.trilhaCombatenteEscolhida || '');
                 setPoderesCombatenteEscolhidos(Array.isArray(p.poderesCombatenteEscolhidos) ? p.poderesCombatenteEscolhidos : []);
+                setTrilhaEspecialistaEscolhida(p.trilhaEspecialistaEscolhida || '');
+                setPoderesEspecialistaEscolhidos(Array.isArray(p.poderesEspecialistaEscolhidos) ? p.poderesEspecialistaEscolhidos : []);
 
                 const atributos = p.atributos || {};
                 const trilha = p.trilha || 'Combatente';
@@ -565,6 +574,31 @@ export default function CharacterSheetPage() {
         () => OPT.trilhaCombatentePorNome(trilhaCombatenteEscolhida),
         [trilhaCombatenteEscolhida]
     );
+    // Mesma ideia acima, agora pro Especialista: Perito/Eclético
+    // (Tabela 1.4) no lugar do Ataque Especial, e a própria lista de
+    // Trilhas/Poderes de Especialista.
+    const peritoEspecialistaAtual = useMemo(() => OPT.peritoEspecialistaMaximo(nex), [nex]);
+    const slotsPoderEspecialista = useMemo(() => OPT.slotsPoderEspecialistaLiberados(nex), [nex]);
+    const trilhaEspecialistaInfo = useMemo(
+        () => OPT.trilhaEspecialistaPorNome(trilhaEspecialistaEscolhida),
+        [trilhaEspecialistaEscolhida]
+    );
+    // Bônus fixo dos poderes de trilha JÁ ESCOLHIDOS (Reflexos
+    // Defensivos, Iniciativa Aprimorada, Hacker, Gatuno — ver
+    // bonusNumericoDosPoderes em trilhas.js pra saber quais poderes
+    // têm efeito computado). Aplicado na Defesa (abaixo) e no Bônus de
+    // cada perícia (ver skills-list mais adiante) — não fica só
+    // escrito na descrição do poder, soma de verdade no número.
+    const bonusPoderes = useMemo(
+        () => OPT.bonusNumericoDosPoderes({
+            nex,
+            poderesCombatenteEscolhidos,
+            trilhaCombatenteEscolhida,
+            poderesEspecialistaEscolhidos,
+            trilhaEspecialistaEscolhida,
+        }),
+        [nex, poderesCombatenteEscolhidos, trilhaCombatenteEscolhida, poderesEspecialistaEscolhidos, trilhaEspecialistaEscolhida]
+    );
     const vidaMax = useMemo(
         () => OP.vidaMaxima(trilha, atributos.vig, nex) + bonusOrigem.vida + bonusCascaGrossa,
         [trilha, atributos.vig, nex, bonusOrigem, bonusCascaGrossa]
@@ -584,7 +618,7 @@ export default function CharacterSheetPage() {
         [trilha, nex, bonusOrigem]
     );
     const defesaEquip = useMemo(() => OPI.defesaDoInventario(inventario), [inventario]);
-    const defesaTotal = OP.defesaTotal(atributos.agi, defesaEquip, defesaOutros) + bonusOrigem.defesa;
+    const defesaTotal = OP.defesaTotal(atributos.agi, defesaEquip, defesaOutros) + bonusOrigem.defesa + bonusPoderes.defesa;
     const peRodada = useMemo(() => OP.peRodadaPorNex(nex) + bonusOrigem.peRodada, [nex, bonusOrigem]);
     // Texto do campo "Proteção" — nome(s) da(s) proteção(ões) equipada(s)
     // no Inventário agora mesmo (mesma fonte de verdade do bônus de
@@ -655,6 +689,20 @@ export default function CharacterSheetPage() {
             const novo = [...prev];
             novo[indice] = nome;
             salvarCampos({ poderesCombatenteEscolhidos: novo });
+            return novo;
+        });
+    }
+
+    // --- Poderes de Trilha (Especialista, ver src/lib/trilhas.js) ---
+    function handleEscolherTrilhaEspecialista(nome) {
+        setTrilhaEspecialistaEscolhida(nome);
+        salvarCampos({ trilhaEspecialistaEscolhida: nome });
+    }
+    function handleEscolherPoderEspecialista(indice, nome) {
+        setPoderesEspecialistaEscolhidos(prev => {
+            const novo = [...prev];
+            novo[indice] = nome;
+            salvarCampos({ poderesEspecialistaEscolhidos: novo });
             return novo;
         });
     }
@@ -1173,7 +1221,12 @@ export default function CharacterSheetPage() {
                         <div className="defesa-row">
                             <div className="defesa-box">
                                 <span className="defesa-label">DEFESA</span>
-                                <span className="defesa-total">{defesaTotal}</span>
+                                <span
+                                    className="defesa-total"
+                                    title={bonusPoderes.defesa ? `Inclui +${bonusPoderes.defesa} de poder de trilha` : undefined}
+                                >
+                                    {defesaTotal}
+                                </span>
                             </div>
                             <div className="defesa-formula">
                                 10 + AGI +
@@ -1291,7 +1344,12 @@ export default function CharacterSheetPage() {
                             const salva = salvasPorNome[catItem.nome];
                             const treinado = !!(salva && salva.treinado);
                             const valorAtributo = Number(atributos[catItem.atributo]) || 0;
-                            const bonus = treinado ? (Number(salva.bonus) || 0) : 0;
+                            const bonusBase = treinado ? (Number(salva.bonus) || 0) : 0;
+                            // Bônus de poder de trilha (ex: Hacker +5 Tecnologia) soma
+                            // independente de treino/destreino — é um bônus concedido
+                            // pelo poder escolhido, não pelo grau de treinamento.
+                            const bonusPoder = bonusPoderes.pericias[catItem.nome] || 0;
+                            const bonus = bonusBase + bonusPoder;
                             const grau = treinado ? (salva.grau || 'treinado') : null;
                             const bloqueada = !!catItem.somenteTreinada && !treinado;
                             const labelAtributo = ATTR_MAP.find(a => a.key === catItem.atributo)?.label || '?';
@@ -1303,7 +1361,12 @@ export default function CharacterSheetPage() {
                                         <span className="skill-attr-ref">({labelAtributo})</span>
                                     </span>
                                     <span className="skill-dice">{valorAtributo > 0 ? `${valorAtributo}d20` : '2d20↓'}</span>
-                                    <span className="skill-bonus">{bonus >= 0 ? `+${bonus}` : `${bonus}`}</span>
+                                    <span
+                                        className="skill-bonus"
+                                        title={bonusPoder ? `Base: ${bonusBase >= 0 ? '+' + bonusBase : bonusBase} · Poderes de trilha: +${bonusPoder}` : undefined}
+                                    >
+                                        {bonus >= 0 ? `+${bonus}` : `${bonus}`}
+                                    </span>
                                     <span
                                         className="skill-treino"
                                         title={treinado ? (OP.GRAU_LABEL[grau] || 'Treinado') : (bloqueada ? 'Só pode ser usada treinada' : 'Destreinado')}
@@ -1633,17 +1696,11 @@ export default function CharacterSheetPage() {
 
                         {abaAtiva === 'trilha' && (
                             <div className="tab-panel-trilha">
-                                {trilha !== 'Combatente' ? (
-                                    <p className="trilha-em-breve">
-                                        Poderes de trilha para {trilha || 'essa trilha'} ainda não foram
-                                        modelados nesta ficha — só o Combatente tem o catálogo completo
-                                        por enquanto.
-                                    </p>
-                                ) : (
+                                {trilha === 'Combatente' ? (
                                     <>
-                                        <div className="trilha-ataque-especial">
-                                            <span className="trilha-ataque-especial-label">Ataque Especial</span>
-                                            <span className="trilha-ataque-especial-valor">
+                                        <div className="trilha-numero-limpo">
+                                            <span className="trilha-numero-limpo-label">Ataque Especial</span>
+                                            <span className="trilha-numero-limpo-valor">
                                                 {ataqueEspecialAtual
                                                     ? `até ${ataqueEspecialAtual.pe} PE por +${ataqueEspecialAtual.bonus} (no ataque ou no dano)`
                                                     : '—'}
@@ -1685,7 +1742,7 @@ export default function CharacterSheetPage() {
                                             </div>
                                         )}
 
-                                        <div className="trilha-poder-combatente-slots">
+                                        <div className="trilha-poder-slots">
                                             <h3>Poderes de Combatente</h3>
                                             {slotsPoderCombatente === 0 ? (
                                                 <p className="trilha-em-breve">Libera o primeiro em NEX 15%.</p>
@@ -1701,7 +1758,7 @@ export default function CharacterSheetPage() {
                                                             onChange={e => handleEscolherPoderCombatente(indice, e.target.value)}
                                                         >
                                                             <option value="">— Escolher —</option>
-                                                            {OPT.PODERES_COMBATENTE.map(p => (
+                                                            {OPT.poderesDisponiveisParaSlot(OPT.PODERES_COMBATENTE, poderesCombatenteEscolhidos, indice).map(p => (
                                                                 <option key={p.nome} value={p.nome}>{p.nome}</option>
                                                             ))}
                                                         </select>
@@ -1721,6 +1778,94 @@ export default function CharacterSheetPage() {
                                             )}
                                         </div>
                                     </>
+                                ) : trilha === 'Especialista' ? (
+                                    <>
+                                        <div className="trilha-numero-limpo">
+                                            <span className="trilha-numero-limpo-label">Eclético / Perito</span>
+                                            <span className="trilha-numero-limpo-valor">
+                                                {peritoEspecialistaAtual
+                                                    ? `até ${peritoEspecialistaAtual.pe} PE por +${peritoEspecialistaAtual.dado} numa perícia (Eclético/Perito)`
+                                                    : '—'}
+                                            </span>
+                                        </div>
+
+                                        <div className="trilha-secundaria-picker">
+                                            <label htmlFor="trilha-especialista-select">Trilha de Especialista</label>
+                                            <select
+                                                id="trilha-especialista-select"
+                                                value={trilhaEspecialistaEscolhida}
+                                                onChange={e => handleEscolherTrilhaEspecialista(e.target.value)}
+                                            >
+                                                <option value="">— Escolher (liberado em NEX 10%) —</option>
+                                                {OPT.TRILHAS_ESPECIALISTA.map(t => (
+                                                    <option key={t.nome} value={t.nome}>{t.nome}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {trilhaEspecialistaInfo && (
+                                            <div className="trilha-secundaria-poderes">
+                                                <p className="trilha-secundaria-descricao">{trilhaEspecialistaInfo.descricao}</p>
+                                                {trilhaEspecialistaInfo.poderes.map(poder => {
+                                                    const liberado = nex >= poder.nex;
+                                                    return (
+                                                        <div
+                                                            className={`trilha-poder-card${liberado ? '' : ' trilha-poder-bloqueado'}`}
+                                                            key={poder.nome}
+                                                        >
+                                                            <div className="trilha-poder-card-header">
+                                                                <strong>{poder.nome}</strong>
+                                                                <span className="trilha-poder-nex">NEX {poder.nex}%{liberado ? '' : ' (bloqueado)'}</span>
+                                                            </div>
+                                                            <p className="trilha-poder-descricao">{poder.descricao}</p>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+
+                                        <div className="trilha-poder-slots">
+                                            <h3>Poderes de Especialista</h3>
+                                            {slotsPoderEspecialista === 0 ? (
+                                                <p className="trilha-em-breve">Libera o primeiro em NEX 15%.</p>
+                                            ) : (
+                                                Array.from({ length: slotsPoderEspecialista }).map((_, indice) => (
+                                                    <div className="trilha-poder-slot" key={indice}>
+                                                        <label htmlFor={`poder-especialista-${indice}`}>
+                                                            Poder {indice + 1} <small>(NEX {OPT.PODER_ESPECIALISTA_MARCOS[indice]}%)</small>
+                                                        </label>
+                                                        <select
+                                                            id={`poder-especialista-${indice}`}
+                                                            value={poderesEspecialistaEscolhidos[indice] || ''}
+                                                            onChange={e => handleEscolherPoderEspecialista(indice, e.target.value)}
+                                                        >
+                                                            <option value="">— Escolher —</option>
+                                                            {OPT.poderesDisponiveisParaSlot(OPT.PODERES_ESPECIALISTA, poderesEspecialistaEscolhidos, indice).map(p => (
+                                                                <option key={p.nome} value={p.nome}>{p.nome}</option>
+                                                            ))}
+                                                        </select>
+                                                        {poderesEspecialistaEscolhidos[indice] && (() => {
+                                                            const escolhido = OPT.PODERES_ESPECIALISTA.find(p => p.nome === poderesEspecialistaEscolhidos[indice]);
+                                                            return escolhido ? (
+                                                                <p className="trilha-poder-descricao">
+                                                                    {escolhido.descricao}
+                                                                    {escolhido.preRequisito && (
+                                                                        <em className="trilha-poder-prereq"> (Pré-requisito: {escolhido.preRequisito})</em>
+                                                                    )}
+                                                                </p>
+                                                            ) : null;
+                                                        })()}
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <p className="trilha-em-breve">
+                                        Poderes de trilha para {trilha || 'essa trilha'} ainda não foram
+                                        modelados nesta ficha — só Combatente e Especialista têm o
+                                        catálogo completo por enquanto.
+                                    </p>
                                 )}
                             </div>
                         )}

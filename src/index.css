@@ -1,21 +1,6 @@
-/* ============================================================
-   DESIGN TOKENS
-   ------------------------------------------------------------
-   Extraidos das cores que ja apareciam repetidas pelo arquivo --
-   nenhum valor de cor mudou aqui, so passou a ter nome. Cobre por
-   enquanto: fundo, superficie, texto, roxo primario ("Ordem"),
-   vermelho de perigo/alerta, vermelho "paranormal" (pentagrama/
-   ataques -- familia visualmente distinta do vermelho de alerta),
-   verde de sucesso e as 5 cores de Elemento de ritual. Tons usados
-   só 1-2x (gradientes pontuais, sombras) ficaram de fora desta
-   primeira leva de proposito -- dá pra estender depois.
-   ============================================================ */
 :root {
-    /* Fundo e superficie */
     --color-bg: #121212;
     --color-surface: #1e1e1e;
-
-    /* Texto */
     --color-text: #fff;
     --color-text-body: #e0e0e0;
     --color-text-muted: #aaa;
@@ -23,8 +8,6 @@
     --color-text-subtle: #888;
     --color-text-hint: #777;
     --color-text-dim: #666;
-
-    /* Roxo primario ("Ordem") -- escala do mais escuro (900) ao mais claro (100) */
     --color-primary-900: #4a148c;
     --color-primary-700: #6a1b9a;
     --color-primary-500: #7c43bd;
@@ -32,25 +15,16 @@
     --color-primary-300: #b39ddb;
     --color-primary-200: #ce93d8;
     --color-primary-100: #d1c4e9;
-
-    /* Vermelho de perigo/alerta (validacao, exclusao, erro) */
     --color-danger: #ff1744;
     --color-danger-light: #ff8a80;
-
-    /* Vermelho "paranormal" (pentagrama, ataques, tema ritualistico --
-       mesma familia de "perigo", tom mais profundo e decorativo) */
     --color-blood-700: #b71c1c;
     --color-blood-600: #e53935;
     --color-blood-500: #5c1414;
     --color-blood-400: #4a0f0f;
     --color-blood-200: #e8d5d5;
-
-    /* Verde de sucesso (treinado/equipado/acerto critico) */
     --color-success: #4caf50;
     --color-success-light: #a5d6a7;
     --color-success-crit: #00e676;
-
-    /* Elementos de Ritual */
     --color-elemento-conhecimento: #d4af37;
     --color-elemento-energia: #ab47bc;
     --color-elemento-morte: #546e7a;
@@ -1160,15 +1134,16 @@ h3 {
     animation: fadeIn 0.2s ease both;
 }
 
-/* --- TRILHA: Ataque Especial, sub-trilha e Poderes de Combatente
-   (ver src/lib/trilhas.js) --- */
+/* --- TRILHA: número limpo (Ataque Especial do Combatente / Perito
+   do Especialista / ...), sub-trilha e Poderes de Trilha (ver
+   src/lib/trilhas.js) --- */
 .trilha-em-breve {
     color: var(--color-text-dim);
     font-size: 0.85rem;
     padding: 10px 0;
 }
 
-.trilha-ataque-especial {
+.trilha-numero-limpo {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1180,14 +1155,14 @@ h3 {
     border-radius: 8px;
 }
 
-.trilha-ataque-especial-label {
+.trilha-numero-limpo-label {
     font-weight: bold;
     font-size: 0.8rem;
     letter-spacing: 0.3px;
     color: var(--color-text-muted);
 }
 
-.trilha-ataque-especial-valor {
+.trilha-numero-limpo-valor {
     font-size: 0.85rem;
     color: var(--color-primary-300);
 }
@@ -1268,7 +1243,7 @@ h3 {
     color: var(--color-text-dim);
 }
 
-.trilha-poder-combatente-slots h3 {
+.trilha-poder-slots h3 {
     margin: 4px 0 10px;
 }
 
@@ -2976,15 +2951,17 @@ h3 {
     width: 100%;
 }
 
-/* .form-pericias-section e .form-extra-section reaproveitam a classe
-   .skills-section (mesmo "cartão" visual da ficha), mas essa classe
-   tem `overflow: hidden`, pensado pra coluna de altura fixa da ficha
-   (sheet.html). Aqui essas seções crescem com o conteúdo (a lista de
-   perícias inteira, sem scroll interno — ver .form-pericias-catalogo),
-   então herdar overflow:hidden só serviria pra cortar conteúdo por
-   engano caso a altura calculada ficasse um pixel curta. */
-.form-pericias-section,
-.form-extra-section {
+/* .form-pericias-section reaproveita a classe .skills-section (mesmo
+   "cartão" visual da ficha), mas essa classe tem `overflow: hidden`,
+   pensado pra coluna de altura fixa da ficha (sheet.html). Aqui a
+   seção cresce com o conteúdo (a lista de perícias inteira, sem
+   scroll interno — ver .form-pericias-catalogo), então herdar
+   overflow:hidden só serviria pra cortar conteúdo por engano caso a
+   altura calculada ficasse um pixel curta. Rituais e Trilha saíram
+   dessa classe e foram pra .sheet-tabs-section (mesmo esquema de
+   abas com tab-panel-rituais/tab-panel-trilha da Ficha — ver
+   CharacterFormPage.jsx), que já não tem overflow:hidden. */
+.form-pericias-section {
     overflow: visible;
 }
 

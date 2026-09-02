@@ -25,6 +25,7 @@ import OrigemCatalogModal from '@/components/OrigemCatalogModal';
 import * as OP from '@/lib/pericias';
 import * as OPR from '@/lib/rituais';
 import { origemPorNome } from '@/lib/origens';
+import * as OPT from '@/lib/trilhas';
 
 const ATRIBUTOS = [
     { key: 'agi', label: 'AGI', posClass: 'pos-agi' },
@@ -155,6 +156,19 @@ export default function CharacterFormPage() {
     const [modalRitualAberto, setModalRitualAberto] = useState(false);
     const [expandidosConhecidos, setExpandidosConhecidos] = useState(() => new Set());
 
+    // --- Poderes de Trilha (só Combatente modelado por enquanto, ver
+    // src/lib/trilhas.js e a aba "Trilha" da Ficha — mesmos campos). ---
+    const [trilhaCombatenteEscolhida, setTrilhaCombatenteEscolhida] = useState('');
+    const [poderesCombatenteEscolhidos, setPoderesCombatenteEscolhidos] = useState([]);
+
+    // --- Poderes de Trilha (Especialista, mesmo esquema acima). ---
+    const [trilhaEspecialistaEscolhida, setTrilhaEspecialistaEscolhida] = useState('');
+    const [poderesEspecialistaEscolhidos, setPoderesEspecialistaEscolhidos] = useState([]);
+
+    // --- Aba ativa da seção Rituais/Trilha (mesmo esquema de abas da
+    // Ficha — ver CharacterSheetPage.jsx / .sheet-tabs-section). ---
+    const [abaAtiva, setAbaAtiva] = useState('rituais');
+
     // ---------------------------------------------------------------
     // Carrega o personagem (edição) ou reseta pros padrões (criação).
     // ---------------------------------------------------------------
@@ -171,6 +185,10 @@ export default function CharacterFormPage() {
             setCombatenteEscolhasFixas(escolhas);
             setOrigem('');
             setRituais([]);
+            setTrilhaCombatenteEscolhida('');
+            setPoderesCombatenteEscolhidos([]);
+            setTrilhaEspecialistaEscolhida('');
+            setPoderesEspecialistaEscolhidos([]);
             setCarregando(false);
             return;
         }
@@ -200,6 +218,10 @@ export default function CharacterFormPage() {
                 setCombatenteEscolhasFixas(escolhas);
                 setOrigem(personagem.origem || '');
                 setRituais(Array.isArray(personagem.rituais) ? personagem.rituais : []);
+                setTrilhaCombatenteEscolhida(personagem.trilhaCombatenteEscolhida || '');
+                setPoderesCombatenteEscolhidos(Array.isArray(personagem.poderesCombatenteEscolhidos) ? personagem.poderesCombatenteEscolhidos : []);
+                setTrilhaEspecialistaEscolhida(personagem.trilhaEspecialistaEscolhida || '');
+                setPoderesEspecialistaEscolhidos(Array.isArray(personagem.poderesEspecialistaEscolhidos) ? personagem.poderesEspecialistaEscolhidos : []);
             })
             .catch(err => {
                 console.error('[character-form] Erro ao carregar personagem pra edição:', err);
@@ -317,6 +339,20 @@ export default function CharacterFormPage() {
     const quotaLivreExcedida = livresUsadas > quotaLivre;
     const regraTrilha = OP.TRILHA_REGRAS[trilha] || OP.TRILHA_REGRAS.Combatente;
     const circuloOcultista = trilha === 'Ocultista' ? OP.circuloRitualLiberado(nex) : 0;
+    // Mesmos cálculos da aba "Trilha" da Ficha (ver
+    // CharacterSheetPage.jsx) — só fazem sentido pro Combatente.
+    const ataqueEspecialAtual = useMemo(() => OPT.ataqueEspecialMaximo(nex), [nex]);
+    const slotsPoderCombatente = useMemo(() => OPT.slotsPoderCombatenteLiberados(nex), [nex]);
+    const trilhaCombatenteInfo = useMemo(
+        () => OPT.trilhaCombatentePorNome(trilhaCombatenteEscolhida),
+        [trilhaCombatenteEscolhida]
+    );
+    const peritoEspecialistaAtual = useMemo(() => OPT.peritoEspecialistaMaximo(nex), [nex]);
+    const slotsPoderEspecialista = useMemo(() => OPT.slotsPoderEspecialistaLiberados(nex), [nex]);
+    const trilhaEspecialistaInfo = useMemo(
+        () => OPT.trilhaEspecialistaPorNome(trilhaEspecialistaEscolhida),
+        [trilhaEspecialistaEscolhida]
+    );
     // null quando `origem` está vazio OU é um texto de personagem
     // antigo que não bate com nenhuma Origem oficial do catálogo (ver
     // comentário no state `origem` acima).
@@ -351,6 +387,32 @@ export default function CharacterFormPage() {
     function handleTrilhaChange(novaTrilha) {
         setTrilha(novaTrilha);
         setCombatenteEscolhasFixas([null, null]); // trilha nova = escolhas antigas não valem mais
+        // Idem pra escolhas de Trilha/Poder de Combatente e de
+        // Especialista — não fazem sentido pra uma trilha diferente.
+        setTrilhaCombatenteEscolhida('');
+        setPoderesCombatenteEscolhidos([]);
+        setTrilhaEspecialistaEscolhida('');
+        setPoderesEspecialistaEscolhidos([]);
+    }
+    function handleEscolherTrilhaCombatente(nomeTrilha) {
+        setTrilhaCombatenteEscolhida(nomeTrilha);
+    }
+    function handleEscolherPoderCombatente(indice, nomePoder) {
+        setPoderesCombatenteEscolhidos(prev => {
+            const novo = [...prev];
+            novo[indice] = nomePoder;
+            return novo;
+        });
+    }
+    function handleEscolherTrilhaEspecialista(nomeTrilha) {
+        setTrilhaEspecialistaEscolhida(nomeTrilha);
+    }
+    function handleEscolherPoderEspecialista(indice, nomePoder) {
+        setPoderesEspecialistaEscolhidos(prev => {
+            const novo = [...prev];
+            novo[indice] = nomePoder;
+            return novo;
+        });
     }
 
     function handleNexChange(valor) {
@@ -445,7 +507,7 @@ export default function CharacterFormPage() {
                 return { nome: p.nome, atributo: p.atributo, treinado: true, grau: st.grau, bonusExtra: Number(st.bonusExtra) || 0, bonus };
             });
 
-        return { nome: nome.trim(), trilha, nex, atributos, pericias, origem, rituais };
+        return { nome: nome.trim(), trilha, nex, atributos, pericias, origem, rituais, trilhaCombatenteEscolhida, poderesCombatenteEscolhidos, trilhaEspecialistaEscolhida, poderesEspecialistaEscolhidos };
     }
 
     async function handleSalvar() {
@@ -723,63 +785,261 @@ export default function CharacterFormPage() {
                     </div>
                 </section>
 
-                <section className="form-extra-section skills-section">
-                    <div className="rituals-section-header">
-                        <h3>Rituais</h3>
-                        <button type="button" className="btn-add-item" title="Adicionar ritual" onClick={() => setModalRitualAberto(true)}>+</button>
-                    </div>
+                <section className="sheet-tabs-section">
+                    <nav className="sheet-tabs-nav">
+                        <button
+                            type="button"
+                            className={`sheet-tab-btn${abaAtiva === 'rituais' ? ' active' : ''}`}
+                            onClick={() => setAbaAtiva('rituais')}
+                        >
+                            Rituais
+                        </button>
+                        <button
+                            type="button"
+                            className={`sheet-tab-btn${abaAtiva === 'trilha' ? ' active' : ''}`}
+                            onClick={() => setAbaAtiva('trilha')}
+                        >
+                            Trilha
+                        </button>
+                    </nav>
 
-                    {trilha === 'Ocultista' && (
-                        <div className="rituais-info">
-                            {circuloOcultista > 0
-                                ? `Círculo de Rituais liberado neste NEX: até o ${circuloOcultista}º círculo.`
-                                : 'NEX ainda não libera nenhum círculo de rituais.'}
-                        </div>
-                    )}
-
-                    <div className="rituals-list">
-                        {rituais.length === 0 && (
-                            <div className="inventory-empty">Nenhum ritual conhecido ainda.</div>
-                        )}
-                        {rituais.map((ritual, index) => {
-                            const aberto = expandidosConhecidos.has(ritual.nome);
-                            return (
-                                <div className={`modal-item-card ritual-card elemento-${elementoSlug(ritual.elemento)}${aberto ? ' expanded' : ''}`} key={ritual.nome}>
-                                    <div className="modal-item-card-header" onClick={() => toggleExpandidoConhecido(ritual.nome)}>
-                                        <span className="modal-item-card-chevron">▶</span>
-                                        <div className="modal-item-card-info">
-                                            <div className="modal-item-card-title-row">
-                                                <span className="modal-item-card-nome">{ritual.nome}</span>
-                                                <span className={`modal-item-card-badge badge-elemento-${elementoSlug(ritual.elemento)}`}>{ritual.elemento}</span>
-                                                <span className="modal-item-card-badge badge-circulo">{ritual.circulo}º círc.</span>
-                                            </div>
-                                            <div className="modal-item-card-sub">{subtituloRitual(ritual)}</div>
-                                        </div>
-                                        <div className="ataque-card-actions">
-                                            <button
-                                                type="button"
-                                                className="modal-item-card-remove"
-                                                title="Esquecer ritual"
-                                                onClick={ev => { ev.stopPropagation(); handleRemoverRitual(index); }}
-                                            >
-                                                <TrashIcon />
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div className={`modal-item-card-body${aberto ? '' : ' hidden'}`}>
-                                        <div className="modal-item-stats-grid">
-                                            {statsDoRitual(ritual).map(({ label, valor }) => (
-                                                <div className="modal-item-stat" key={label}>
-                                                    <span className="modal-item-stat-label">{label}</span>
-                                                    <span className="modal-item-stat-value">{valor}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        {ritual.descricao && <div className="modal-item-card-efeito">{ritual.descricao}</div>}
-                                    </div>
+                    <div className="sheet-tab-panel">
+                        {abaAtiva === 'rituais' && (
+                            <div className="tab-panel-rituais">
+                                <div className="rituals-section-header">
+                                    <h3>Rituais</h3>
+                                    <button type="button" className="btn-add-item" title="Adicionar ritual" onClick={() => setModalRitualAberto(true)}>+</button>
                                 </div>
-                            );
-                        })}
+
+                                {trilha === 'Ocultista' && (
+                                    <div className="rituais-info">
+                                        {circuloOcultista > 0
+                                            ? `Círculo de Rituais liberado neste NEX: até o ${circuloOcultista}º círculo.`
+                                            : 'NEX ainda não libera nenhum círculo de rituais.'}
+                                    </div>
+                                )}
+
+                                <div className="rituals-list">
+                                    {rituais.length === 0 && (
+                                        <div className="inventory-empty">Nenhum ritual conhecido ainda.</div>
+                                    )}
+                                    {rituais.map((ritual, index) => {
+                                        const aberto = expandidosConhecidos.has(ritual.nome);
+                                        return (
+                                            <div className={`modal-item-card ritual-card elemento-${elementoSlug(ritual.elemento)}${aberto ? ' expanded' : ''}`} key={ritual.nome}>
+                                                <div className="modal-item-card-header" onClick={() => toggleExpandidoConhecido(ritual.nome)}>
+                                                    <span className="modal-item-card-chevron">▶</span>
+                                                    <div className="modal-item-card-info">
+                                                        <div className="modal-item-card-title-row">
+                                                            <span className="modal-item-card-nome">{ritual.nome}</span>
+                                                            <span className={`modal-item-card-badge badge-elemento-${elementoSlug(ritual.elemento)}`}>{ritual.elemento}</span>
+                                                            <span className="modal-item-card-badge badge-circulo">{ritual.circulo}º círc.</span>
+                                                        </div>
+                                                        <div className="modal-item-card-sub">{subtituloRitual(ritual)}</div>
+                                                    </div>
+                                                    <div className="ataque-card-actions">
+                                                        <button
+                                                            type="button"
+                                                            className="modal-item-card-remove"
+                                                            title="Esquecer ritual"
+                                                            onClick={ev => { ev.stopPropagation(); handleRemoverRitual(index); }}
+                                                        >
+                                                            <TrashIcon />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div className={`modal-item-card-body${aberto ? '' : ' hidden'}`}>
+                                                    <div className="modal-item-stats-grid">
+                                                        {statsDoRitual(ritual).map(({ label, valor }) => (
+                                                            <div className="modal-item-stat" key={label}>
+                                                                <span className="modal-item-stat-label">{label}</span>
+                                                                <span className="modal-item-stat-value">{valor}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                    {ritual.descricao && <div className="modal-item-card-efeito">{ritual.descricao}</div>}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {abaAtiva === 'trilha' && (
+                            <div className="tab-panel-trilha">
+                                {trilha === 'Combatente' ? (
+                                    <>
+                                        <div className="trilha-numero-limpo">
+                                            <span className="trilha-numero-limpo-label">Ataque Especial</span>
+                                            <span className="trilha-numero-limpo-valor">
+                                                {ataqueEspecialAtual
+                                                    ? `até ${ataqueEspecialAtual.pe} PE por +${ataqueEspecialAtual.bonus} (no ataque ou no dano)`
+                                                    : '—'}
+                                            </span>
+                                        </div>
+
+                                        <div className="trilha-secundaria-picker">
+                                            <label htmlFor="form-trilha-combatente-select">Trilha de Combatente</label>
+                                            <select
+                                                id="form-trilha-combatente-select"
+                                                value={trilhaCombatenteEscolhida}
+                                                onChange={e => handleEscolherTrilhaCombatente(e.target.value)}
+                                            >
+                                                <option value="">— Escolher (liberado em NEX 10%) —</option>
+                                                {OPT.TRILHAS_COMBATENTE.map(t => (
+                                                    <option key={t.nome} value={t.nome}>{t.nome}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {trilhaCombatenteInfo && (
+                                            <div className="trilha-secundaria-poderes">
+                                                <p className="trilha-secundaria-descricao">{trilhaCombatenteInfo.descricao}</p>
+                                                {trilhaCombatenteInfo.poderes.map(poder => {
+                                                    const liberado = nex >= poder.nex;
+                                                    return (
+                                                        <div
+                                                            className={`trilha-poder-card${liberado ? '' : ' trilha-poder-bloqueado'}`}
+                                                            key={poder.nome}
+                                                        >
+                                                            <div className="trilha-poder-card-header">
+                                                                <strong>{poder.nome}</strong>
+                                                                <span className="trilha-poder-nex">NEX {poder.nex}%{liberado ? '' : ' (bloqueado)'}</span>
+                                                            </div>
+                                                            <p className="trilha-poder-descricao">{poder.descricao}</p>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+
+                                        <div className="trilha-poder-slots">
+                                            <h3>Poderes de Combatente</h3>
+                                            {slotsPoderCombatente === 0 ? (
+                                                <p className="trilha-em-breve">Libera o primeiro em NEX 15%.</p>
+                                            ) : (
+                                                Array.from({ length: slotsPoderCombatente }).map((_, indice) => (
+                                                    <div className="trilha-poder-slot" key={indice}>
+                                                        <label htmlFor={`form-poder-combatente-${indice}`}>
+                                                            Poder {indice + 1} <small>(NEX {OPT.PODER_COMBATENTE_MARCOS[indice]}%)</small>
+                                                        </label>
+                                                        <select
+                                                            id={`form-poder-combatente-${indice}`}
+                                                            value={poderesCombatenteEscolhidos[indice] || ''}
+                                                            onChange={e => handleEscolherPoderCombatente(indice, e.target.value)}
+                                                        >
+                                                            <option value="">— Escolher —</option>
+                                                            {OPT.poderesDisponiveisParaSlot(OPT.PODERES_COMBATENTE, poderesCombatenteEscolhidos, indice).map(p => (
+                                                                <option key={p.nome} value={p.nome}>{p.nome}</option>
+                                                            ))}
+                                                        </select>
+                                                        {poderesCombatenteEscolhidos[indice] && (() => {
+                                                            const escolhido = OPT.PODERES_COMBATENTE.find(p => p.nome === poderesCombatenteEscolhidos[indice]);
+                                                            return escolhido ? (
+                                                                <p className="trilha-poder-descricao">
+                                                                    {escolhido.descricao}
+                                                                    {escolhido.preRequisito && (
+                                                                        <em className="trilha-poder-prereq"> (Pré-requisito: {escolhido.preRequisito})</em>
+                                                                    )}
+                                                                </p>
+                                                            ) : null;
+                                                        })()}
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </>
+                                ) : trilha === 'Especialista' ? (
+                                    <>
+                                        <div className="trilha-numero-limpo">
+                                            <span className="trilha-numero-limpo-label">Eclético / Perito</span>
+                                            <span className="trilha-numero-limpo-valor">
+                                                {peritoEspecialistaAtual
+                                                    ? `até ${peritoEspecialistaAtual.pe} PE por +${peritoEspecialistaAtual.dado} numa perícia (Eclético/Perito)`
+                                                    : '—'}
+                                            </span>
+                                        </div>
+
+                                        <div className="trilha-secundaria-picker">
+                                            <label htmlFor="form-trilha-especialista-select">Trilha de Especialista</label>
+                                            <select
+                                                id="form-trilha-especialista-select"
+                                                value={trilhaEspecialistaEscolhida}
+                                                onChange={e => handleEscolherTrilhaEspecialista(e.target.value)}
+                                            >
+                                                <option value="">— Escolher (liberado em NEX 10%) —</option>
+                                                {OPT.TRILHAS_ESPECIALISTA.map(t => (
+                                                    <option key={t.nome} value={t.nome}>{t.nome}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {trilhaEspecialistaInfo && (
+                                            <div className="trilha-secundaria-poderes">
+                                                <p className="trilha-secundaria-descricao">{trilhaEspecialistaInfo.descricao}</p>
+                                                {trilhaEspecialistaInfo.poderes.map(poder => {
+                                                    const liberado = nex >= poder.nex;
+                                                    return (
+                                                        <div
+                                                            className={`trilha-poder-card${liberado ? '' : ' trilha-poder-bloqueado'}`}
+                                                            key={poder.nome}
+                                                        >
+                                                            <div className="trilha-poder-card-header">
+                                                                <strong>{poder.nome}</strong>
+                                                                <span className="trilha-poder-nex">NEX {poder.nex}%{liberado ? '' : ' (bloqueado)'}</span>
+                                                            </div>
+                                                            <p className="trilha-poder-descricao">{poder.descricao}</p>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+
+                                        <div className="trilha-poder-slots">
+                                            <h3>Poderes de Especialista</h3>
+                                            {slotsPoderEspecialista === 0 ? (
+                                                <p className="trilha-em-breve">Libera o primeiro em NEX 15%.</p>
+                                            ) : (
+                                                Array.from({ length: slotsPoderEspecialista }).map((_, indice) => (
+                                                    <div className="trilha-poder-slot" key={indice}>
+                                                        <label htmlFor={`form-poder-especialista-${indice}`}>
+                                                            Poder {indice + 1} <small>(NEX {OPT.PODER_ESPECIALISTA_MARCOS[indice]}%)</small>
+                                                        </label>
+                                                        <select
+                                                            id={`form-poder-especialista-${indice}`}
+                                                            value={poderesEspecialistaEscolhidos[indice] || ''}
+                                                            onChange={e => handleEscolherPoderEspecialista(indice, e.target.value)}
+                                                        >
+                                                            <option value="">— Escolher —</option>
+                                                            {OPT.poderesDisponiveisParaSlot(OPT.PODERES_ESPECIALISTA, poderesEspecialistaEscolhidos, indice).map(p => (
+                                                                <option key={p.nome} value={p.nome}>{p.nome}</option>
+                                                            ))}
+                                                        </select>
+                                                        {poderesEspecialistaEscolhidos[indice] && (() => {
+                                                            const escolhido = OPT.PODERES_ESPECIALISTA.find(p => p.nome === poderesEspecialistaEscolhidos[indice]);
+                                                            return escolhido ? (
+                                                                <p className="trilha-poder-descricao">
+                                                                    {escolhido.descricao}
+                                                                    {escolhido.preRequisito && (
+                                                                        <em className="trilha-poder-prereq"> (Pré-requisito: {escolhido.preRequisito})</em>
+                                                                    )}
+                                                                </p>
+                                                            ) : null;
+                                                        })()}
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <p className="trilha-em-breve">
+                                        Poderes de trilha para {trilha || 'essa trilha'} ainda não foram modelados
+                                        nesta ficha — só Combatente e Especialista têm o catálogo completo por enquanto.
+                                    </p>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </section>
             </div>
