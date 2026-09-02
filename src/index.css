@@ -53,45 +53,12 @@ input, select, button, textarea {
     font-size: 1rem;
 }
 
-/* Uma única fonte pra todo botão do projeto (ver também a fonte do
-   body, logo acima — o projeto inteiro usa Montserrat agora, ver
-   comentário em index.html). Antes as abas COMBATE/RITUAIS/INVENTÁRIO
-   e o pentagrama de atributos usavam Cinzel (serifada), e o resto
-   (inclusive os botões redondos de remover/conjurar dentro das abas)
-   herdava a fonte padrão do body — mistura de 2 fontes que motivou
-   trocar tudo pra uma fonte só. Regra base aqui pra cobrir todo
-   `<button>`; os seletores mais específicos abaixo (abas, pentagrama)
-   também declaram Montserrat explicitamente, então não há conflito.
-   `input`/`select`/`textarea` ficam de fora de propósito — texto
-   digitado/editável continua herdando a mesma fonte do body de
-   qualquer forma (Montserrat também), então não faz diferença visual;
-   só não force um family diferente ali sem motivo. */
 button {
     font-family: 'Montserrat', 'Segoe UI', sans-serif;
 }
 
-/* Anel de foco genérico pra todo `<button>` do projeto (WCAG 2.3.7 --
-   antes só 4 seletores no arquivo inteiro tinham foco customizado, e
-   nenhum deles era botão: eram campos de texto/busca, que continuam
-   com o próprio anel deles mais abaixo). Sem isso, navegar por teclado
-   dependia só do outline padrão do navegador, que pode não ter
-   contraste suficiente sobre os fundos escuros do app.
-   - `:focus-visible` (não `:focus`) pra só aparecer em navegação por
-     teclado, não em todo clique de mouse.
-   - Duas camadas de box-shadow em vez de `outline` de verdade: a
-     primeira (cor de fundo) cria o "deslocamento" entre o botão e o
-     anel, a segunda é o anel roxo em si -- e diferente de `outline`,
-     box-shadow acompanha o border-radius de cada botão (vários aqui
-     são circulares: .attr-value-input, .dice-box-settings-btn, etc.).
-   - Botões que já têm o próprio box-shadow de hover/estado (ex.
-     .modal-item-card-remove:hover) continuam funcionando normalmente
-     no mouse; isso aqui só entra em jogo no foco por teclado. */
 button:focus-visible,
 [role="button"]:focus-visible {
-    /* [role="button"] cobre os cabeçalhos de cartão expansíveis
-       (.modal-item-card-header) -- não são <button> de verdade (já têm
-       botões de ação de verdade dentro, tipo Rolar/Remover), mas agora
-       são navegáveis por teclado, então precisam do mesmo anel. */
     outline: none;
     box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-primary-300);
 }
@@ -101,9 +68,6 @@ button:focus-visible,
     min-height: 100vh;
 }
 
-/* Tela de espera curta enquanto o RequireAuth (React) checa se já
-   existe sessão salva no Firebase, antes de decidir mostrar a página
-   ou redirecionar pro login. */
 .app-loading {
     min-height: 100vh;
     display: flex;
@@ -113,26 +77,13 @@ button:focus-visible,
     font-size: 0.95rem;
 }
 
-/* Classe utilitária genérica: esconde qualquer elemento (telas,
-   mensagens de erro, estados vazios etc). */
 .hidden {
     display: none !important;
 }
 
-/* --- CANTO DE ANIMAÇÃO 3D DOS DADOS (dice-box) --- */
-/* Caixinha fixa no canto inferior direito (embaixo da coluna de
-   rolagem/log, perto do botão ROLAR), em vez de ocupar a tela toda.
-   ".dice-box-wrap" é quem carrega o tamanho/posição fixa agora; o
-   "#dice-box" (onde a lib do dado 3D injeta o <canvas>) só preenche o
-   wrapper por dentro — assim dá pra sobrepor o resultado da rolagem
-   (".dice-box-result") sem interferir no elemento que a lib controla. */
 .dice-box-wrap {
     position: fixed;
     bottom: 16px;
-    /* Canto inferior DIREITO (embaixo da coluna de rolagem/log) — não o
-       esquerdo, porque agora a coluna de atributos tem o bloco de
-       Vida/Determinação/Defesa embaixo do pentagrama, sem espaço vazio
-       sobrando pra caixa dos dados não sobrepor o conteúdo. */
     right: 16px;
     width: 380px;
     height: 380px;
@@ -155,9 +106,6 @@ button:focus-visible,
     height: 100%;
 }
 
-/* Valor da rolagem mais recente, sobreposto no topo do quadrado dos
-   dados — só o resultado atual (sem histórico; o histórico de verdade
-   já fica no .log-container). Some/reaparece a cada nova rolagem. */
 .dice-box-result {
     position: absolute;
     top: 10px;
@@ -194,11 +142,6 @@ button:focus-visible,
     to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Aviso discreto de fallback — some com o resultado, mas fica sempre
-   ancorado embaixo do quadrado (não sobrepõe o número/título de cima).
-   Some sozinho junto com o resto do .dice-box-wrap quando a tela
-   encolhe (ver media queries abaixo), então não precisa de regra extra
-   pros breakpoints estreitos. */
 .dice-box-aviso-fallback {
     position: absolute;
     bottom: 8px;
@@ -211,11 +154,6 @@ button:focus-visible,
     pointer-events: none;
 }
 
-/* Botão de engrenagem no canto do quadrado dos dados — abre a modal
-   "Aparência dos Dados" (DiceThemeModal). ".dice-box-wrap" tem
-   "pointer-events: none" (pra nunca bloquear cliques na ficha por trás
-   dela quando "fixed" no canto da tela), então precisa reativar aqui,
-   senão o botão fica visível mas não clicável. */
 .dice-box-settings-btn {
     /* Alvo de toque -- mesmo piso de 30px do resto (ver .vital-btn). */
     position: absolute;
@@ -250,51 +188,15 @@ button:focus-visible,
     }
 }
 
-/* A partir daqui a ficha já colapsa pra uma coluna só (ver
-   .character-sheet mais abaixo) e cresce bastante em altura — uma
-   caixa "fixed" no canto acabaria flutuando por cima do conteúdo (a
-   coluna de Perícias, as abas) ao rolar a página. Em vez disso, ela
-   passa a fazer parte do fluxo normal — uma faixa no topo da ficha —
-   assim que a coluna única entra em ação, não só em celular. MESMO
-   ponto de corte do .character-sheet mais abaixo (1400px) — os dois
-   têm que mudar juntos, senão sobra uma faixa de largura (entre este
-   valor e o do .character-sheet) onde a ficha já virou uma coluna só
-   mas a caixa dos dados continua "fixed" no canto, flutuando solta por
-   cima do conteúdo em vez de ficar no fluxo normal da página. */
 @media (max-width: 1400px) {
     .dice-box-wrap {
-        /* "relative", não "static": ainda entra no fluxo normal da
-           página (o que importa aqui), mas continua sendo o ponto de
-           referência do ".dice-box-result" (position:absolute) — com
-           "static" esse overlay "escapa" pro ancestral posicionado
-           mais próximo (ou pro topo da página, se não houver nenhum) e
-           aparece flutuando sobre a barra superior em vez de dentro do
-           quadrado dos dados. */
         position: relative;
-        /* A regra de tela larga (mais acima) define "bottom: 16px" e
-           "right: 16px" pra grudar a caixa no canto da tela quando ela é
-           "fixed" — como aqui ela vira "relative", esses dois valores
-           continuam ativos e, pra position:relative, "bottom: 16px" quer
-           dizer "suba a caixa 16px da posição normal", empurrando-a por
-           cima do fim do cartão de Origem (ou de Resistências, quando
-           não tem Origem escolhida) em vez de deixá-la no lugar certo,
-           entre eles e a lista de Perícias. Resetando os dois aqui a
-           caixa passa a ficar exatamente onde o fluxo normal da página
-           já a posiciona (encontrado testando com uma Origem
-           escolhida, onde o cartão de detalhes fica alto o bastante pra
-           expor a sobreposição). */
         top: auto;
         bottom: auto;
         right: auto;
         width: 100%;
         max-width: 340px;
         height: 240px;
-        /* "margin: 0 ..." zerava o espaço ACIMA da caixa — resolveu a
-           sobreposição, mas deixou a caixa colada (0px) no fim do cartão
-           de Origem/Resistências acima dela. 22px aqui segue o mesmo
-           ritmo do ".vitals-block" (que já usa 22px de margin-top em
-           relação ao ".identity-block" logo acima), então a caixa fica
-           com uma respiração parecida com o resto dessa coluna. */
         margin: 22px auto 16px auto;
     }
 
@@ -310,15 +212,6 @@ button:focus-visible,
     }
 }
 
-/* --- LAYOUT PRINCIPAL (GRID) --- */
-/* Base compartilhada entre os dois grids de 3 colunas da ficha: este
-   (.character-sheet, tela de visualizar) e o do formulário
-   (.character-form-grid, tela de criar/editar, mais abaixo). A única
-   diferença de verdade entre os dois é a largura das colunas laterais
-   (cada um define seu próprio grid-template-columns); display, gap,
-   padding, max-width e margin eram repetidos idênticos nos dois — daqui
-   pra frente qualquer ajuste nesse espaçamento vale pros dois só
-   mudando aqui. */
 .character-sheet,
 .character-form-grid {
     display: grid;
@@ -329,23 +222,6 @@ button:focus-visible,
 }
 
 .character-sheet {
-    /* Coluna 1 (atributos/vida/PE/defesa) volta a ficar mais enxuta
-       agora que o Inventário saiu dela; coluna 3 cresceu bastante
-       (300px -> 440px) porque virou uma seção com abas de verdade
-       (Combate/Rituais/Inventário — ver .sheet-tabs-section), que
-       precisa de espaço pra cartões, rolagem personalizada e log. */
-    /* Colunas laterais fluidas (clamp) em vez de px fixo: o teto
-       (320px / 440px) é o mesmo valor de antes e continua valendo
-       enquanto o grid ainda cabe no max-width de 1600px aqui embaixo
-       -- então em telas grandes nada muda visualmente. Abaixo disso,
-       em vez de ficarem travadas no teto e sobrar cada vez menos pra
-       coluna do meio (skills-section, ver o bug documentado mais
-       abaixo em @media (max-width: 1400px)), elas encolhem junto com
-       a viewport (20vw / 27.5vw = 320px e 440px / 1600px, a mesma
-       proporcao do layout largo) ate o piso, que é o valor que essas
-       mesmas contas dao em 1400px -- exatamente onde o layout colapsa
-       pra 1 coluna só. Reduz a chance de uma resolução intermediária
-       ainda não testada repetir essa classe de bug. */
     grid-template-columns: clamp(280px, 20vw, 320px) 1fr clamp(385px, 27.5vw, 440px);
     height: 100%;
 }
@@ -375,13 +251,6 @@ h3 {
     border-radius: 50%;
 }
 
-/* --- Círculo ritualístico (SVG) atrás dos nós de atributo ---
-   Estrela de 5 pontas de verdade (liga cada atributo aos dois que não
-   são vizinhos, o desenho clássico do pentagrama) em vermelho —
-   remetendo ao lado paranormal/perigoso — e um anel em roxo (a cor já
-   usada em todo o resto do app) passando exatamente pelo centro dos 5
-   nós, como se fossem "trilhos" — o duplo símbolo Ordem (roxo,
-   ordem/controle) + Paranormal (vermelho, o ritual/ameaça). */
 .pentagram-svg {
     position: absolute;
     inset: 0;
@@ -490,11 +359,6 @@ h3 {
 .attr-btn {
     width: 50px;
     height: 50px;
-    /* Exceção proposital à regra geral de botões quadriculados: o
-       pentagrama de atributos é o único lugar do projeto em que o
-       círculo fica melhor que o quadrado (é literalmente o "nó" de um
-       pentagrama ritualístico desenhado em círculo, ver .pentagram-svg
-       acima) — mantido redondo por pedido explícito do usuário. */
     border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #2b2b2b, #0a0a0a 72%);
     border: 2px solid var(--color-blood-500);
@@ -523,10 +387,6 @@ h3 {
     transform: scale(1.1);
 }
 
-/* --- Tela de Criação/Edição: distribuição de pontos de atributo no
-   mesmo círculo ritualístico da ficha (ver .pentagram-svg acima) — em
-   vez de um botão de rolar, cada ponta tem um número editável (mesmo
-   círculo .attr-btn, só que como <input>) flanqueado por um "−"/"+". */
 .attr-stepper {
     display: flex;
     align-items: center;
@@ -534,13 +394,8 @@ h3 {
 }
 
 .attr-value-input {
-    /* Reaproveita a cara do .attr-btn (mesmo círculo gravado em
-       pedra/metal com brilho vermelho), só que como campo editável em
-       vez de botão de rolar. */
     width: 50px;
     height: 50px;
-    /* Mesma exceção do .attr-btn logo acima: círculo mantido de
-       propósito no pentagrama, por pedido explícito do usuário. */
     border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #2b2b2b, #0a0a0a 72%);
     border: 2px solid var(--color-blood-500);
@@ -556,9 +411,6 @@ h3 {
         0 0 0 4px var(--color-blood-400),
         inset 0 0 8px rgba(0, 0, 0, 0.85),
         0 0 10px rgba(139, 0, 0, 0.35);
-    /* Remove as setinhas nativas do input number — os botões −/+ ao
-       lado já fazem esse trabalho, de um jeito consistente com o
-       círculo. */
     -moz-appearance: textfield;
     appearance: textfield;
 }
@@ -579,9 +431,6 @@ h3 {
         0 0 16px rgba(255, 23, 23, 0.45);
 }
 
-/* Atributo fora do limite permitido pelo NEX atual -- ver
-   .info-aviso-erro mais abaixo pra mensagem explicando qual atributo
-   e por quê. */
 .attr-value-input-erro {
     border: 3px solid var(--color-danger);
     box-shadow:
@@ -592,9 +441,6 @@ h3 {
 }
 
 .attr-stepper-btn {
-    /* Alvo de toque -- mesmo piso de 30px do .vital-btn (ver comentário
-       lá). No mobile (@media max-width: 600px, mais abaixo) também sobe
-       pra 30px, igual aqui. */
     width: 30px;
     height: 30px;
     border-radius: 6px;
@@ -618,24 +464,12 @@ h3 {
     transform: scale(0.92);
 }
 
-/* Posicionamento dos nós — pentágono regular de verdade (72° entre um
-   atributo e o próximo), centralizado em cada ponta com translate. As
-   posições antigas (top/left "no olho") não formavam um pentagrama
-   geométrico correto; estas batem exatamente com as pontas da estrela
-   desenhada no SVG acima. */
 .pos-agi { top: 7.14%;  left: 50%;    transform: translate(-50%, -50%); }
 .pos-int { top: 36.76%; left: 90.76%; transform: translate(-50%, -50%); }
 .pos-vig { top: 84.67%; left: 75.19%; transform: translate(-50%, -50%); }
 .pos-pre { top: 84.67%; left: 24.81%; transform: translate(-50%, -50%); }
 .pos-for { top: 36.76%; left: 9.24%;  transform: translate(-50%, -50%); }
 
-/* --- Identidade (Origem/Classe/NEX/PE por Rodada) — mesmo agrupamento
-   da ficha oficial do livro, só que com o visual do resto do app (campos
-   pequenos com rótulo em vez das "caixas pretas" do papel). Origem é o
-   único campo digitável aqui (nunca existiu em nenhum lugar do projeto);
-   Classe e NEX são só exibidos (já são editados na tela de Editar
-   personagem) — editar aqui de novo abriria brecha pra ficar
-   inconsistente com as quotas de perícia/atributo calculadas por eles. */
 .identity-block {
     width: 100%;
     max-width: 280px;
@@ -701,9 +535,6 @@ h3 {
     text-overflow: ellipsis;
 }
 
-/* Origem: mesmo visual do identity-field-value, mas clicável (abre a
-   modal de catálogo) — usado tanto na Ficha quanto em qualquer outro
-   campo que precise de um valor "somente catálogo" no futuro. */
 .identity-field-button {
     width: 100%;
     text-align: left;
@@ -717,9 +548,6 @@ h3 {
     color: #c8f0ca;
 }
 
-/* --- Proteção / Resistências — mesma "dupla de campos" do livro,
-   agora empilhada em vez de lado a lado (nomes de proteção e
-   descrições de resistência tendem a ser mais longos que Origem/NEX). */
 .protecao-resistencias-block {
     width: 100%;
     max-width: 280px;
@@ -729,7 +557,6 @@ h3 {
     gap: 10px;
 }
 
-/* --- Vida / Determinação / Defesa --- */
 .vitals-block {
     width: 100%;
     max-width: 280px;
@@ -770,9 +597,6 @@ h3 {
 }
 
 .vital-btn {
-    /* Alvo de toque (WCAG 2.5.5 pede 44x44px; aqui um meio-termo
-       deliberado, ver conversa) -- 24px era pequeno demais, sobe pro
-       piso de 30px combinado. */
     background-image: linear-gradient(160deg, #2a2a2a, #161616);
     border: 1px solid #444;
     color: #ccc;
@@ -833,11 +657,6 @@ h3 {
     background-color: var(--color-primary-500);
 }
 
-/* Pisca a barra de PE quando um ritual é conjurado (ver conjurarRitual em
-   CharacterSheetPage.jsx) — sinal visual de que o PE foi gasto, visível
-   mesmo se o usuário não estiver olhando pro log da aba Combate. O key
-   trocado no elemento força o React a remontá-lo a cada conjuração, o
-   que reinicia a animação mesmo em conjurações seguidas. */
 @keyframes peSpentFlash {
     0% { box-shadow: 0 0 0 rgba(0, 191, 165, 0); border-color: #444; }
     25% { box-shadow: 0 0 14px 3px rgba(0, 191, 165, 0.85); border-color: #26cbb3; }
@@ -1038,18 +857,6 @@ h3 {
 }
 
 .btn-roll-skill {
-    /* Só o ícone (d20) agora, sem o texto "Rolar" -- por isso virou um
-       quadradinho fixo em vez de crescer com o conteúdo. O nome da
-       perícia (ex: "Rolar Ocultismo") vai só no title/aria-label, não
-       aparece na tela -- a coluna "Nome" já mostra a perícia do lado.
-       "justify-self: center" é necessário aqui: sem isso, um item de
-       grid com largura fixa (menor que a coluna "Ação") gruda no início
-       da coluna em vez de centralizar, ficando desalinhado com o
-       cabeçalho "Ação" (que é centralizado). A regra do breakpoint de
-       700px (mais abaixo) usa o seletor ".skill-item .btn-roll-skill"
-       de propósito -- com mais especificidade que esta regra -- pra
-       continuar vencendo em telas estreitas mesmo com "justify-self"
-       definido aqui também. */
     width: 36px;
     height: 36px;
     justify-self: center;
@@ -1070,12 +877,6 @@ h3 {
     color: white;
 }
 
-/* --- COLUNA 3: ABAS (Combate / Rituais / Inventário) -----------------
-   Substitui as antigas seções empilhadas (.dice-section direto na
-   coluna 3, .inventory-section espremida na coluna 1, .rituals-section
-   como uma 4ª linha de largura total) por uma única coluna com
-   navegação por abas, no espírito da referência que o usuário mandou —
-   só uma aba de conteúdo fica montada por vez. */
 .sheet-tabs-section {
     background-color: var(--color-surface);
     border-radius: 8px;
@@ -1134,9 +935,6 @@ h3 {
     animation: fadeIn 0.2s ease both;
 }
 
-/* --- TRILHA: número limpo (Ataque Especial do Combatente / Perito
-   do Especialista / ...), sub-trilha e Poderes de Trilha (ver
-   src/lib/trilhas.js) --- */
 .trilha-em-breve {
     color: var(--color-text-dim);
     font-size: 0.85rem;
@@ -1300,10 +1098,6 @@ h3 {
 .btn-conjurar {
     flex-shrink: 0;
     padding: 5px 12px;
-    /* Antes usava o mesmo degrade claro->escuro (700->900) de outros
-       botões (ROLAR, +) -- ficou pedido mais escuro que eles aqui, então
-       virou sólido no tom mais escuro do roxo, com a borda também um
-       degrau mais escura (700 em vez de 400). */
     background-color: var(--color-primary-900);
     border: 1px solid var(--color-primary-700);
     color: var(--color-text);
@@ -1340,9 +1134,6 @@ h3 {
     width: 100%;
 }
 
-/* --- INVENTÁRIO (agora dentro da aba "Inventário" da coluna 3, em
-   vez de espremido na coluna 1 — por isso perdeu o max-width antigo,
-   que existia só pra caber ao lado de Vida/Determinação/Defesa) --- */
 .inventory-section-header {
     display: flex;
     align-items: center;
@@ -1424,9 +1215,6 @@ h3 {
     gap: 8px;
 }
 
-/* Cada item vira um "cartão" empilhado (nome / categoria+espaços / efeito
-   / quantidade+ações), já que o Inventário agora mora numa coluna
-   lateral estreita (~320px) em vez de ocupar a largura toda da tela. */
 .inventory-item {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1476,11 +1264,6 @@ h3 {
 .inventory-item-qty span { min-width: 18px; text-align: center; font-size: 0.85rem; }
 
 .btn-equipar {
-    /* Antes era só contorno (fundo transparente + texto na variação
-       clara do verde, --color-success-light) -- ganhou um fundo verde
-       bem sutil e o texto passou pro verde mais cheio (--color-success),
-       pra não ficar mais claro que os outros botões da ficha. O estado
-       ".equipado" logo abaixo (já preenchido sólido) não mudou. */
     background-color: rgba(76, 175, 80, 0.14);
     border: 1px solid var(--color-success);
     color: var(--color-success);
@@ -1510,15 +1293,6 @@ h3 {
     text-align: center;
 }
 
-/* (O cartão compacto do Inventário já é o layout padrão agora — ver
-   `.inventory-item` acima — porque a seção vive numa coluna estreita o
-   tempo todo, não só em telas pequenas. Por isso não precisa mais de uma
-   versão diferente aqui pra mobile.) */
-
-/* --- RITUAIS (aba "Rituais" da coluna 3) ------------------------------
-   Cada ritual reaproveita a mesma classe `.modal-item-card` da modal
-   de itens (cartão expansível) — ver `.ritual-card`/`.badge-elemento-*`
-   mais abaixo pra a parte específica de ritual (cor por Elemento). */
 .rituals-section-header {
     display: flex;
     align-items: center;
@@ -1546,10 +1320,6 @@ h3 {
 }
 
 .rituals-list {
-    /* Antes era um grid de várias colunas (a seção ocupava a largura
-       toda da ficha); agora mora dentro da aba "Rituais" da coluna 3
-       (~440px), então uma lista de 1 coluna (igual ao Inventário)
-       aproveita melhor o espaço. */
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -1570,10 +1340,6 @@ h3 {
 
 .modal-overlay.hidden { display: none; }
 
-/* Entrada suave (sobe + cresce levemente) em vez da modal simplesmente
-   "aparecer" — mesma ideia usada no .auth-card da tela de login
-   (authCardEnter), reaproveitada aqui num keyframe próprio porque a
-   distância percorrida é bem menor (a modal já nasce quase no centro). */
 @keyframes modalBoxEnter {
     from { opacity: 0; transform: translateY(10px) scale(0.97); }
     to { opacity: 1; transform: translateY(0) scale(1); }
@@ -1594,9 +1360,6 @@ h3 {
     animation: modalBoxEnter 0.22s cubic-bezier(0.2, 0.8, 0.3, 1) both;
 }
 
-/* Faixa decorativa no topo — o mesmo roxo do resto do app, só que
-   como um "sinal" visual de que a modal pertence à ficha, em vez de
-   simplesmente uma caixa cinza igual a qualquer outra. */
 .modal-box::before {
     content: '';
     position: absolute;
@@ -1613,17 +1376,10 @@ h3 {
     max-width: 660px;
 }
 
-/* Variante usada na confirmação de exclusão (CharactersPage) — mesma
-   caixa/moldura de sempre, só que a faixa decorativa do topo troca do
-   roxo padrão pro vermelho de perigo, como um sinal visual extra de
-   que essa é uma ação destrutiva/irreversível antes mesmo de ler o
-   texto. */
 .modal-box-danger::before {
     background: linear-gradient(90deg, transparent, var(--color-danger), var(--color-blood-600), var(--color-danger), transparent);
 }
 
-/* Texto de aviso da confirmação de exclusão, entre o header da modal
-   e o campo de "digite o nome pra confirmar". */
 .modal-confirm-text {
     color: var(--color-text-body);
     font-size: 0.9rem;
@@ -1635,13 +1391,6 @@ h3 {
     color: var(--color-text);
 }
 
-/* O campo "digite o nome pra confirmar" (.control-group.full) não tem
-   margin-bottom aqui porque essa regra só existe pra dentro de
-   .modal-tab-content (ver ".modal-tab-content > .control-group" mais
-   abaixo) -- e essa modal de exclusão não usa abas. Sem esse respiro,
-   os botões de Cancelar/Excluir (.modal-item-actions) ficavam colados
-   direto embaixo do input. Mesmo valor (14px) do espaçamento que as
-   outras modais já usam entre campo e botão. */
 .modal-box-danger .modal-item-actions {
     margin-top: 14px;
 }
@@ -1813,10 +1562,6 @@ h3 {
     box-shadow: 0 2px 8px rgba(124, 67, 189, 0.4);
 }
 
-/* Sub-abas de Elemento (modal de Rituais) — cada elemento ganha a cor
-   de destaque dele (ver .badge-elemento-* mais abaixo) quando ativo,
-   em vez do roxo genérico, pra reforçar visualmente qual elemento está
-   sendo navegado. */
 .modal-subtab.elemento-conhecimento.active { background-image: linear-gradient(135deg, #a1811e, var(--color-elemento-conhecimento)); border-color: #e8cf7a; color: #241d04; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.45); }
 .modal-subtab.elemento-energia.active { background-image: linear-gradient(135deg, var(--color-primary-700), var(--color-elemento-energia)); border-color: var(--color-primary-200); box-shadow: 0 2px 8px rgba(171, 71, 188, 0.45); }
 .modal-subtab.elemento-morte.active { background-image: linear-gradient(135deg, #37474f, var(--color-elemento-morte)); border-color: #90a4ae; box-shadow: 0 2px 8px rgba(84, 110, 122, 0.45); }
@@ -1870,11 +1615,6 @@ h3 {
     border-radius: 8px;
     overflow: hidden;
     transition: border-color 0.15s ease, background-color 0.15s ease;
-    /* Sem isso, o flexbox (coluna) espreme os cartões pra caber dentro
-       do max-height do container em vez de deixar rolar (overflow-y:
-       auto) — todo mundo fica achatado numa lasquinha de poucos
-       pixels. flex-shrink:0 mantém cada cartão na altura real do seu
-       conteúdo e deixa a rolagem cuidar do resto. */
     flex-shrink: 0;
 }
 
@@ -1883,10 +1623,6 @@ h3 {
     background-color: #161616;
 }
 
-/* Cartão de ritual: faixa de cor à esquerda identificando o elemento
-   (Conhecimento/Energia/Morte/Sangue/Medo — ver rituais.js), tanto na
-   lista de "Rituais Conhecidos" da ficha quanto nos cartões da modal
-   de adicionar. */
 .ritual-card {
     border-left: 3px solid var(--color-primary-900);
 }
@@ -1897,9 +1633,6 @@ h3 {
 .ritual-card.elemento-sangue { border-left-color: var(--color-elemento-sangue); }
 .ritual-card.elemento-medo { border-left-color: var(--color-elemento-medo); }
 
-/* Cartão de ataque (aba Combate) — mesma base de .modal-item-card, com
-   uma faixa vermelha à esquerda (cor do pentagrama de combate) em vez
-   da cor por elemento dos rituais. */
 .ataque-card {
     border-left: 3px solid #8b1e1e;
 }
@@ -1972,11 +1705,6 @@ h3 {
     color: #ffcc80;
 }
 
-/* Selo dos ataques gerados automaticamente a partir de uma arma no
-   Inventário (ver ataquesAutomaticos em CharacterSheetPage.jsx) — tom
-   verde discreto, mesma família de cor usada nos toasts de sucesso
-   (ver App.jsx), pra sinalizar "sincronizado automaticamente" sem
-   competir visualmente com os badges de Dano/Crítico ao lado. */
 .badge-auto {
     background-color: rgba(102, 187, 106, 0.14);
     border-color: #4a7c4e;
@@ -2025,20 +1753,11 @@ h3 {
 
 .modal-item-card-add.added:hover { transform: none; box-shadow: none; }
 
-/* Botão de remover (ícone de lixeira) — mesma "moldura" circular do de
-   adicionar, só que em vermelho. Usado nos 3 lugares de "remover" da
-   ficha: item do inventário, ritual conhecido e ataque cadastrado — os
-   três com o mesmo estilo agora (antes o inventário usava .btn-danger,
-   retangular com "✕" de texto, e ritual/ataque só tinham o "✕" sem o
-   estilo do inventário; ver TrashIcon em CharacterSheetPage.jsx). */
 .modal-item-card-remove {
     flex-shrink: 0;
     width: 26px;
     height: 26px;
     border-radius: 6px;
-    /* Escurecido: usa a mesma familia "vermelho paranormal" (blood-*)
-       do resto da ficha em vez dos tons soltos de antes -- gradiente
-       e borda mais escuros e menos "pastel". */
     background-image: linear-gradient(145deg, var(--color-blood-700), var(--color-blood-500));
     border: 1px solid var(--color-blood-600);
     color: var(--color-text);
@@ -2110,10 +1829,6 @@ h3 {
     margin-bottom: 18px;
 }
 
-/* Cada opção é o próprio <button>, não um cartão com um botão dentro
-   (como o .modal-item-card-add da OrigemCatalogModal) — aqui a
-   escolha é única e simples o bastante (sem expandir/colapsar
-   detalhes) pra não precisar separar "área clicável" de "ação". */
 .dice-theme-card {
     display: flex;
     flex-direction: column;
@@ -2197,9 +1912,6 @@ h3 {
     box-shadow: 0 0 0 2px var(--color-primary-500);
 }
 
-/* Seletor de cor nativo do navegador — disfarçado de mais um "swatch"
-   redondo (mesmo tamanho/formato dos presets acima) em vez de mostrar
-   o quadrado feio que o <input type="color"> tem por padrão. */
 .dice-color-custom {
     width: 30px;
     height: 30px;
@@ -2228,11 +1940,6 @@ h3 {
     gap: 10px;
 }
 
-/* --- OrigemCatalogModal: Perícias Treinadas / Poder de Origem dentro
-   do cartão expandido — mesma tipografia de .modal-item-stat, só que
-   empilhado (label em cima, texto corrido embaixo) em vez de grid,
-   porque a descrição do poder costuma ser longa demais pra caber numa
-   coluna estreita. */
 .origem-campo {
     display: flex;
     flex-direction: column;
@@ -2243,11 +1950,6 @@ h3 {
     margin-top: 10px;
 }
 
-/* --- Cartão-resumo da Origem escolhida, mostrado no formulário de
-   Criar/Editar Personagem e na ficha (ver CharacterFormPage.jsx /
-   CharacterSheetPage.jsx) — mesmo visual de um .modal-item-card
-   "sempre aberto", sem precisar entrar na modal de novo só pra
-   lembrar o que a Origem atual faz. */
 .origem-resumo {
     background-color: var(--color-surface);
     background-image: linear-gradient(160deg, rgba(74, 20, 140, 0.1), transparent 55%);
@@ -2333,17 +2035,6 @@ h3 {
     flex-direction: column;
 }
 
-/* As modais "Novo Ataque" e "Item Personalizado" empilham um
-   .control-group (ou a linha Dano/Crítico/Alcance, .ataque-form-row)
-   atrás do outro dentro de .modal-tab-content sem nenhum espaçamento
-   próprio — diferente da aba Catálogo, onde cada peça (subtabs, busca,
-   lista de cartões) já tem seu próprio margin-bottom. Isso fazia o
-   botão "Adicionar" (dentro de .modal-item-actions, sempre o último
-   filho) ficar colado no campo anterior, principalmente no textarea de
-   Observações/Descrição. Regra com combinador de filho direto (>) pra
-   não vazar pro .control-group da rolagem de dados (.dice-controls),
-   que fica numa linha (flex-end) onde um margin-bottom desalinharia os
-   campos com o botão ROLAR ao lado. */
 .modal-tab-content > .control-group,
 .modal-tab-content > .ataque-form-row {
     margin-bottom: 14px;
@@ -2372,10 +2063,6 @@ h3 {
     resize: vertical;
 }
 
-/* Validação inline (CharacterFormPage) -- borda mais grossa e numa cor
-   bem diferente do cinza padrão (#444) em vez de só trocar o tom,
-   pra quem não distingue bem cores também notar o campo problemático;
-   a mensagem em .form-field-erro logo abaixo é o reforço em texto. */
 .control-group input.input-erro,
 .control-group textarea.input-erro {
     border: 2px solid var(--color-danger);
@@ -2432,19 +2119,6 @@ h3 {
 
 /* Log Styles */
 .log-container {
-    /* Antes só tinha `flex: 1`, que só funciona se o pai (.dice-section)
-       tiver uma altura definida pra "repartir" — mas .character-sheet
-       usa height:auto (pra acompanhar a coluna de Perícias, que varia
-       de tamanho), então na prática o container não tinha limite
-       nenhum e crescia sem parar a cada rolagem, empurrando a página
-       inteira pra baixo. Uma altura fixa resolve isso.
-
-       Altura fixada em 400px de propósito (decisão do usuário, testada
-       na prática) — com rolagens que mostram vários dados (ex: uma
-       perícia que rola 5 dados) o conteúdo de uma entrada cresce um
-       pouco, e é esperado que a rolagem interna (overflow-y) apareça
-       nesse caso. Não mudar esse valor em ajustes futuros a não ser
-       que seja realmente necessário. */
     height: 400px;
     flex: none;
     background-color: #000;
@@ -2484,15 +2158,7 @@ h3 {
 /* ============================================================
    TELA: LOGIN / CADASTRO
    ============================================================ */
-/* Antes eram seletores de ID (#screen-login) porque cada tela vanilla
-   era uma página HTML com um elemento de id único; na versão React
-   viraram classes normais (mesmo nome, sem o "#"), já que cada tela
-   agora é um componente e não faz sentido depender de um id global.
 
-   Observação: o antigo seletor "#form-auth" (gap entre os campos) nunca
-   batia com nada — o <form> real não tinha esse id — então os campos
-   ficavam coladas sem espaçamento. Virou a classe ".auth-form" abaixo,
-   aplicada de fato no JSX. */
 .screen-login {
     position: relative;
     display: flex;
@@ -2691,11 +2357,7 @@ h3 {
     animation: fadeIn 0.3s ease both;
 }
 
-/* Volta a ser uma regra só (igual era antes) em vez de dividida em
-   duas -- não tinha problema nenhum pra cascata em CSS (propriedades
-   diferentes em cada uma não conflitam), mas não custa nada manter
-   simples igual era, principalmente depois do susto com os botões
-   sem estilo. */
+
 .btn-action.full {
     width: 100%;
     display: inline-flex;
@@ -2704,13 +2366,6 @@ h3 {
     gap: 8px;
 }
 
-/* .btn-action-busy (botão "Salvar Personagem" enquanto salva, ver
-   CharacterFormPage.jsx) precisa do mesmo layout flex que .full pra
-   alinhar o .btn-spinner com o texto -- sem isso, o span do spinner
-   (que só tem largura/altura fixas, sem display próprio) não vira um
-   item flex e o width/height dele é ignorado pelo navegador. Regra
-   própria em vez de dividir com .full -- só repete 3 linhas, mas fica
-   cada seletor com a sua regra inteira. */
 .btn-action.btn-action-busy {
     display: inline-flex;
     align-items: center;
@@ -2749,9 +2404,6 @@ h3 {
     text-decoration: underline;
 }
 
-/* Anima só o essencial (spinner de carregamento) quando o usuário pede
-   menos movimento; o resto do clima visual (névoa, brilho, entrada do
-   card) fica estático mas continua bonito. */
 @media (prefers-reduced-motion: reduce) {
     .login-bg-glow,
     .login-bg-stars,
@@ -2839,10 +2491,6 @@ h3 {
     color: var(--color-text-subtle);
 }
 
-/* Erro de verdade ao carregar a lista (ver CharactersPage.jsx) --
-   mesma caixa de ".characters-empty" (usada pra "nenhum personagem
-   ainda"), mas com cor de texto E borda vermelhas, pra não confundir
-   as duas situações a partir de só um texto cinza neutro. */
 .characters-empty.characters-erro {
     color: var(--color-danger-light);
     border: 1px solid var(--color-danger);
@@ -2890,12 +2538,6 @@ h3 {
 
 /* ============================================================
    TELA: CRIAR / EDITAR PERSONAGEM
-   ------------------------------------------------------------
-   Usa a mesma barra superior (.sheet-topbar) e o mesmo grid de 3
-   colunas da ficha (.character-sheet) — em vez de um painel estreito
-   centralizado, a tela inteira é aproveitada: coluna 1 (identidade +
-   pentagrama de atributos), coluna 2 (perícias, que é grande) e coluna
-   3 (rituais, reservada pro futuro).
    ============================================================ */
 .screen-form {
     min-height: 100vh;
@@ -2907,14 +2549,6 @@ h3 {
 }
 
 .character-form-grid {
-    /* Mesma lógica de coluna fluida do .character-sheet (ver
-       comentário lá): teto = valor fixo de antes (360px/300px,
-       válido até o grid bater no max-width de 1600px logo abaixo),
-       proporção 22.5vw/18.75vw = 360px/300px em 1600px de viewport,
-       e piso = o que essa mesma conta dá em 1400px, onde o
-       .character-form-grid também colapsa pra 1 coluna (ver
-       @media max-width: 1400px). display/gap/padding/max-width/margin
-       ficam na regra compartilhada com .character-sheet, lá em cima. */
     grid-template-columns: clamp(315px, 22.5vw, 360px) 1fr clamp(263px, 18.75vw, 300px);
 }
 
@@ -2922,13 +2556,6 @@ h3 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* Sem isso, Nome / Origem / Trilha+NEX ficavam grudados um no outro
-       (a section é flex-column sem gap nenhum) — passava despercebido
-       enquanto o cartão da Origem era só uma linha ("Nenhuma Origem
-       escolhida ainda"), mas com uma Origem escolhida (nome + descrição
-       + Perícias Treinadas + Poder de Origem, bem mais alto) ficava
-       visualmente colado tanto no campo Nome acima quanto em Trilha/NEX
-       abaixo. */
     gap: 18px;
 }
 
@@ -2951,16 +2578,6 @@ h3 {
     width: 100%;
 }
 
-/* .form-pericias-section reaproveita a classe .skills-section (mesmo
-   "cartão" visual da ficha), mas essa classe tem `overflow: hidden`,
-   pensado pra coluna de altura fixa da ficha (sheet.html). Aqui a
-   seção cresce com o conteúdo (a lista de perícias inteira, sem
-   scroll interno — ver .form-pericias-catalogo), então herdar
-   overflow:hidden só serviria pra cortar conteúdo por engano caso a
-   altura calculada ficasse um pixel curta. Rituais e Trilha saíram
-   dessa classe e foram pra .sheet-tabs-section (mesmo esquema de
-   abas com tab-panel-rituais/tab-panel-trilha da Ficha — ver
-   CharacterFormPage.jsx), que já não tem overflow:hidden. */
 .form-pericias-section {
     overflow: visible;
 }
@@ -3005,10 +2622,6 @@ h3 {
     font-size: 0.8rem;
 }
 
-/* Mesmo formato de .atributos-aviso acima, só que pra avisos de erro
-   de verdade (soma/atributo fora do limite, quota de perícias livres
-   excedida) -- usada tanto em .atributos-info quanto em
-   .pericias-info. */
 .info-aviso-erro {
     color: var(--color-danger-light);
     flex-basis: 100%;
@@ -3059,8 +2672,6 @@ h3 {
     color: var(--color-primary-100);
 }
 
-/* Mesma "pílula" da Trilha, mas em tom âmbar — só pra deixar visualmente
-   claro que esta perícia veio da Origem, não da Trilha. */
 .pericia-fixa-origem {
     background-color: #2f2717;
     border-color: #8c5e14;
@@ -3099,12 +2710,6 @@ h3 {
 }
 
 .form-pericias-catalogo {
-    /* Sem altura máxima de propósito — ao contrário da ficha (sheet.html),
-       essa tela não tem uma altura de viewport fixa pra dividir entre
-       colunas, então a lista inteira de perícias aparece sem precisar de
-       um scroll interno pequeno; se não couber na tela, a PÁGINA toda
-       rola (ver #screen-form), que é bem mais confortável pra escolher
-       entre várias perícias do que uma caixinha de scroll curta. */
     padding-right: 6px;
     margin-bottom: 12px;
 }
@@ -3190,8 +2795,6 @@ h3 {
         gap: 0;
     }
 
-    /* Em telas estreitas a linha de perícia (checkbox + grau + bônus)
-       não cabe numa linha só — empilha o grau/bônus embaixo do nome. */
     .pericia-catalogo-row {
         flex-wrap: wrap;
     }
@@ -3209,10 +2812,6 @@ h3 {
    TELA: FICHA (barra superior nova + grid já existente)
    ============================================================ */
 .screen-sheet {
-    /* Antes era `height: 100vh` fixo, com rolagem só dentro das colunas
-       (perícias/log). Isso parou de fazer sentido com o Inventário, que
-       pode crescer bastante e fica numa faixa embaixo das 3 colunas —
-       agora a TELA inteira rola normalmente quando o conteúdo não cabe. */
     min-height: 100vh;
 }
 
@@ -3263,32 +2862,9 @@ h3 {
 
 /* ============================================================
    RESPONSIVO: FICHA (TABLET E CELULAR)
-   ------------------------------------------------------------
-   Estes blocos ficam de propósito no FINAL do arquivo. Como têm a
-   mesma especificidade (0,0,1,0) das regras "base" lá em cima
-   (.skills-section, .skills-list, #screen-sheet etc.), o CSS resolve
-   o empate por ORDEM NO ARQUIVO — a regra que aparece por último
-   vence, independente de estar dentro de uma media query ou não.
-   Se esses blocos ficarem antes das regras base (como estavam antes),
-   as regras base "ganham" de volta fora da media query e a versão
-   responsiva nunca é aplicada de verdade. Por isso: NÃO mover estes
-   blocos pra cima sem também aumentar a especificidade das regras,
-   senão o bug de perícias/log somem em celular volta.
    ============================================================ */
 
-/* Empilha tudo numa coluna só bem mais cedo do que antes (era 1000px).
-   A coluna de Perícias (grid de 5 colunas: Nome/Dados/Bônus/Treino/Ação)
-   é a mais larga das 3, e o grid principal (.character-sheet) tem as
-   colunas 1 e 3 em px fixo (320px + 440px + 40px de gap = 800px) — sobra
-   pouco pra ela. Medido na prática: com viewport de 1024px a coluna de
-   Perícias fica com só 184px, estreita o bastante pra CORTAR o botão
-   "Rolar" de vez (##overflow:hidden do .skills-section## esconde o que
-   não cabe, sem nem rolar até lá) — e até 1300px ela ainda fica presa no
-   mínimo (~56px de botão, número e "Rolar" espremidos). Isso pega em
-   cheio quem usa a ficha numa tela "em pé" (monitor girado, ~1080px de
-   largura) ou num notebook comum — não é só celular. 1400px de corte
-   garante que a coluna nunca renderize mais estreita que a tela toda
-   (menos padding), que já é confortável pro grid de 5 colunas. */
+
 @media (max-width: 1400px) {
     .character-sheet {
         grid-template-columns: 1fr;
@@ -3306,11 +2882,6 @@ h3 {
         height: auto;
     }
 
-    /* Com a altura da coluna virando "auto", os filhos com flex:1 (que
-       dependiam de um container de altura fixa pra calcular espaço)
-       colapsavam pra 0px e a lista de perícias/log sumiam da tela.
-       Aqui eles saem do esquema flex-fill e passam a ter altura própria,
-       limitada e com rolagem interna. */
     .skills-section,
     .sheet-tabs-section {
         display: block;
@@ -3331,10 +2902,6 @@ h3 {
         max-height: 340px;
     }
 
-    /* Mesmo ajuste acima, agora pra tela de Criar/Editar: sem altura
-       fixa no grid, empilha tudo numa coluna só e cada seção passa a
-       ter altura própria com rolagem interna em vez de tentar dividir
-       o espaço com flex. */
     .character-form-grid {
         grid-template-columns: 1fr;
         height: auto;
@@ -3380,11 +2947,6 @@ h3 {
     }
 
     .attr-stepper-btn {
-        /* Mesmo piso de 30px do resto (ver .attr-stepper-btn acima) --
-           antes encolhia pra 22px aqui só pra abrir espaço pro círculo
-           central, que já sobe pra 44px logo acima. Vale conferir numa
-           tela estreita de verdade se a linha inteira (botão + círculo
-           + botão) ainda cabe sem apertar. */
         width: 30px;
         height: 30px;
         font-size: 0.85rem;
