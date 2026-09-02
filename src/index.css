@@ -1152,11 +1152,124 @@ h3 {
 
 .tab-panel-combate,
 .tab-panel-rituais,
-.tab-panel-inventario {
+.tab-panel-inventario,
+.tab-panel-trilha {
     display: flex;
     flex-direction: column;
     gap: 14px;
     animation: fadeIn 0.2s ease both;
+}
+
+/* --- TRILHA: Ataque Especial, sub-trilha e Poderes de Combatente
+   (ver src/lib/trilhas.js) --- */
+.trilha-em-breve {
+    color: var(--color-text-dim);
+    font-size: 0.85rem;
+    padding: 10px 0;
+}
+
+.trilha-ataque-especial {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 12px;
+    background-color: var(--color-bg);
+    border: 1px solid #333;
+    border-radius: 8px;
+}
+
+.trilha-ataque-especial-label {
+    font-weight: bold;
+    font-size: 0.8rem;
+    letter-spacing: 0.3px;
+    color: var(--color-text-muted);
+}
+
+.trilha-ataque-especial-valor {
+    font-size: 0.85rem;
+    color: var(--color-primary-300);
+}
+
+.trilha-secundaria-picker,
+.trilha-poder-slot {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.trilha-poder-slot {
+    margin-bottom: 14px;
+}
+
+.trilha-secundaria-picker label,
+.trilha-poder-slot label {
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: var(--color-text-muted);
+    letter-spacing: 0.3px;
+}
+
+.trilha-secundaria-picker select,
+.trilha-poder-slot select {
+    padding: 10px;
+    background-color: var(--color-bg);
+    border: 1px solid #444;
+    color: white;
+    border-radius: 4px;
+    width: 100%;
+}
+
+.trilha-secundaria-descricao {
+    font-size: 0.8rem;
+    color: var(--color-text-dim);
+    font-style: italic;
+    margin: 0 0 8px;
+}
+
+.trilha-poder-card {
+    background-color: var(--color-bg);
+    border: 1px solid #333;
+    border-left: 3px solid var(--color-primary-500);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    transition: opacity 0.15s ease, border-color 0.15s ease;
+}
+
+.trilha-poder-bloqueado {
+    opacity: 0.5;
+    border-left-color: #444;
+}
+
+.trilha-poder-card-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.trilha-poder-nex {
+    font-size: 0.7rem;
+    color: var(--color-text-subtle);
+    white-space: nowrap;
+}
+
+.trilha-poder-descricao {
+    font-size: 0.8rem;
+    color: var(--color-text-body);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.trilha-poder-prereq {
+    color: var(--color-text-dim);
+}
+
+.trilha-poder-combatente-slots h3 {
+    margin: 4px 0 10px;
 }
 
 /* --- COMBATE: cabeçalho de filtro + lista de Ataques --- */

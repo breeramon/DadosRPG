@@ -35,6 +35,7 @@ import * as OP from '@/lib/pericias';
 import * as OPI from '@/lib/itens';
 import * as OPR from '@/lib/rituais';
 import { origemPorNome, bonusNumericoDaOrigem } from '@/lib/origens';
+import * as OPT from '@/lib/trilhas';
 import OrigemCatalogModal from '@/components/OrigemCatalogModal';
 import DiceThemeModal from '@/components/DiceThemeModal';
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll';
@@ -286,6 +287,16 @@ export default function CharacterSheetPage() {
     // --- Aba ativa da coluna 3 (Combate / Rituais / Inventário) ---
     const [abaAtiva, setAbaAtiva] = useState('combate');
 
+    // --- Poderes de Trilha (só Combatente modelado por enquanto, ver
+    // src/lib/trilhas.js) --- trilhaCombatenteEscolhida = nome de uma
+    // das TRILHAS_COMBATENTE (ou '' se ainda não escolheu, possível
+    // até NEX 10%). poderesCombatenteEscolhidos = array de nomes de
+    // PODERES_COMBATENTE, um por slot liberado (ver
+    // slotsPoderCombatenteLiberados) — pode ter buracos ('' pros
+    // slots liberados mas ainda não escolhidos).
+    const [trilhaCombatenteEscolhida, setTrilhaCombatenteEscolhida] = useState('');
+    const [poderesCombatenteEscolhidos, setPoderesCombatenteEscolhidos] = useState([]);
+
     // --- Modal "Novo Ataque" ---
     const [modalAtaqueAberto, setModalAtaqueAberto] = useState(false);
     const [ataqueNome, setAtaqueNome] = useState('');
@@ -376,18 +387,22 @@ export default function CharacterSheetPage() {
                 setDefesaOutros(Number(p.defesaOutros) || 0);
                 setOrigem(p.origem || '');
                 setResistencias(p.resistencias || '');
+                setTrilhaCombatenteEscolhida(p.trilhaCombatenteEscolhida || '');
+                setPoderesCombatenteEscolhidos(Array.isArray(p.poderesCombatenteEscolhidos) ? p.poderesCombatenteEscolhidos : []);
 
                 const atributos = p.atributos || {};
                 const trilha = p.trilha || 'Combatente';
                 const nex = Number(p.nex) || 5;
                 // Inclui o bônus numérico da Origem (ex: Desgarrado
-                // soma Vida, Universitário soma PE) no cálculo do
-                // máximo usado pra clampar — senão um personagem com
-                // uma dessas Origens teria seu Vida/PE atual salvo
-                // erroneamente rebaixado (e gravado de volta!) só por
-                // este efeito não saber do bônus.
+                // soma Vida, Universitário soma PE) e o de Casca
+                // Grossa (Tropa de Choque, ver trilhas.js) no cálculo
+                // do máximo usado pra clampar — senão um personagem
+                // com um desses bônus teria seu Vida/PE/Vida atual
+                // salvo erroneamente rebaixado (e gravado de volta!)
+                // só por este efeito não saber do bônus.
                 const bonus = bonusNumericoDaOrigem(p.origem, nex, trilha);
-                const vidaMax = OP.vidaMaxima(trilha, atributos.vig, nex) + bonus.vida;
+                const bonusCascaGrossa = OPT.bonusVidaCascaGrossa(p.trilhaCombatenteEscolhida, nex);
+                const vidaMax = OP.vidaMaxima(trilha, atributos.vig, nex) + bonus.vida + bonusCascaGrossa;
                 const detMax = OP.determinacaoMaxima(trilha, atributos.pre, nex) + bonus.pe;
                 const sanMax = Math.max(0, OP.sanidadeMaxima(trilha, nex) + bonus.sanidade);
                 const vida = (typeof p.vidaAtual === 'number') ? Math.min(p.vidaAtual, vidaMax) : vidaMax;
@@ -533,9 +548,26 @@ export default function CharacterSheetPage() {
     // ou nenhuma escolhida ainda), todos os bônus ficam 0.
     const bonusOrigem = useMemo(() => bonusNumericoDaOrigem(origem, nex, trilha), [origem, nex, trilha]);
     const origemEscolhida = useMemo(() => origemPorNome(origem), [origem]);
+    // Casca Grossa (Tropa de Choque, ver trilhas.js) — só entra se o
+    // jogador tiver escolhido essa sub-trilha de Combatente e já
+    // estiver no NEX que libera o poder.
+    const bonusCascaGrossa = useMemo(
+        () => OPT.bonusVidaCascaGrossa(trilhaCombatenteEscolhida, nex),
+        [trilhaCombatenteEscolhida, nex]
+    );
+    // Ataque Especial (Tabela 1.3) e quantos slots de Poder de
+    // Combatente já estão liberados no NEX atual — só usados na aba
+    // "Trilha" quando trilha === 'Combatente', mas calculados aqui
+    // (fora do JSX) pra não recalcular a cada render.
+    const ataqueEspecialAtual = useMemo(() => OPT.ataqueEspecialMaximo(nex), [nex]);
+    const slotsPoderCombatente = useMemo(() => OPT.slotsPoderCombatenteLiberados(nex), [nex]);
+    const trilhaCombatenteInfo = useMemo(
+        () => OPT.trilhaCombatentePorNome(trilhaCombatenteEscolhida),
+        [trilhaCombatenteEscolhida]
+    );
     const vidaMax = useMemo(
-        () => OP.vidaMaxima(trilha, atributos.vig, nex) + bonusOrigem.vida,
-        [trilha, atributos.vig, nex, bonusOrigem]
+        () => OP.vidaMaxima(trilha, atributos.vig, nex) + bonusOrigem.vida + bonusCascaGrossa,
+        [trilha, atributos.vig, nex, bonusOrigem, bonusCascaGrossa]
     );
     const detMax = useMemo(
         () => OP.determinacaoMaxima(trilha, atributos.pre, nex) + bonusOrigem.pe,
@@ -611,6 +643,20 @@ export default function CharacterSheetPage() {
     function handleResistenciasChange(valor) {
         setResistencias(valor);
         salvarCampos({ resistencias: valor });
+    }
+
+    // --- Poderes de Trilha (Combatente, ver src/lib/trilhas.js) ---
+    function handleEscolherTrilhaCombatente(nome) {
+        setTrilhaCombatenteEscolhida(nome);
+        salvarCampos({ trilhaCombatenteEscolhida: nome });
+    }
+    function handleEscolherPoderCombatente(indice, nome) {
+        setPoderesCombatenteEscolhidos(prev => {
+            const novo = [...prev];
+            novo[indice] = nome;
+            salvarCampos({ poderesCombatenteEscolhidos: novo });
+            return novo;
+        });
     }
 
     function ajustarVida(delta) {
@@ -1302,6 +1348,13 @@ export default function CharacterSheetPage() {
                         >
                             Inventário
                         </button>
+                        <button
+                            type="button"
+                            className={`sheet-tab-btn${abaAtiva === 'trilha' ? ' active' : ''}`}
+                            onClick={() => setAbaAtiva('trilha')}
+                        >
+                            Trilha
+                        </button>
                     </nav>
 
                     <div className="sheet-tab-panel">
@@ -1575,6 +1628,100 @@ export default function CharacterSheetPage() {
                                         </div>
                                     ))}
                                 </div>
+                            </div>
+                        )}
+
+                        {abaAtiva === 'trilha' && (
+                            <div className="tab-panel-trilha">
+                                {trilha !== 'Combatente' ? (
+                                    <p className="trilha-em-breve">
+                                        Poderes de trilha para {trilha || 'essa trilha'} ainda não foram
+                                        modelados nesta ficha — só o Combatente tem o catálogo completo
+                                        por enquanto.
+                                    </p>
+                                ) : (
+                                    <>
+                                        <div className="trilha-ataque-especial">
+                                            <span className="trilha-ataque-especial-label">Ataque Especial</span>
+                                            <span className="trilha-ataque-especial-valor">
+                                                {ataqueEspecialAtual
+                                                    ? `até ${ataqueEspecialAtual.pe} PE por +${ataqueEspecialAtual.bonus} (no ataque ou no dano)`
+                                                    : '—'}
+                                            </span>
+                                        </div>
+
+                                        <div className="trilha-secundaria-picker">
+                                            <label htmlFor="trilha-combatente-select">Trilha de Combatente</label>
+                                            <select
+                                                id="trilha-combatente-select"
+                                                value={trilhaCombatenteEscolhida}
+                                                onChange={e => handleEscolherTrilhaCombatente(e.target.value)}
+                                            >
+                                                <option value="">— Escolher (liberado em NEX 10%) —</option>
+                                                {OPT.TRILHAS_COMBATENTE.map(t => (
+                                                    <option key={t.nome} value={t.nome}>{t.nome}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {trilhaCombatenteInfo && (
+                                            <div className="trilha-secundaria-poderes">
+                                                <p className="trilha-secundaria-descricao">{trilhaCombatenteInfo.descricao}</p>
+                                                {trilhaCombatenteInfo.poderes.map(poder => {
+                                                    const liberado = nex >= poder.nex;
+                                                    return (
+                                                        <div
+                                                            className={`trilha-poder-card${liberado ? '' : ' trilha-poder-bloqueado'}`}
+                                                            key={poder.nome}
+                                                        >
+                                                            <div className="trilha-poder-card-header">
+                                                                <strong>{poder.nome}</strong>
+                                                                <span className="trilha-poder-nex">NEX {poder.nex}%{liberado ? '' : ' (bloqueado)'}</span>
+                                                            </div>
+                                                            <p className="trilha-poder-descricao">{poder.descricao}</p>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+
+                                        <div className="trilha-poder-combatente-slots">
+                                            <h3>Poderes de Combatente</h3>
+                                            {slotsPoderCombatente === 0 ? (
+                                                <p className="trilha-em-breve">Libera o primeiro em NEX 15%.</p>
+                                            ) : (
+                                                Array.from({ length: slotsPoderCombatente }).map((_, indice) => (
+                                                    <div className="trilha-poder-slot" key={indice}>
+                                                        <label htmlFor={`poder-combatente-${indice}`}>
+                                                            Poder {indice + 1} <small>(NEX {OPT.PODER_COMBATENTE_MARCOS[indice]}%)</small>
+                                                        </label>
+                                                        <select
+                                                            id={`poder-combatente-${indice}`}
+                                                            value={poderesCombatenteEscolhidos[indice] || ''}
+                                                            onChange={e => handleEscolherPoderCombatente(indice, e.target.value)}
+                                                        >
+                                                            <option value="">— Escolher —</option>
+                                                            {OPT.PODERES_COMBATENTE.map(p => (
+                                                                <option key={p.nome} value={p.nome}>{p.nome}</option>
+                                                            ))}
+                                                        </select>
+                                                        {poderesCombatenteEscolhidos[indice] && (() => {
+                                                            const escolhido = OPT.PODERES_COMBATENTE.find(p => p.nome === poderesCombatenteEscolhidos[indice]);
+                                                            return escolhido ? (
+                                                                <p className="trilha-poder-descricao">
+                                                                    {escolhido.descricao}
+                                                                    {escolhido.preRequisito && (
+                                                                        <em className="trilha-poder-prereq"> (Pré-requisito: {escolhido.preRequisito})</em>
+                                                                    )}
+                                                                </p>
+                                                            ) : null;
+                                                        })()}
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>
