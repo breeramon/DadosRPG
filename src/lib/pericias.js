@@ -1,26 +1,3 @@
-// ============================================================
-// pericias.js
-//
-// Porta direta de javascript/pericias.js (versão vanilla) pra módulo
-// ES — mesmos nomes, mesmos valores, mesma lógica, só trocando o
-// "window.OrdemParanormal = {...}" por "export". Usado pela tela de
-// Criar/Editar Personagem e, mais adiante, pela Ficha.
-//
-// IMPORTANTE — sobre a precisão destes números (comentário original
-// preservado): os nomes e atributos das 28 perícias são bem
-// estabelecidos e vieram de múltiplas fontes concordantes. Já os
-// marcos exatos de NEX (grau veterano/expert em 35%/70%, círculos de
-// ritual em 5/25/55/85 etc) vieram de uma pesquisa on-line cuidadosa,
-// mas o livro oficial não está disponível de forma aberta pra
-// conferência 100% garantida — trate os marcos de NEX abaixo como
-// "melhor estimativa documentada", não como transcrição literal do
-// livro. Tudo centralizado neste arquivo, então dá pra ajustar aqui
-// se notar algo diferente na sua mesa/livro físico.
-// ============================================================
-
-// As 28 perícias oficiais e o atributo que cada uma usa.
-// `somenteTreinada: true` = perícia que só pode ser rolada se o
-// personagem for treinado nela (confirmado numa ficha oficial real).
 export const PERICIAS_CATALOGO = [
     { nome: 'Acrobacia', atributo: 'agi' },
     { nome: 'Adestramento', atributo: 'pre', somenteTreinada: true },
@@ -95,24 +72,6 @@ export const CIRCULOS_RITUAL = [
     { circulo: 4, nexMinimo: 85 },
 ];
 
-// Pontos de atributo disponíveis na CRIAÇÃO do personagem, de acordo
-// com o NEX escolhido.
-//
-// CONFIRMADO (3 fontes independentes, texto praticamente idêntico ao
-// do livro oficial): em NEX 5% — o NEX padrão de criação — todos os 5
-// atributos começam em 1 (soma 5) e o jogador ganha +4 pontos livres
-// pra distribuir entre eles como quiser (total 9 pontos). Dá pra zerar
-// um atributo (mínimo 0) pra ganhar 1 ponto extra em outro. O valor
-// máximo de qualquer atributo NA CRIAÇÃO é 3.
-//
-// ATENÇÃO — extrapolação pra NEX inicial > 5%: o livro NÃO tem uma
-// tabela oficial de "quantos pontos de atributo pra criar direto num
-// NEX mais alto" — isso é decisão de mesa. Como este app deixa
-// escolher qualquer NEX de 5% a 99% já na criação, uso como extensão
-// a tabela que O LIVRO realmente tem pra personagens JÁ EM JOGO
-// subindo de NEX (confirmado em 2 fontes: a cada marco de NEX 20%,
-// 50%, 80% e 95%, o personagem ganha +1 ponto de atributo à escolha,
-// com teto de 5 em qualquer atributo por essa via).
 export const ATRIBUTOS_NEX_MARCOS = [20, 50, 80, 95];
 export const ATRIBUTOS_BASE = { total: 9, maxPorAtributo: 3, minPorAtributo: 0 };
 export const ATRIBUTOS_TETO_ABSOLUTO = 5; // nenhum atributo passa disso por essa conta
@@ -129,16 +88,6 @@ export function pontosAtributoPorNex(nex) {
     };
 }
 
-// Vida (PV), PE (Pontos de Esforço) e Sanidade (SAN), por trilha —
-// conferidos direto contra a Tabela de Características de cada classe
-// no livro de regras (confiança alta, todas as 3 trilhas conferidas
-// em 2026-09). PE do Combatente e do Especialista foram corrigidos
-// nessa conferência (valores antigos não batiam com o livro); PE do
-// Ocultista também estava errado (era 10/+5, o livro diz 4+Presença
-// inicial e +4 PE (+Pre) por nível). Sanidade é um recurso novo nesta
-// versão do app — ver sanidadeMaxima() logo abaixo, e a seção
-// "Sanidade" do livro (p.111) pras regras de dano mental/perturbado/
-// enlouquecendo/insano (ainda não modeladas, só o valor máximo).
 export const RECURSOS = {
     Combatente: { pvInicial: 20, pvIncremento: 4, detInicial: 2, detIncremento: 2, sanInicial: 12, sanIncremento: 3 },
     Especialista: { pvInicial: 16, pvIncremento: 3, detInicial: 3, detIncremento: 3, sanInicial: 16, sanIncremento: 4 },
@@ -163,21 +112,13 @@ export function determinacaoMaxima(trilha, presenca, nex) {
     return (r.detInicial + pre) + passos * (r.detIncremento + pre);
 }
 
-// Sanidade máxima = Sanidade Inicial da trilha + (passos de NEX acima
-// de 5% * Sanidade por nível de exposição da trilha) — ao contrário
-// de Vida/PE, não soma nenhum atributo (o livro só lista o valor fixo
-// por trilha, sem "+Atributo" na linha de Sanidade).
 export function sanidadeMaxima(trilha, nex) {
     const r = RECURSOS[trilha] || RECURSOS.Combatente;
     const passos = passosDeNex(nex);
     return r.sanInicial + passos * r.sanIncremento;
 }
 
-// Quantos PE o personagem pode gastar POR RODADA, de acordo com o NEX —
-// Tabela 1.2 ("Progressão de Personagem") do livro básico, conferida
-// direto no PDF que o usuário enviou nesta conversa (confiança alta):
-// NEX 5% = 1, NEX 10% = 2, NEX 15% = 3 ... NEX 95% = 19, NEX 99% = 20.
-// Um padrão simples e exato: 1 PE de rodada a cada 5% de NEX.
+// Quantos PE o personagem pode gastar POR RODADA, de acordo com o NEX
 export function peRodadaPorNex(nex) {
     return Math.round(clampNex(nex) / 5);
 }

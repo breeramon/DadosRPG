@@ -1,45 +1,3 @@
-// ============================================================
-// itens.js
-//
-// Porta direta de javascript/itens.js (versão vanilla) pra módulo ES —
-// mesmo catálogo, mesmas regras de carga ("Espaços"), só trocando o
-// "window.OrdemParanormalItens = {...}" por "export".
-//
-// ESTRUTURA DE DADOS: armas e proteções têm campos estruturados (dano,
-// crítico, tipo de dano, alcance, munição, defesaBonus etc.), pra dar
-// pra montar a modal de adicionar item com um "cartão de estatísticas".
-//
-//   grupo:      'armas' | 'municoes' | 'protecoes' | 'geral'
-//               Decide em qual aba da modal o item cai.
-//
-//   categoria:  pra armas = a PROFICIÊNCIA/TREINO da arma: 'Simples',
-//               'Tática' ou 'Pesada'. Pra proteções = 'Leve' ou
-//               'Pesada'. Pra munição/geral/ocultismo = só um rótulo
-//               solto ('Munição', 'Item Geral', 'Ocultismo', etc).
-//
-// CONFIANÇA DOS DADOS DE ARMAS/PROTEÇÕES/MUNIÇÕES (pesquisado a fundo,
-// já que o livro oficial não está disponível pra scraping direto):
-//   - Fonte principal: repositório GitHub SouOWendel/ordemparanormal_fvtt
-//     (sistema de Foundry VTT open-source, licenciado sob Sistema
-//     Aberto/OGL, com os dados das 34 armas / 3 proteções / 6 munições
-//     em JSON estruturado extraído do livro).
-//   - 6 armas (Acha, Katana, Montante, Arco Composto, Fuzil de Assalto,
-//     Fuzil de Precisão) foram conferidas contra uma segunda fonte
-//     independente (extração de texto do Capítulo 3 no Studocu) e
-//     bateram exatamente — essas têm confiança alta (🟢). As outras 28
-//     armas vêm só da fonte GitHub, mas são internamente consistentes
-//     com essas 6 confirmadas — confiança boa mas não 100% (🟡).
-//   - Bônus de Defesa das proteções (+5 Leve / +10 Pesada): confirmado
-//     por 2 fontes independentes.
-//   - DUAS PENDÊNCIAS EM ABERTO (não resolvidas, sinalizadas direto no
-//     dado): Florete com tipo de dano "Impacto" (esperado seria
-//     Perfurante — pode ser erro da fonte); Proteção Pesada com
-//     Espaços 5 vs 2 conforme a fonte (mantido 5, vindo da fonte mais
-//     detalhada).
-//   - Fórmula de espaços disponíveis (5 + 5×Força): confirmada por
-//     várias fontes, confiança alta.
-// ============================================================
-
 export const ITENS_CATALOGO = [
     // ============================================================
     // ARMAS — Corpo a Corpo
@@ -95,14 +53,6 @@ export const ITENS_CATALOGO = [
 
     // ============================================================
     // PROTEÇÕES (alimentam o bônus de Equipamento da Defesa)
-    //
-    // `tipoProtecao` marca o "slot" de equipar, separado de `categoria`
-    // (que já é usada pro treino/proficiência — 'Leve'/'Pesada' —, e
-    // pro Escudo continuar contando como Pesada nesse sentido, como diz
-    // o próprio efeito dele). 'corpo' = Proteção Leve/Pesada, que se
-    // excluem entre si (só dá pra vestir uma por vez — ver
-    // handleEquiparToggle em CharacterSheetPage.jsx); 'escudo' = um slot
-    // à parte, que acumula com qualquer proteção de corpo equipada.
     // ============================================================
     { nome: 'Proteção Leve', grupo: 'protecoes', categoria: 'Leve', tipoProtecao: 'corpo', espacos: 2, defesaBonus: 5, efeito: 'Jaqueta de couro pesada ou colete de kevlar, usada por seguranças e policiais. Sem penalidade de carga.', confianca: 2 },
     { nome: 'Proteção Pesada', grupo: 'protecoes', categoria: 'Pesada', tipoProtecao: 'corpo', espacos: 5, defesaBonus: 10, efeito: 'Capacete, ombreiras, joelheiras, caneleiras e colete de kevlar. Resistência a balístico, corte, impacto e perfuração 2. Penalidade: -5 em testes de perícia afetados por carga. ⚠ Espaços: uma fonte (guia rápido, resumido) diz 2 em vez de 5 — mantido 5 por vir da fonte mais detalhada (livro completo), mas não é 100% certo.', confianca: 1 },
@@ -165,39 +115,12 @@ export function estadoCarga(usados, forca) {
     return 'excesso';
 }
 
-// Descobre o "slot" de uma proteção (`'corpo'` pra Leve/Pesada,
-// `'escudo'` pro Escudo) sem depender cegamente do campo `tipoProtecao`
-// já GRAVADO no item do inventário. Isso importa porque um personagem
-// que já tinha "Proteção Leve"/"Proteção Pesada" no inventário ANTES
-// dessa regra existir foi salvo no Firestore sem esse campo (ele só
-// passou a existir em ITENS_CATALOGO depois) — se a gente confiasse só
-// no que já está salvo, a exclusividade simplesmente não funcionaria
-// pra nenhum personagem criado antes de hoje (o `if (alvo.tipoProtecao)`
-// nunca seria verdadeiro). Em vez de migrar/reescrever o dado salvo
-// (evolução não-destrutiva — ver PRODUCT.md), sempre re-consultamos o
-// catálogo atual pelo NOME do item, que é a fonte de verdade de
-// verdade. `item.tipoProtecao` só é usado como atalho quando já vem
-// preenchido (ex: itens adicionados a partir de agora).
 export function tipoProtecaoDoItem(item) {
     if (item.tipoProtecao) return item.tipoProtecao;
     const doCatalogo = ITENS_CATALOGO.find(c => c.grupo === 'protecoes' && c.nome === item.nome);
     return doCatalogo ? doCatalogo.tipoProtecao : undefined;
 }
 
-// Soma o bônus de Defesa dos itens de Proteção marcados como
-// "equipado" no inventário. Usa `grupo` (não `categoria`) porque a
-// categoria de uma proteção agora é o treino dela ('Leve'/'Pesada'),
-// não mais o rótulo fixo 'Proteção'.
-//
-// Regra do livro: só dá pra vestir UMA proteção de corpo por vez
-// (Leve OU Pesada, nunca as duas) — um Escudo é um slot à parte e
-// acumula com qualquer uma das duas (ver `tipoProtecaoDoItem` acima).
-// O toggle de equipar em CharacterSheetPage.jsx já impede marcar duas
-// proteções de corpo como equipadas ao mesmo tempo, mas essa função
-// soma com segurança mesmo que o dado salvo esteja "sujo" por outro
-// motivo (personagem criado antes dessa regra existir, ou editado
-// direto no Firestore): entre as de corpo equipadas, conta só a de
-// maior bônus — nunca a soma das duas.
 export function defesaDoInventario(itens) {
     const equipadas = (itens || []).filter(item => item.grupo === 'protecoes' && item.equipado);
     const corpo = equipadas.filter(item => tipoProtecaoDoItem(item) === 'corpo');

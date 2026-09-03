@@ -1,19 +1,3 @@
-// ============================================================
-// diceSound.js
-//
-// Porta direta de javascript/dice-sound.js (vanilla) pra módulo ES —
-// mesma síntese de som via Web Audio API (sem arquivo de áudio pra
-// baixar/hospedar), só trocando "window.playDiceRollSound = ..." por
-// "export function playDiceRollSound".
-//
-// Efeito sonoro de dados rolando, sintetizado na hora: toca uma
-// sequência curta de "batidas" de ruído filtrado, parecido com dados
-// caindo/chacoalhando numa mesa, toda vez que uma rolagem começa.
-// Dispara e esquece (não trava a rolagem esperando o som acabar). Se o
-// navegador não suportar Web Audio, ou ainda não liberou áudio por
-// falta de interação do usuário, simplesmente não toca nada.
-// ============================================================
-
 let audioCtx = null;
 
 function getContext() {
@@ -86,13 +70,7 @@ function tocarTom(ctx, tempo, freqInicial, freqFinal, duracao, volume, tipo) {
     osc.stop(tempo + duracao + 0.02);
 }
 
-// Efeito sonoro de "conjurar um ritual" (PE gasto) — três tons curtos
-// subindo de frequência, sobrepostos, num timbre mais etéreo/tilintado
-// (não percussivo feito o barulho de dados acima) pra combinar com o
-// tema de magia/ritual. Toca junto com o feedback visual em
-// CharacterSheetPage (ver conjurarRitual) pra dar um retorno imediato
-// de que o PE foi descontado, mesmo sem estar olhando pro log (que só
-// existe na aba Combate).
+// Efeito sonoro de "conjurar um ritual" (PE gasto)
 export function playRitualCastSound() {
     const ctx = getContext();
     if (!ctx) return;

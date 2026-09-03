@@ -1,38 +1,5 @@
-// ============================================================
-// trilhas.js
-//
-// Poderes de Trilha (Combatente/Especialista/Ocultista) — o
-// equivalente pra Trilha do que origens.js já é pra Origem. Cada
-// classe tem sua própria Tabela de progressão (1.3/1.4/1.5) com uma
-// lista de "Poderes de <Trilha>" à escolha do jogador em certos NEX,
-// e (pro Combatente e Especialista) um segundo nível de escolha: uma
-// "trilha secundária" (ex: Aniquilador, Guerreiro...) com 4 poderes
-// próprios liberados em NEX 10/40/65/99.
-//
-// STATUS: Combatente e Especialista preenchidos. Ocultista fica como
-// próximo passo, quando o usuário mandar as páginas correspondentes
-// (32-35).
-//
-// CONFIANÇA: Combatente transcrito direto das páginas 24-27 do livro
-// de regras, Especialista das páginas 28-31 (imagens enviadas pelo
-// usuário nesta conversa) — confiança alta pros dois. Os glifos de
-// dado do livro (penalidade/bônus em dado nos testes, ex: "-🎲")
-// foram transcritos como texto ("penalidade de 1 dado", "bônus de 1
-// dado") pra evitar depender de um glifo que pode não renderizar em
-// toda fonte/dispositivo — usado no Combatente e em 3 poderes do
-// Especialista (Na Trilha Certa, Primeira Impressão, Discurso
-// Motivador) cujo ícone de bônus não estava legível na foto pra
-// extrair um número exato.
-
 import { passosDeNex } from './pericias';
 
-// --- Ataque Especial (Tabela 1.3) ---------------------------------
-// "Quando faz um ataque, você pode gastar 2 PE para receber +5 no
-// teste de ataque ou na rolagem de dano. Conforme avança de NEX, você
-// pode gastar +1 PE para receber mais bônus de +5." — é o único item
-// da Tabela 1.3 que é 100% determinístico a partir do NEX (sem
-// escolha do jogador nem depender de trilha secundária), por isso é o
-// primeiro efeito "número limpo" desta leva.
 export const ATAQUE_ESPECIAL_COMBATENTE = [
     { nex: 5, pe: 2, bonus: 5 },
     { nex: 25, pe: 3, bonus: 10 },
@@ -40,10 +7,6 @@ export const ATAQUE_ESPECIAL_COMBATENTE = [
     { nex: 85, pe: 5, bonus: 20 },
 ];
 
-// Maior tier de Ataque Especial já liberado no NEX atual (o jogador
-// pode gastar QUALQUER PE até esse teto — não precisa gastar tudo de
-// uma vez; a tabela só define o máximo). Retorna null se nex < 5, o
-// que não deveria acontecer já que clampNex trava o mínimo em 5%.
 export function ataqueEspecialMaximo(nex) {
     const n = Number(nex) || 0;
     let atual = null;
@@ -53,15 +16,8 @@ export function ataqueEspecialMaximo(nex) {
     return atual;
 }
 
-// --- Poder de Combatente (Tabela 1.3) ------------------------------
-// NEX 15%, 30%, 45%, 60%, 75%, 90% — 6 slots ao longo da progressão,
-// cada um escolhendo 1 poder da lista abaixo (pode repetir Transcender
-// e Treinamento em Perícia, os únicos marcados como reescolhíveis no
-// livro).
 export const PODER_COMBATENTE_MARCOS = [15, 30, 45, 60, 75, 90];
 
-// Quantos slots de Poder de Combatente já estão liberados no NEX
-// atual (0 a 6).
 export function slotsPoderCombatenteLiberados(nex) {
     const n = Number(nex) || 0;
     return PODER_COMBATENTE_MARCOS.filter(m => n >= m).length;
@@ -89,16 +45,6 @@ export const PODERES_COMBATENTE = [
     { nome: 'Treinamento em Perícia', descricao: 'Escolha duas perícias e se torne treinado nelas. A partir de NEX 35%, pode escolher perícias nas quais já é treinado pra se tornar veterano; a partir de NEX 70%, perícias veteranas pra se tornar expert. Pode escolher este poder várias vezes.', preRequisito: null, repetivel: true },
 ];
 
-// --- Trilhas de Combatente (p.26-27) -------------------------------
-// Escolhida via "Habilidade de Trilha" em NEX 10%; o 2º/3º/4º poder
-// da trilha escolhida vem em NEX 40%, 65% e 99%.
-//
-// "Versatilidade" (NEX 50%, ver Tabela 1.3) deixa escolher entre um
-// Poder de Combatente extra OU o 1º poder de uma trilha DIFERENTE da
-// principal — o app só rastreia a trilha principal por enquanto (um
-// campo, uma escolha); a opção de pegar uma segunda trilha via
-// Versatilidade fica só descrita como texto, sem um segundo seletor
-// próprio nesta primeira versão.
 export const TRILHAS_COMBATENTE = [
     {
         nome: 'Aniquilador',
@@ -156,14 +102,6 @@ export function trilhaCombatentePorNome(nome) {
     return TRILHAS_COMBATENTE.find(t => t.nome === nome) || null;
 }
 
-// "Casca Grossa" (Tropa de Choque, NEX 10) tem um efeito numérico
-// limpo — +1 PV por passo de NEX acima do NEX inicial (5%), mesma
-// convenção usada em Cicatrizes Psicológicas (Vítima, ver origens.js)
-// pra "+1 X para cada 5% de NEX" — mas SÓ se essa sub-trilha tiver
-// sido escolhida E o poder já estiver liberado (NEX >= 10). Separado
-// do resto porque depende de duas escolhas do jogador (trilha
-// principal = Tropa de Choque, e ter chegado no NEX certo), diferente
-// do Ataque Especial que vale pra qualquer Combatente.
 export function bonusVidaCascaGrossa(trilhaCombatenteEscolhida, nex) {
     if (trilhaCombatenteEscolhida !== 'Tropa de Choque') return 0;
     const n = Number(nex) || 0;
@@ -175,13 +113,6 @@ export function bonusVidaCascaGrossa(trilhaCombatenteEscolhida, nex) {
 // ESPECIALISTA (Tabela 1.4, p.28-31)
 // ====================================================================
 
-// --- Eclético / Perito (Tabela 1.4) --------------------------------
-// "Eclético" (treinado de graça em qualquer perícia, gastando 2 PE) e
-// "Perito" (bônus de dado extra em duas perícias escolhidas) evoluem
-// juntos pela mesma progressão de NEX — mesma lógica do Ataque
-// Especial do Combatente lá em cima: 100% determinístico a partir do
-// NEX, sem escolha nem depender de trilha secundária, por isso é o
-// "número limpo" desta leva pro Especialista.
 export const PERITO_ESPECIALISTA = [
     { nex: 5, pe: 2, dado: '1d6' },
     { nex: 25, pe: 3, dado: '1d8' },
@@ -189,9 +120,6 @@ export const PERITO_ESPECIALISTA = [
     { nex: 85, pe: 5, dado: '1d12' },
 ];
 
-// Maior tier de Perito já liberado no NEX atual — mesma ideia de
-// ataqueEspecialMaximo acima (o jogador pode gastar qualquer PE até
-// esse teto, a tabela só define o máximo).
 export function peritoEspecialistaMaximo(nex) {
     const n = Number(nex) || 0;
     let atual = null;
@@ -201,10 +129,6 @@ export function peritoEspecialistaMaximo(nex) {
     return atual;
 }
 
-// --- Poder de Especialista (Tabela 1.4) ----------------------------
-// NEX 15%, 30%, 45%, 60%, 75%, 90% — mesmos 6 marcos do Poder de
-// Combatente (Tabela 1.3), só que com a lista de poderes própria do
-// Especialista abaixo.
 export const PODER_ESPECIALISTA_MARCOS = [15, 30, 45, 60, 75, 90];
 
 export function slotsPoderEspecialistaLiberados(nex) {
@@ -230,13 +154,6 @@ export const PODERES_ESPECIALISTA = [
     { nome: 'Treinamento em Perícia', descricao: 'Escolha duas perícias e se torne treinado nelas. A partir de NEX 35%, pode escolher perícias nas quais já é treinado pra se tornar veterano; a partir de NEX 70%, perícias veteranas pra se tornar expert. Pode escolher este poder várias vezes.', preRequisito: null, repetivel: true },
 ];
 
-// --- Trilhas de Especialista (p.30-31) ------------------------------
-// Escolhida via "Habilidade de Trilha" em NEX 10%; o 2º/3º/4º poder da
-// trilha escolhida vem em NEX 40%, 65% e 99% — mesmo esquema do
-// Combatente. "Médico de Campo" tem pré-requisito pra ESCOLHER a
-// trilha inteira (treinado em Medicina, e precisa de kit de medicina
-// pra usar as habilidades) — sem campo próprio ainda, descrito dentro
-// da própria descrição da trilha.
 export const TRILHAS_ESPECIALISTA = [
     {
         nome: 'Atirador de Elite',
@@ -294,14 +211,6 @@ export function trilhaEspecialistaPorNome(nome) {
     return TRILHAS_ESPECIALISTA.find(t => t.nome === nome) || null;
 }
 
-// Lista de poderes disponíveis pra um slot específico: remove os que
-// já foram escolhidos em QUALQUER OUTRO slot (pra não deixar escolher
-// o mesmo poder duas vezes em NEX diferentes), menos os marcados
-// `repetivel: true` no catálogo (Transcender e Treinamento em
-// Perícia — os únicos que o livro permite pegar mais de uma vez, tanto
-// pro Combatente quanto pro Especialista). O poder já escolhido NO
-// PRÓPRIO slot nunca é removido daqui (por isso o `.filter((_, i) =>
-// i !== indice)` abaixo), senão o <select> perderia o valor atual.
 export function poderesDisponiveisParaSlot(catalogo, escolhidos, indice) {
     const escolhidosEmOutrosSlots = new Set(
         (escolhidos || []).filter((_, i) => i !== indice).filter(Boolean)
@@ -309,23 +218,6 @@ export function poderesDisponiveisParaSlot(catalogo, escolhidos, indice) {
     return catalogo.filter(p => p.repetivel || !escolhidosEmOutrosSlots.has(p.nome));
 }
 
-// --- Bônus numérico dos Poderes de Trilha escolhidos ---------------
-// Só uma parte dos poderes acima tem um efeito 100% passivo e
-// incondicional (ex: "+5 em Tecnologia") — esses ganharam um campo
-// `efeitos` (mesmo formato do `efeitos` de origens.js: { tipo, ... }).
-// A maioria dos poderes tem custo de PE, uso limitado por cena/rodada
-// ou depende de uma ação específica do jogador em combate — esses
-// continuam só como texto na carta do poder (o app não tem um motor
-// de ações/combate pra saber QUANDO aplicar um bônus condicional sem
-// arriscar computar errado). Ver cada catálogo acima pra saber quais
-// poderes têm `efeitos` — por enquanto: Reflexos Defensivos
-// (Combatente), Iniciativa Aprimorada (Operações Especiais) e Hacker
-// (Especialista), Gatuno (Infiltrador).
-//
-// Recebe as escolhas atuais do jogador e devolve { defesa, pericias }
-// — `pericias` é um mapa nome-da-perícia -> soma de bônus. Poderes de
-// sub-trilha só contam se o NEX atual já liberou aquele poder
-// específico (não basta ter escolhido a trilha).
 export function bonusNumericoDosPoderes({
     nex,
     poderesCombatenteEscolhidos,

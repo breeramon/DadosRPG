@@ -1,12 +1,3 @@
-// ============================================================
-// CharactersPage.jsx
-//
-// Tela "Meus Personagens" (equivalente a characters.html +
-// javascript/characters-list.js na versão vanilla): lista, abrir,
-// editar e excluir personagens. O usuário logado vem do RequireAuth
-// (ver App.jsx), que só deixa chegar aqui quem já tem sessão.
-// ============================================================
-
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
@@ -19,12 +10,6 @@ export default function CharactersPage() {
     const [personagens, setPersonagens] = useState([]);
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState(null);
-
-    // Modal de confirmação de exclusão (substitui o window.confirm nativo —
-    // ver excluirPersonagem/confirmarExclusao/fecharModalExcluir abaixo).
-    // Guarda o personagem inteiro (não só o id) porque a modal precisa do
-    // nome pra mostrar contexto e pro campo de "digite o nome pra
-    // confirmar".
     const [personagemParaExcluir, setPersonagemParaExcluir] = useState(null);
     const [confirmText, setConfirmText] = useState('');
 
@@ -99,16 +84,6 @@ export default function CharactersPage() {
                         <button className="btn-secondary" onClick={handleLogout}>Sair</button>
                     </div>
                 </div>
-
-                {/* Sem isso, entre a tela montar e a lista carregar do
-                    Firestore essa área ficava em branco -- podia passar a
-                    impressão de "não tenho nenhum personagem" por um
-                    instante antes de popular. Mesmo texto simples
-                    ("Carregando...") que .app-loading já usa em outras
-                    telas (ver RequireAuth/CharacterFormPage/
-                    CharacterSheetPage), só que escopado pra essa área em
-                    vez de substituir a tela inteira -- cabeçalho e botões
-                    continuam aparecendo na hora. */}
                 {carregando && (
                     <div className="characters-empty">Carregando personagens...</div>
                 )}

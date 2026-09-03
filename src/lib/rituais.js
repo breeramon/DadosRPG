@@ -1,33 +1,3 @@
-// ============================================================
-// rituais.js
-//
-// Catálogo dos Rituais de Ordem Paranormal (o "grimório" do Ocultista),
-// organizados por Elemento (Conhecimento, Energia, Morte, Sangue, Medo)
-// e Círculo (1º a 4º, ligado ao NEX — ver CIRCULOS_RITUAL em
-// pericias.js). Ainda não está ligado a nenhuma tela da ficha; esse
-// arquivo só guarda os dados para uma futura aba "Rituais".
-//
-// FONTE E CONFIANÇA DOS DADOS: extraído diretamente do PDF do livro
-// básico de Ordem Paranormal (Capítulo 5: O Outro Lado, seção "Lista
-// de Rituais" / "Descrição dos Rituais") que o usuário enviou nesta
-// conversa — não veio de pesquisa on-line, então a confiança é alta
-// (🟢) para execução/alcance/duração/resistência/dano de todos os
-// rituais abaixo, com uma única exceção sinalizada.
-//
-// O QUE NÃO ESTÁ AQUI (de propósito): o texto integral de cada ritual
-// (regras de "Discente"/"Verdadeiro", aprimoramentos, exceções) NÃO é
-// conteúdo coberto pela OGL de Ordem Paranormal — só perícias, combate
-// e itens "de sistema" são abertos. Por isso `descricao` é um resumo
-// bem curto, escrito com minhas próprias palavras, e não uma cópia do
-// livro. Os números de dano/cura na BASE do ritual (sem aprimorar)
-// estão inclusos porque são dado de jogo (mecânica), não texto
-// narrativo — mesmo cuidado que já foi usado em itens.js.
-//
-// CUSTO EM PE: sempre fixo por Círculo (Tabela 5.2 do livro), não
-// varia por ritual — por isso fica centralizado aqui em vez de repetido
-// em cada item.
-// ============================================================
-
 export const CUSTO_PE_POR_CIRCULO = { 1: 1, 2: 3, 3: 6, 4: 10 };
 
 export const ELEMENTOS_RITUAL = ['Conhecimento', 'Energia', 'Morte', 'Sangue', 'Medo'];

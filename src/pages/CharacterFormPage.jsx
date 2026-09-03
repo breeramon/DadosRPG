@@ -1,20 +1,3 @@
-// ============================================================
-// CharacterFormPage.jsx
-//
-// Tela "Criar / Editar Personagem" (equivalente a form.html +
-// javascript/character-form.js na versão vanilla). Sem ":id" na rota
-// = criando personagem novo; com "/form/:id" = editando (busca os
-// dados no Firestore ao carregar).
-//
-// Sobre o estado das perícias: cada perícia do catálogo guarda
-// { treinado, grau, bonusExtra, autoFixo }. "autoFixo" marca as que a
-// trilha atual preenche sozinha (ex: Ocultismo/Vontade pro Ocultista,
-// ou a escolha de Luta/Pontaria pro Combatente) — controlado por
-// aplicarFixasNoEstado, chamada sempre que a trilha ou a escolha do
-// par muda (mesma regra da versão vanilla, só que aqui como efeito
-// puro em vez de mutação direta do objeto).
-// ============================================================
-
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
@@ -45,9 +28,6 @@ function catalogoInicial() {
     return estado;
 }
 
-// Monta o estado de perícias a partir de um personagem salvo (edição),
-// ou o catálogo zerado (criação). Também recupera, quando dá, qual foi
-// a escolha original de cada par obrigatório do Combatente.
 function periciasStateApartirDoPersonagem(personagem) {
     const estado = catalogoInicial();
     const escolhas = [null, null];
@@ -74,11 +54,6 @@ function periciasStateApartirDoPersonagem(personagem) {
     return { estado, escolhas };
 }
 
-// Porta de aplicarFixasNoEstado (vanilla): garante que as perícias
-// automáticas da trilha atual (E da Origem escolhida — ver
-// origens.js) estejam marcadas, sem mexer nas escolhidas manualmente.
-// Versão pura — devolve um novo estado (e uma nova lista de escolhas,
-// com os slots vazios preenchidos) em vez de mutar o de entrada.
 function aplicarFixas(periciasState, trilha, combatenteEscolhasFixas, origemNome) {
     const regra = OP.TRILHA_REGRAS[trilha] || OP.TRILHA_REGRAS.Combatente;
     const desejado = new Set(regra.fixasSimples);
@@ -136,37 +111,15 @@ export default function CharacterFormPage() {
     const [atributos, setAtributos] = useState(ATRIBUTOS_ZERO);
     const [periciasState, setPericiasState] = useState(catalogoInicial);
     const [combatenteEscolhasFixas, setCombatenteEscolhasFixas] = useState([null, null]);
-
-    // --- Origem (ver src/lib/origens.js) — guarda só o NOME oficial da
-    // Origem escolhida (mesmo campo de texto que já existia na ficha,
-    // agora preenchido só através da modal de catálogo, nunca digitado
-    // à mão). Um personagem salvo antes dessa funcionalidade existir
-    // pode ter um texto livre aqui que não bate com nenhuma Origem
-    // oficial — nesse caso `origemEscolhida` (useMemo mais abaixo) fica
-    // null e a tela mostra esse texto como está, sem nenhuma perícia/
-    // poder aplicado, até o jogador escolher uma Origem oficial pra
-    // substituir.
     const [origem, setOrigem] = useState('');
     const [modalOrigemAberto, setModalOrigemAberto] = useState(false);
-
-    // --- Rituais conhecidos (mesma ideia da ficha — ver
-    // CharacterSheetPage.jsx — só que aqui sem "Conjurar": nesta tela só
-    // dá pra escolher quais o personagem já conhece, não gastar PE). ---
     const [rituais, setRituais] = useState([]);
     const [modalRitualAberto, setModalRitualAberto] = useState(false);
     const [expandidosConhecidos, setExpandidosConhecidos] = useState(() => new Set());
-
-    // --- Poderes de Trilha (só Combatente modelado por enquanto, ver
-    // src/lib/trilhas.js e a aba "Trilha" da Ficha — mesmos campos). ---
     const [trilhaCombatenteEscolhida, setTrilhaCombatenteEscolhida] = useState('');
     const [poderesCombatenteEscolhidos, setPoderesCombatenteEscolhidos] = useState([]);
-
-    // --- Poderes de Trilha (Especialista, mesmo esquema acima). ---
     const [trilhaEspecialistaEscolhida, setTrilhaEspecialistaEscolhida] = useState('');
     const [poderesEspecialistaEscolhidos, setPoderesEspecialistaEscolhidos] = useState([]);
-
-    // --- Aba ativa da seção Rituais/Trilha (mesmo esquema de abas da
-    // Ficha — ver CharacterSheetPage.jsx / .sheet-tabs-section). ---
     const [abaAtiva, setAbaAtiva] = useState('rituais');
 
     // ---------------------------------------------------------------
@@ -233,14 +186,8 @@ export default function CharacterFormPage() {
             });
 
         return () => { cancelado = true; };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id, user.uid]);
 
-    // ---------------------------------------------------------------
-    // Reenquadra os atributos dentro do que o NEX atual libera (mesma
-    // regra de renderAtributosForm): clampa cada um, depois tira ponto
-    // do(s) atributo(s) mais alto(s) se a soma passar do total.
-    // ---------------------------------------------------------------
     const regraAtributos = useMemo(() => OP.pontosAtributoPorNex(nex), [nex]);
 
     useEffect(() => {
@@ -265,18 +212,8 @@ export default function CharacterFormPage() {
         }
         const mudou = ATRIBUTOS.some(({ key }) => clamped[key] !== atributos[key]);
         if (mudou) setAtributos(clamped);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [nex, atributos, regraAtributos]);
 
-    // Validação inline (ver CSS .input-erro/.attr-value-input-erro/
-    // .info-aviso-erro): antes só existia como alert() no momento de
-    // salvar (validarECollectar mais abaixo, que continua sendo a
-    // fonte de verdade -- estes aqui só espelham a mesma regra pra
-    // destacar o campo problemático na hora, com mensagem por perto em
-    // vez de só a cor). Na prática o efeito de auto-clamp logo acima já
-    // evita a maioria destes casos ao vivo, mas ficam como reforço
-    // (ex: um personagem carregado com dados antigos que não valem mais
-    // pro NEX atual, antes desse efeito rodar).
     const atributosForaDoLimite = useMemo(
         () => ATRIBUTOS.filter(({ key }) => {
             const v = atributos[key] || 0;
@@ -290,12 +227,6 @@ export default function CharacterFormPage() {
     );
     const somaAtributosExcedida = somaAtributosAtual > regraAtributos.total;
 
-    // ---------------------------------------------------------------
-    // Mantém as perícias automáticas da trilha E da Origem em dia
-    // (aplicarFixas) e rebaixa o grau de qualquer perícia treinada
-    // cujo grau não seja mais permitido no NEX atual (ex: baixou o NEX
-    // de volta pra 30% com uma perícia em "veterano").
-    // ---------------------------------------------------------------
     useEffect(() => {
         const { periciasState: proximo, combatenteEscolhasFixas: proximasEscolhas, mudou, escolhasMudou } =
             aplicarFixas(periciasState, trilha, combatenteEscolhasFixas, origem);
@@ -316,12 +247,8 @@ export default function CharacterFormPage() {
             }
         });
         if (rebaixou) setPericiasState(rebaixado);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [trilha, nex, combatenteEscolhasFixas, periciasState, origem]);
 
-    // ---------------------------------------------------------------
-    // Derivados pra exibição
-    // ---------------------------------------------------------------
     const nomesFixos = useMemo(() => nomesFixosDe(periciasState), [periciasState]);
     const grausPermitidos = useMemo(() => OP.grausPermitidos(nex), [nex]);
     const grauMaisAlto = grausPermitidos[grausPermitidos.length - 1];
@@ -331,16 +258,9 @@ export default function CharacterFormPage() {
         [periciasState, nomesFixos]
     );
     const cotaEsgotada = livresUsadas >= quotaLivre;
-    // Diferente de cotaEsgotada (>=, só trava novas escolhas): aqui é
-    // >, o caso em que já passou do limite -- só acontece se a quota
-    // encolher DEPOIS de perícias já treinadas (trilha ou INT mudou),
-    // já que o checkbox (mais abaixo) trava novas escolhas em
-    // cotaEsgotada mas não destreina as que já estavam marcadas.
     const quotaLivreExcedida = livresUsadas > quotaLivre;
     const regraTrilha = OP.TRILHA_REGRAS[trilha] || OP.TRILHA_REGRAS.Combatente;
     const circuloOcultista = trilha === 'Ocultista' ? OP.circuloRitualLiberado(nex) : 0;
-    // Mesmos cálculos da aba "Trilha" da Ficha (ver
-    // CharacterSheetPage.jsx) — só fazem sentido pro Combatente.
     const ataqueEspecialAtual = useMemo(() => OPT.ataqueEspecialMaximo(nex), [nex]);
     const slotsPoderCombatente = useMemo(() => OPT.slotsPoderCombatenteLiberados(nex), [nex]);
     const trilhaCombatenteInfo = useMemo(
@@ -353,9 +273,7 @@ export default function CharacterFormPage() {
         () => OPT.trilhaEspecialistaPorNome(trilhaEspecialistaEscolhida),
         [trilhaEspecialistaEscolhida]
     );
-    // null quando `origem` está vazio OU é um texto de personagem
-    // antigo que não bate com nenhuma Origem oficial do catálogo (ver
-    // comentário no state `origem` acima).
+
     const origemEscolhida = useMemo(() => origemPorNome(origem), [origem]);
 
     function handleEscolherOrigem(origemDoCatalogo) {
@@ -372,9 +290,6 @@ export default function CharacterFormPage() {
         })).filter(grupo => grupo.itens.length);
     }, [nomesFixos]);
 
-    // ---------------------------------------------------------------
-    // Handlers
-    // ---------------------------------------------------------------
     const handleAttrChange = useCallback((key, valor) => {
         const v = parseInt(valor, 10);
         setAtributos(prev => ({ ...prev, [key]: Number.isNaN(v) ? 0 : v }));
@@ -386,9 +301,7 @@ export default function CharacterFormPage() {
 
     function handleTrilhaChange(novaTrilha) {
         setTrilha(novaTrilha);
-        setCombatenteEscolhasFixas([null, null]); // trilha nova = escolhas antigas não valem mais
-        // Idem pra escolhas de Trilha/Poder de Combatente e de
-        // Especialista — não fazem sentido pra uma trilha diferente.
+        setCombatenteEscolhasFixas([null, null]);
         setTrilhaCombatenteEscolhida('');
         setPoderesCombatenteEscolhidos([]);
         setTrilhaEspecialistaEscolhida('');
@@ -447,12 +360,6 @@ export default function CharacterFormPage() {
         setPericiasState(prev => ({ ...prev, [nomePericia]: { ...prev[nomePericia], bonusExtra: v } }));
     }
 
-    // ---------------------------------------------------------------
-    // Rituais — mesmo espírito do que já existe na ficha (ver
-    // CharacterSheetPage.jsx: adicionarRitual/handleRemoverRitual), só
-    // que aqui não salva na hora — fica só no estado local até
-    // "Salvar Personagem" (mesmo padrão do resto deste formulário).
-    // ---------------------------------------------------------------
     function adicionarRitual(catalogRitual) {
         if (rituais.some(r => r.nome === catalogRitual.nome)) {
             toast.error(`Você já conhece "${catalogRitual.nome}".`);
@@ -540,10 +447,6 @@ export default function CharacterFormPage() {
         posClass,
         content: (
             <div className="attr-stepper">
-                {/* Caracteres Unicode literais em vez de entidades HTML (&minus;/&plus;)
-                    — a tabela de entidades que o JSX decodifica em tempo de build não
-                    inclui todos os nomes do HTML5 ("plus" não está nela), então &plus;
-                    aparecia como texto cru na tela em vez de virar "+". */}
                 <button type="button" className="attr-stepper-btn" onClick={() => handleAttrStepper(key, -1)} title="-1">{'−'}</button>
                 <input
                     type="number"
@@ -707,13 +610,6 @@ export default function CharacterFormPage() {
                                 );
                             })}
 
-                            {/* Perícias treinadas concedidas pela Origem escolhida (ver
-                                aplicarFixas/origens.js) — mesmo mecanismo de "autoFixo" das
-                                perícias da Trilha, só que com fonte diferente. Sem isto, a
-                                perícia ficava marcada como treinada por baixo dos panos (e
-                                escondida da lista principal, ver catalogoAgrupado/nomesFixos)
-                                sem NENHUMA indicação visual de que isso aconteceu — bug pego
-                                em teste antes de entregar. */}
                             {origemEscolhida?.periciasTreinadas.map(nomePericia => {
                                 const catalogo = OP.PERICIAS_CATALOGO.find(p => p.nome === nomePericia);
                                 return (

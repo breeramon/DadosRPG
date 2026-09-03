@@ -1,17 +1,10 @@
 // ============================================================
 // LoginPage.jsx
 //
-// Tela de login/cadastro (equivalente a index.html + javascript/auth.js
-// na versão vanilla). Primeira tela migrada pro React — usa o hook
-// useAuth só pra saber se já existe sessão salva (e pular direto pra
-// "/characters" nesse caso); o próprio envio do formulário chama
+// Tela de login/cadastro — usa o hook useAuth só pra saber se já existe sessão salva
+//  (e pular direto pra "/characters" nesse caso); o próprio envio do formulário chama
 // Auth.signIn/signUp diretamente, igual o antigo auth.js fazia.
 //
-// Versão "elaborada": mesmo comportamento/lógica de sempre, só que com
-// fundo animado sutil (tema Ordem Paranormal), card com entrada suave,
-// troca de senha visível/oculta, spinner no botão e pequenas transições
-// ao alternar entre login e cadastro. Tudo em CSS puro (sem libs novas)
-// e respeitando prefers-reduced-motion (ver .screen-login em index.css).
 // ============================================================
 
 import { useState } from 'react';

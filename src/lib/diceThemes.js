@@ -1,26 +1,3 @@
-// ============================================================
-// diceThemes.js
-//
-// Catálogo dos temas visuais disponíveis pra animação 3D dos dados
-// (ver useDiceBox.js) — cada um vem de um pacote separado
-// (@3d-dice/theme-*, ver scripts/copy-dice-themes.mjs) com seus
-// próprios modelos/texturas em public/assets/themes/<id>/.
-//
-// "corAtiva: true" indica que o material do tema é do tipo "color" (a
-// textura é neutra/cinza e recebe uma cor por cima, via o parâmetro
-// "themeColor" da DiceBox) — só esses aceitam a paleta de cores do
-// DiceThemeModal. O "Dice of Rolling" é do tipo "standard" (textura já
-// vem colorida/pintada de fábrica), então "themeColor" não faz nada
-// nele — por isso "corAtiva: false".
-//
-// "corPadrao" é só a cor inicial sugerida quando a pessoa nunca
-// escolheu nada pra aquele tema (usada só dentro do DiceThemeModal, pra
-// pré-selecionar uma sugestão sensata) — não é aplicada sozinha; a
-// aparência atual (sem nenhuma preferência salva) continua sendo a cor
-// padrão da própria biblioteca, pra não mudar a experiência de quem
-// nunca abriu essa configuração.
-// ============================================================
-
 export const TEMAS_DADOS = [
     {
         id: 'default',
