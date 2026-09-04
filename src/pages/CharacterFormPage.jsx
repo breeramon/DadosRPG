@@ -258,7 +258,20 @@ export default function CharacterFormPage() {
     const nomesFixos = useMemo(() => nomesFixosDe(periciasState), [periciasState]);
     const grausPermitidos = useMemo(() => OP.grausPermitidos(nex), [nex]);
     const grauMaisAlto = grausPermitidos[grausPermitidos.length - 1];
-    const quotaLivre = useMemo(() => OP.quotaPericiasLivres(trilha, atributos.int), [trilha, atributos.int]);
+    // Treinamento em Perícia (poder repetível das 3 trilhas, ver
+    // quotaExtraTreinamentoPericia em trilhas.js) soma perícias treinadas
+    // extras à cota livre normal (trilha + Intelecto) — cada escolha do
+    // poder libera mais 2 perícias, além das já contadas por quotaPericiasLivres.
+    const quotaTreinamentoPericia = useMemo(
+        () => OPT.quotaExtraTreinamentoPericia({
+            poderesCombatenteEscolhidos,
+            poderesEspecialistaEscolhidos,
+            poderesOcultistaEscolhidos,
+        }),
+        [poderesCombatenteEscolhidos, poderesEspecialistaEscolhidos, poderesOcultistaEscolhidos]
+    );
+    const quotaBasePericias = useMemo(() => OP.quotaPericiasLivres(trilha, atributos.int), [trilha, atributos.int]);
+    const quotaLivre = quotaBasePericias + quotaTreinamentoPericia;
     const livresUsadas = useMemo(
         () => Object.entries(periciasState).filter(([nome, st]) => st.treinado && !nomesFixos.includes(nome)).length,
         [periciasState, nomesFixos]
@@ -610,7 +623,10 @@ export default function CharacterFormPage() {
                     <div className="pericias-info">
                         <span>NEX {nex}%</span>
                         <span>Grau máximo liberado: <strong>{OP.GRAU_LABEL[grauMaisAlto]}</strong></span>
-                        <span className={cotaEsgotada ? 'pericias-cota-cheia' : ''}>
+                        <span
+                            className={cotaEsgotada ? 'pericias-cota-cheia' : ''}
+                            title={quotaTreinamentoPericia ? `Base (trilha + Intelecto): ${quotaBasePericias} · Treinamento em Perícia: +${quotaTreinamentoPericia}` : undefined}
+                        >
                             Perícias treinadas à escolha: <strong>{livresUsadas} / {quotaLivre}</strong>
                         </span>
                         {quotaLivreExcedida && (

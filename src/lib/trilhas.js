@@ -305,6 +305,29 @@ export function poderesDisponiveisParaSlot(catalogo, escolhidos, indice) {
     return catalogo.filter(p => p.repetivel || !escolhidosEmOutrosSlots.has(p.nome));
 }
 
+// Treinamento em Perícia (poder repetível presente nas 3 trilhas, ver
+// PODERES_COMBATENTE/ESPECIALISTA/OCULTISTA acima): cada vez que é
+// escolhido, o personagem ganha 2 perícias treinadas "à escolha" além
+// da cota normal (trilha + Intelecto, ver quotaPericiasLivres em
+// pericias.js). Esta função soma quantas vezes o poder foi escolhido
+// nos 3 grupos de slots e devolve o total de perícias extras liberadas,
+// pra ser somado à cota livre na tela de Edição/Criação.
+export const PERICIAS_POR_TREINAMENTO = 2;
+
+export function quotaExtraTreinamentoPericia({
+    poderesCombatenteEscolhidos,
+    poderesEspecialistaEscolhidos,
+    poderesOcultistaEscolhidos,
+} = {}) {
+    const todos = [
+        ...(poderesCombatenteEscolhidos || []),
+        ...(poderesEspecialistaEscolhidos || []),
+        ...(poderesOcultistaEscolhidos || []),
+    ];
+    const vezes = todos.filter(nome => nome === 'Treinamento em Perícia').length;
+    return vezes * PERICIAS_POR_TREINAMENTO;
+}
+
 export function bonusNumericoDosPoderes({
     nex,
     poderesCombatenteEscolhidos,
