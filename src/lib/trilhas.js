@@ -211,6 +211,93 @@ export function trilhaEspecialistaPorNome(nome) {
     return TRILHAS_ESPECIALISTA.find(t => t.nome === nome) || null;
 }
 
+// ====================================================================
+// OCULTISTA (Tabela 1.5, p.32-35)
+// ====================================================================
+
+export const PODER_OCULTISTA_MARCOS = [15, 30, 45, 60, 75, 90];
+
+export function slotsPoderOcultistaLiberados(nex) {
+    const n = Number(nex) || 0;
+    return PODER_OCULTISTA_MARCOS.filter(m => n >= m).length;
+}
+
+export const PODERES_OCULTISTA = [
+    { nome: 'Camuflar Ocultismo', descricao: 'Você pode gastar uma ação livre para esconder símbolos e sigilos desenhados ou gravados em objetos ou em sua pele, tornando-os invisíveis para outras pessoas além de você. Além disso, quando lança um ritual, pode gastar +2 PE para lançá-lo sem componentes ritualísticos e sem gesticular (mãos presas), usando apenas concentração. Outros seres só percebem que você lançou um ritual se passarem num teste de Ocultismo (DT 25).', preRequisito: null },
+    { nome: 'Criar Selo', descricao: 'Você sabe fabricar selos paranormais de rituais que conheça (p.151). Fabricar um selo gasta uma ação de interlúdio e um número de PE igual ao custo de conjurar o ritual. Pode ter um número máximo de selos criados ao mesmo tempo igual à sua Presença.', preRequisito: null },
+    { nome: 'Envolto em Mistério', descricao: 'Sua aparência e postura assombrosas permitem manipular e assustar pessoas ignorantes ou supersticiosas (o mestre define quem se encaixa). Como regra geral, você recebe +5 em Enganação e Intimidação contra pessoas não treinadas em Ocultismo.', preRequisito: null },
+    { nome: 'Especialista em Elemento', descricao: 'Escolha um elemento. A DT para resistir aos seus rituais desse elemento aumenta em +2.', preRequisito: null },
+    { nome: 'Ferramentas Paranormais', descricao: 'Você reduz a categoria de um item paranormal em I e pode ativar itens paranormais sem pagar seu custo em PE.', preRequisito: null },
+    { nome: 'Fluxo de Poder', descricao: 'Você pode manter dois efeitos sustentados de rituais ativos ao mesmo tempo com apenas uma ação livre, pagando o custo de cada efeito separadamente.', preRequisito: 'NEX 60%' },
+    { nome: 'Guiado pelo Paranormal', descricao: 'Uma vez por cena, você pode gastar 2 PE para fazer uma ação de investigação adicional.', preRequisito: null },
+    { nome: 'Identificação Paranormal', descricao: 'Você recebe +10 em testes de Ocultismo para identificar criaturas, objetos ou rituais.', preRequisito: null },
+    { nome: 'Improvisar Componentes', descricao: 'Uma vez por cena, você pode gastar uma ação completa para fazer um teste de Investigação (DT 15). Se passar, encontra objetos que podem servir como componentes ritualísticos de um elemento à sua escolha. O mestre define se é possível usar esse poder na cena atual.', preRequisito: null },
+    { nome: 'Intuição Paranormal', descricao: 'Sempre que usa a ação facilitar investigação, você soma seu Intelecto ou Presença no teste (à sua escolha).', preRequisito: null },
+    { nome: 'Mestre em Elemento', descricao: 'Escolha um elemento. O custo para lançar rituais desse elemento diminui em -1 PE.', preRequisito: 'Especialista em Elemento no elemento escolhido, NEX 45%' },
+    { nome: 'Ritual Potente', descricao: 'Você soma seu Intelecto nas rolagens de dano ou nos efeitos de cura de seus rituais.', preRequisito: 'Int 2' },
+    { nome: 'Ritual Predileto', descricao: 'Escolha um ritual que você conhece. Você reduz em -1 PE o custo do ritual. Essa redução se acumula com reduções fornecidas por outras fontes.', preRequisito: null },
+    { nome: 'Tatuagem Ritualística', descricao: 'Símbolos marcados em sua pele reduzem em -1 PE o custo de rituais de alcance pessoal que têm você como alvo.', preRequisito: null },
+    { nome: 'Transcender', descricao: 'Escolha um poder paranormal (p.114). Você recebe o poder escolhido, mas não ganha Sanidade neste aumento de NEX. Pode escolher este poder várias vezes.', preRequisito: null, repetivel: true },
+    { nome: 'Treinamento em Perícia', descricao: 'Escolha duas perícias e se torne treinado nelas. A partir de NEX 35%, pode escolher perícias nas quais já é treinado pra se tornar veterano; a partir de NEX 70%, perícias veteranas pra se tornar expert. Pode escolher este poder várias vezes.', preRequisito: null, repetivel: true },
+];
+
+export const TRILHAS_OCULTISTA = [
+    {
+        nome: 'Conduíte',
+        descricao: 'Você domina os aspectos fundamentais da conjuração de rituais e é capaz de aumentar o alcance e velocidade de suas conjurações. Conforme sua conexão com as entidades paranormais aumenta, você se torna capaz de interferir com os rituais de outros ocultistas.',
+        poderes: [
+            { nex: 10, nome: 'Ampliar Ritual', descricao: 'Quando lança um ritual, você pode gastar +2 PE para aumentar seu alcance em um passo (de curto para médio, de médio para longo ou de longo para extremo) ou dobrar sua área de efeito.' },
+            { nex: 40, nome: 'Acelerar Ritual', descricao: 'Uma vez por rodada, você pode aumentar o custo de um ritual em 4 PE para conjurá-lo como uma ação livre.' },
+            { nex: 65, nome: 'Anular Ritual', descricao: 'Quando for alvo de um ritual, você pode gastar uma quantidade de PE igual ao custo pago por esse ritual e fazer um teste oposto de Ocultismo contra o conjurador. Se vencer, você anula o ritual, cancelando todos os seus efeitos.' },
+            { nex: 99, nome: 'Canalizar o Medo', descricao: 'Você aprende o ritual Canalizar o Medo.' },
+        ],
+    },
+    {
+        nome: 'Flagelador',
+        descricao: 'Dor é um poderoso catalisador paranormal e você aprendeu a transformá-la em poder para seus rituais ocultistas. Quando se torna especialmente poderoso, consegue usar a dor e o sofrimento de seus inimigos como instrumento de seus rituais ocultistas.',
+        poderes: [
+            { nex: 10, nome: 'Poder do Flagelo', descricao: 'Ao conjurar um ritual, você pode gastar seus próprios pontos de vida para pagar o custo em pontos de esforço, à taxa de 2 PV por PE pago. Pontos de vida gastos dessa forma só podem ser recuperados com descanso.' },
+            { nex: 40, nome: 'Abraçar a Dor', descricao: 'Sempre que sofrer dano não paranormal, você pode gastar uma reação e 2 PE para reduzir esse dano à metade.' },
+            { nex: 65, nome: 'Absorver Agonia', descricao: 'Sempre que reduz um ou mais inimigos a 0 PV com um ritual, você recebe uma quantidade de PE temporários igual ao círculo do ritual utilizado (ex: ritual de 2º círculo dá 2 PE temporários).' },
+            { nex: 99, nome: 'Medo Tangível', descricao: 'Você aprende o ritual Medo Tangível.' },
+        ],
+    },
+    {
+        nome: 'Intuitivo',
+        descricao: 'Assim como combatentes treinam seus corpos para resistir a traumas físicos, você preparou sua mente para resistir aos efeitos do Outro Lado. Seu foco e força de vontade fazem com que você expanda os limites de suas capacidades paranormais.',
+        poderes: [
+            { nex: 10, nome: 'Mente Sã', descricao: 'Você compreende melhor as entidades do Outro Lado e passa a ser menos abalado por seus efeitos. Você recebe resistência paranormal +5 (+5 em testes de resistência contra efeitos paranormais).' },
+            { nex: 40, nome: 'Presença Poderosa', descricao: 'Sua resiliência mental faz com que você possa extrair mais do Outro Lado. Você adiciona sua Presença ao seu limite de PE por turno, mas apenas para conjurar rituais (não para DT).' },
+            { nex: 65, nome: 'Inabalável', descricao: 'Você recebe resistência a dano mental e paranormal 10. Além disso, quando é alvo de um efeito paranormal que permite um teste de Vontade para reduzir o dano à metade, você não sofre dano algum se passar.' },
+            { nex: 99, nome: 'Presença do Medo', descricao: 'Você aprende o ritual Presença do Medo.' },
+        ],
+    },
+    {
+        nome: 'Graduado',
+        descricao: 'Você foca seus estudos em se tornar um conjurador versátil e poderoso, conhecendo mais rituais que os outros ocultistas e sendo capaz de torná-los mais difíceis de serem resistidos. Seu objetivo é desvendar e dominar os segredos do Outro Lado, custe o que custar.',
+        poderes: [
+            { nex: 10, nome: 'Saber Ampliado', descricao: 'Você aprende um ritual de 1º círculo. Toda vez que ganha acesso a um novo círculo, aprende um ritual adicional daquele círculo. Esses rituais não contam no seu limite de rituais conhecidos.' },
+            { nex: 40, nome: 'Grimório Ritualístico', descricao: 'Você cria um grimório especial que armazena rituais que sua mente não seria capaz de guardar. Você aprende uma quantidade de rituais de 1º ou 2º círculos igual ao seu Intelecto (e mais um a cada novo círculo liberado). Esses rituais não contam em seu limite de rituais conhecidos. Para conjurar um ritual armazenado no grimório, precisa antes empunhá-lo e gastar uma ação completa folheando-o. O grimório ocupa 1 espaço no inventário; se perdido, pode ser replicado com duas ações de interlúdio.' },
+            { nex: 65, nome: 'Rituais Eficientes', descricao: 'A DT para resistir a todos os seus rituais aumenta em +5.' },
+            { nex: 99, nome: 'Conhecendo o Medo', descricao: 'Você aprende o ritual Conhecendo o Medo.' },
+        ],
+    },
+    {
+        nome: 'Lâmina Paranormal',
+        descricao: 'Alguns ocultistas preferem ficar fechados em suas bibliotecas estudando livros e rituais. Outros preferem investigar fenômenos paranormais em sua fonte. Já você prefere usar o paranormal como uma arma — aprendeu técnicas de luta mesclando suas habilidades de conjuração com suas capacidades de combate.',
+        poderes: [
+            { nex: 10, nome: 'Lâmina Maldita', descricao: 'Você aprende o ritual Amaldiçoar Arma (se já o conhece, seu custo é reduzido em -1 PE). Além disso, quando conjura esse ritual, pode usar testes de Ocultismo (em vez de Luta ou Pontaria) para testes de ataque com a arma amaldiçoada.' },
+            { nex: 40, nome: 'Gladiador Paranormal', descricao: 'Sempre que acerta um ataque corpo a corpo em um inimigo, você recebe 2 PE temporários (máximo por cena igual ao seu limite de PE). PE temporários desaparecem no final da cena.' },
+            { nex: 65, nome: 'Conjuração Marcial', descricao: 'Uma vez por rodada, quando lança um ritual com execução de uma ação padrão, pode gastar 2 PE para fazer um ataque corpo a corpo como uma ação livre.' },
+            { nex: 99, nome: 'Lâmina do Medo', descricao: 'Você aprende o ritual Lâmina do Medo.' },
+        ],
+    },
+];
+
+export function trilhaOcultistaPorNome(nome) {
+    return TRILHAS_OCULTISTA.find(t => t.nome === nome) || null;
+}
+
 export function poderesDisponiveisParaSlot(catalogo, escolhidos, indice) {
     const escolhidosEmOutrosSlots = new Set(
         (escolhidos || []).filter((_, i) => i !== indice).filter(Boolean)
@@ -224,6 +311,8 @@ export function bonusNumericoDosPoderes({
     trilhaCombatenteEscolhida,
     poderesEspecialistaEscolhidos,
     trilhaEspecialistaEscolhida,
+    poderesOcultistaEscolhidos,
+    trilhaOcultistaEscolhida,
 } = {}) {
     const resultado = { defesa: 0, pericias: {} };
 
@@ -244,6 +333,9 @@ export function bonusNumericoDosPoderes({
     (poderesEspecialistaEscolhidos || []).forEach(nomePoder => {
         aplicar(PODERES_ESPECIALISTA.find(p => p.nome === nomePoder)?.efeitos);
     });
+    (poderesOcultistaEscolhidos || []).forEach(nomePoder => {
+        aplicar(PODERES_OCULTISTA.find(p => p.nome === nomePoder)?.efeitos);
+    });
 
     const n = Number(nex) || 0;
     const trilhaComb = trilhaCombatentePorNome(trilhaCombatenteEscolhida);
@@ -255,6 +347,12 @@ export function bonusNumericoDosPoderes({
     const trilhaEsp = trilhaEspecialistaPorNome(trilhaEspecialistaEscolhida);
     if (trilhaEsp) {
         trilhaEsp.poderes.forEach(poder => {
+            if (n >= poder.nex) aplicar(poder.efeitos);
+        });
+    }
+    const trilhaOcu = trilhaOcultistaPorNome(trilhaOcultistaEscolhida);
+    if (trilhaOcu) {
+        trilhaOcu.poderes.forEach(poder => {
             if (n >= poder.nex) aplicar(poder.efeitos);
         });
     }

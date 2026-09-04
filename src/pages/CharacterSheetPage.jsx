@@ -199,6 +199,8 @@ export default function CharacterSheetPage() {
     // --- Poderes de Trilha
     const [trilhaEspecialistaEscolhida, setTrilhaEspecialistaEscolhida] = useState('');
     const [poderesEspecialistaEscolhidos, setPoderesEspecialistaEscolhidos] = useState([]);
+    const [trilhaOcultistaEscolhida, setTrilhaOcultistaEscolhida] = useState('');
+    const [poderesOcultistaEscolhidos, setPoderesOcultistaEscolhidos] = useState([]);
 
     // --- Modal "Novo Ataque" ---
     const [modalAtaqueAberto, setModalAtaqueAberto] = useState(false);
@@ -292,6 +294,8 @@ export default function CharacterSheetPage() {
                 setPoderesCombatenteEscolhidos(Array.isArray(p.poderesCombatenteEscolhidos) ? p.poderesCombatenteEscolhidos : []);
                 setTrilhaEspecialistaEscolhida(p.trilhaEspecialistaEscolhida || '');
                 setPoderesEspecialistaEscolhidos(Array.isArray(p.poderesEspecialistaEscolhidos) ? p.poderesEspecialistaEscolhidos : []);
+                setTrilhaOcultistaEscolhida(p.trilhaOcultistaEscolhida || '');
+                setPoderesOcultistaEscolhidos(Array.isArray(p.poderesOcultistaEscolhidos) ? p.poderesOcultistaEscolhidos : []);
 
                 const atributos = p.atributos || {};
                 const trilha = p.trilha || 'Combatente';
@@ -434,6 +438,11 @@ export default function CharacterSheetPage() {
         () => OPT.trilhaEspecialistaPorNome(trilhaEspecialistaEscolhida),
         [trilhaEspecialistaEscolhida]
     );
+    const slotsPoderOcultista = useMemo(() => OPT.slotsPoderOcultistaLiberados(nex), [nex]);
+    const trilhaOcultistaInfo = useMemo(
+        () => OPT.trilhaOcultistaPorNome(trilhaOcultistaEscolhida),
+        [trilhaOcultistaEscolhida]
+    );
 
     const bonusPoderes = useMemo(
         () => OPT.bonusNumericoDosPoderes({
@@ -442,8 +451,10 @@ export default function CharacterSheetPage() {
             trilhaCombatenteEscolhida,
             poderesEspecialistaEscolhidos,
             trilhaEspecialistaEscolhida,
+            poderesOcultistaEscolhidos,
+            trilhaOcultistaEscolhida,
         }),
-        [nex, poderesCombatenteEscolhidos, trilhaCombatenteEscolhida, poderesEspecialistaEscolhidos, trilhaEspecialistaEscolhida]
+        [nex, poderesCombatenteEscolhidos, trilhaCombatenteEscolhida, poderesEspecialistaEscolhidos, trilhaEspecialistaEscolhida, poderesOcultistaEscolhidos, trilhaOcultistaEscolhida]
     );
     const vidaMax = useMemo(
         () => OP.vidaMaxima(trilha, atributos.vig, nex) + bonusOrigem.vida + bonusCascaGrossa,
@@ -537,6 +548,19 @@ export default function CharacterSheetPage() {
             const novo = [...prev];
             novo[indice] = nome;
             salvarCampos({ poderesEspecialistaEscolhidos: novo });
+            return novo;
+        });
+    }
+
+    function handleEscolherTrilhaOcultista(nome) {
+        setTrilhaOcultistaEscolhida(nome);
+        salvarCampos({ trilhaOcultistaEscolhida: nome });
+    }
+    function handleEscolherPoderOcultista(indice, nome) {
+        setPoderesOcultistaEscolhidos(prev => {
+            const novo = [...prev];
+            novo[indice] = nome;
+            salvarCampos({ poderesOcultistaEscolhidos: novo });
             return novo;
         });
     }
@@ -1623,11 +1647,83 @@ export default function CharacterSheetPage() {
                                             )}
                                         </div>
                                     </>
+                                ) : trilha === 'Ocultista' ? (
+                                    <>
+                                        <div className="trilha-secundaria-picker">
+                                            <label htmlFor="trilha-ocultista-select">Trilha de Ocultista</label>
+                                            <select
+                                                id="trilha-ocultista-select"
+                                                value={trilhaOcultistaEscolhida}
+                                                onChange={e => handleEscolherTrilhaOcultista(e.target.value)}
+                                            >
+                                                <option value="">— Escolher (liberado em NEX 10%) —</option>
+                                                {OPT.TRILHAS_OCULTISTA.map(t => (
+                                                    <option key={t.nome} value={t.nome}>{t.nome}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {trilhaOcultistaInfo && (
+                                            <div className="trilha-secundaria-poderes">
+                                                <p className="trilha-secundaria-descricao">{trilhaOcultistaInfo.descricao}</p>
+                                                {trilhaOcultistaInfo.poderes.map(poder => {
+                                                    const liberado = nex >= poder.nex;
+                                                    return (
+                                                        <div
+                                                            className={`trilha-poder-card${liberado ? '' : ' trilha-poder-bloqueado'}`}
+                                                            key={poder.nome}
+                                                        >
+                                                            <div className="trilha-poder-card-header">
+                                                                <strong>{poder.nome}</strong>
+                                                                <span className="trilha-poder-nex">NEX {poder.nex}%{liberado ? '' : ' (bloqueado)'}</span>
+                                                            </div>
+                                                            <p className="trilha-poder-descricao">{poder.descricao}</p>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+
+                                        <div className="trilha-poder-slots">
+                                            <h3>Poderes de Ocultista</h3>
+                                            {slotsPoderOcultista === 0 ? (
+                                                <p className="trilha-em-breve">Libera o primeiro em NEX 15%.</p>
+                                            ) : (
+                                                Array.from({ length: slotsPoderOcultista }).map((_, indice) => (
+                                                    <div className="trilha-poder-slot" key={indice}>
+                                                        <label htmlFor={`poder-ocultista-${indice}`}>
+                                                            Poder {indice + 1} <small>(NEX {OPT.PODER_OCULTISTA_MARCOS[indice]}%)</small>
+                                                        </label>
+                                                        <select
+                                                            id={`poder-ocultista-${indice}`}
+                                                            value={poderesOcultistaEscolhidos[indice] || ''}
+                                                            onChange={e => handleEscolherPoderOcultista(indice, e.target.value)}
+                                                        >
+                                                            <option value="">— Escolher —</option>
+                                                            {OPT.poderesDisponiveisParaSlot(OPT.PODERES_OCULTISTA, poderesOcultistaEscolhidos, indice).map(p => (
+                                                                <option key={p.nome} value={p.nome}>{p.nome}</option>
+                                                            ))}
+                                                        </select>
+                                                        {poderesOcultistaEscolhidos[indice] && (() => {
+                                                            const escolhido = OPT.PODERES_OCULTISTA.find(p => p.nome === poderesOcultistaEscolhidos[indice]);
+                                                            return escolhido ? (
+                                                                <p className="trilha-poder-descricao">
+                                                                    {escolhido.descricao}
+                                                                    {escolhido.preRequisito && (
+                                                                        <em className="trilha-poder-prereq"> (Pré-requisito: {escolhido.preRequisito})</em>
+                                                                    )}
+                                                                </p>
+                                                            ) : null;
+                                                        })()}
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </>
                                 ) : (
                                     <p className="trilha-em-breve">
                                         Poderes de trilha para {trilha || 'essa trilha'} ainda não foram
-                                        modelados nesta ficha — só Combatente e Especialista têm o
-                                        catálogo completo por enquanto.
+                                        modelados nesta ficha.
                                     </p>
                                 )}
                             </div>

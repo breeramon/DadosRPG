@@ -120,6 +120,8 @@ export default function CharacterFormPage() {
     const [poderesCombatenteEscolhidos, setPoderesCombatenteEscolhidos] = useState([]);
     const [trilhaEspecialistaEscolhida, setTrilhaEspecialistaEscolhida] = useState('');
     const [poderesEspecialistaEscolhidos, setPoderesEspecialistaEscolhidos] = useState([]);
+    const [trilhaOcultistaEscolhida, setTrilhaOcultistaEscolhida] = useState('');
+    const [poderesOcultistaEscolhidos, setPoderesOcultistaEscolhidos] = useState([]);
     const [abaAtiva, setAbaAtiva] = useState('rituais');
 
     // ---------------------------------------------------------------
@@ -142,6 +144,8 @@ export default function CharacterFormPage() {
             setPoderesCombatenteEscolhidos([]);
             setTrilhaEspecialistaEscolhida('');
             setPoderesEspecialistaEscolhidos([]);
+            setTrilhaOcultistaEscolhida('');
+            setPoderesOcultistaEscolhidos([]);
             setCarregando(false);
             return;
         }
@@ -175,6 +179,8 @@ export default function CharacterFormPage() {
                 setPoderesCombatenteEscolhidos(Array.isArray(personagem.poderesCombatenteEscolhidos) ? personagem.poderesCombatenteEscolhidos : []);
                 setTrilhaEspecialistaEscolhida(personagem.trilhaEspecialistaEscolhida || '');
                 setPoderesEspecialistaEscolhidos(Array.isArray(personagem.poderesEspecialistaEscolhidos) ? personagem.poderesEspecialistaEscolhidos : []);
+                setTrilhaOcultistaEscolhida(personagem.trilhaOcultistaEscolhida || '');
+                setPoderesOcultistaEscolhidos(Array.isArray(personagem.poderesOcultistaEscolhidos) ? personagem.poderesOcultistaEscolhidos : []);
             })
             .catch(err => {
                 console.error('[character-form] Erro ao carregar personagem pra edição:', err);
@@ -273,6 +279,11 @@ export default function CharacterFormPage() {
         () => OPT.trilhaEspecialistaPorNome(trilhaEspecialistaEscolhida),
         [trilhaEspecialistaEscolhida]
     );
+    const slotsPoderOcultista = useMemo(() => OPT.slotsPoderOcultistaLiberados(nex), [nex]);
+    const trilhaOcultistaInfo = useMemo(
+        () => OPT.trilhaOcultistaPorNome(trilhaOcultistaEscolhida),
+        [trilhaOcultistaEscolhida]
+    );
 
     const origemEscolhida = useMemo(() => origemPorNome(origem), [origem]);
 
@@ -306,6 +317,8 @@ export default function CharacterFormPage() {
         setPoderesCombatenteEscolhidos([]);
         setTrilhaEspecialistaEscolhida('');
         setPoderesEspecialistaEscolhidos([]);
+        setTrilhaOcultistaEscolhida('');
+        setPoderesOcultistaEscolhidos([]);
     }
     function handleEscolherTrilhaCombatente(nomeTrilha) {
         setTrilhaCombatenteEscolhida(nomeTrilha);
@@ -322,6 +335,16 @@ export default function CharacterFormPage() {
     }
     function handleEscolherPoderEspecialista(indice, nomePoder) {
         setPoderesEspecialistaEscolhidos(prev => {
+            const novo = [...prev];
+            novo[indice] = nomePoder;
+            return novo;
+        });
+    }
+    function handleEscolherTrilhaOcultista(nomeTrilha) {
+        setTrilhaOcultistaEscolhida(nomeTrilha);
+    }
+    function handleEscolherPoderOcultista(indice, nomePoder) {
+        setPoderesOcultistaEscolhidos(prev => {
             const novo = [...prev];
             novo[indice] = nomePoder;
             return novo;
@@ -414,7 +437,7 @@ export default function CharacterFormPage() {
                 return { nome: p.nome, atributo: p.atributo, treinado: true, grau: st.grau, bonusExtra: Number(st.bonusExtra) || 0, bonus };
             });
 
-        return { nome: nome.trim(), trilha, nex, atributos, pericias, origem, rituais, trilhaCombatenteEscolhida, poderesCombatenteEscolhidos, trilhaEspecialistaEscolhida, poderesEspecialistaEscolhidos };
+        return { nome: nome.trim(), trilha, nex, atributos, pericias, origem, rituais, trilhaCombatenteEscolhida, poderesCombatenteEscolhidos, trilhaEspecialistaEscolhida, poderesEspecialistaEscolhidos, trilhaOcultistaEscolhida, poderesOcultistaEscolhidos };
     }
 
     async function handleSalvar() {
@@ -928,10 +951,83 @@ export default function CharacterFormPage() {
                                             )}
                                         </div>
                                     </>
+                                ) : trilha === 'Ocultista' ? (
+                                    <>
+                                        <div className="trilha-secundaria-picker">
+                                            <label htmlFor="form-trilha-ocultista-select">Trilha de Ocultista</label>
+                                            <select
+                                                id="form-trilha-ocultista-select"
+                                                value={trilhaOcultistaEscolhida}
+                                                onChange={e => handleEscolherTrilhaOcultista(e.target.value)}
+                                            >
+                                                <option value="">— Escolher (liberado em NEX 10%) —</option>
+                                                {OPT.TRILHAS_OCULTISTA.map(t => (
+                                                    <option key={t.nome} value={t.nome}>{t.nome}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {trilhaOcultistaInfo && (
+                                            <div className="trilha-secundaria-poderes">
+                                                <p className="trilha-secundaria-descricao">{trilhaOcultistaInfo.descricao}</p>
+                                                {trilhaOcultistaInfo.poderes.map(poder => {
+                                                    const liberado = nex >= poder.nex;
+                                                    return (
+                                                        <div
+                                                            className={`trilha-poder-card${liberado ? '' : ' trilha-poder-bloqueado'}`}
+                                                            key={poder.nome}
+                                                        >
+                                                            <div className="trilha-poder-card-header">
+                                                                <strong>{poder.nome}</strong>
+                                                                <span className="trilha-poder-nex">NEX {poder.nex}%{liberado ? '' : ' (bloqueado)'}</span>
+                                                            </div>
+                                                            <p className="trilha-poder-descricao">{poder.descricao}</p>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+
+                                        <div className="trilha-poder-slots">
+                                            <h3>Poderes de Ocultista</h3>
+                                            {slotsPoderOcultista === 0 ? (
+                                                <p className="trilha-em-breve">Libera o primeiro em NEX 15%.</p>
+                                            ) : (
+                                                Array.from({ length: slotsPoderOcultista }).map((_, indice) => (
+                                                    <div className="trilha-poder-slot" key={indice}>
+                                                        <label htmlFor={`form-poder-ocultista-${indice}`}>
+                                                            Poder {indice + 1} <small>(NEX {OPT.PODER_OCULTISTA_MARCOS[indice]}%)</small>
+                                                        </label>
+                                                        <select
+                                                            id={`form-poder-ocultista-${indice}`}
+                                                            value={poderesOcultistaEscolhidos[indice] || ''}
+                                                            onChange={e => handleEscolherPoderOcultista(indice, e.target.value)}
+                                                        >
+                                                            <option value="">— Escolher —</option>
+                                                            {OPT.poderesDisponiveisParaSlot(OPT.PODERES_OCULTISTA, poderesOcultistaEscolhidos, indice).map(p => (
+                                                                <option key={p.nome} value={p.nome}>{p.nome}</option>
+                                                            ))}
+                                                        </select>
+                                                        {poderesOcultistaEscolhidos[indice] && (() => {
+                                                            const escolhido = OPT.PODERES_OCULTISTA.find(p => p.nome === poderesOcultistaEscolhidos[indice]);
+                                                            return escolhido ? (
+                                                                <p className="trilha-poder-descricao">
+                                                                    {escolhido.descricao}
+                                                                    {escolhido.preRequisito && (
+                                                                        <em className="trilha-poder-prereq"> (Pré-requisito: {escolhido.preRequisito})</em>
+                                                                    )}
+                                                                </p>
+                                                            ) : null;
+                                                        })()}
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </>
                                 ) : (
                                     <p className="trilha-em-breve">
                                         Poderes de trilha para {trilha || 'essa trilha'} ainda não foram modelados
-                                        nesta ficha — só Combatente e Especialista têm o catálogo completo por enquanto.
+                                        nesta ficha.
                                     </p>
                                 )}
                             </div>
