@@ -2722,7 +2722,12 @@ h3 {
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.8px;
-    color: var(--color-primary-500);
+    /* --color-primary-500 tinha só ~2.7-3:1 de contraste contra o fundo
+       escuro (abaixo do mínimo de 4.5:1 do WCAG AA pra texto) -- esses
+       títulos ("AGI", "INT"...) são o que ajuda a navegar uma lista de
+       ~20 perícias, então valem ficar bem legíveis. --color-primary-300
+       é o mesmo tom de roxo, só mais claro (7.8:1). */
+    color: var(--color-primary-300);
     font-weight: bold;
     border-bottom: 1px solid #333;
     padding-bottom: 4px;
