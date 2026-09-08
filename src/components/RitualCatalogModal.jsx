@@ -219,8 +219,14 @@ export default function RitualCatalogModal({ aberto, onFechar, trilha, nex, ritu
                                     <button
                                         type="button"
                                         className={`modal-item-card-add${jaConhece ? ' added' : ''}`}
-                                        title={jaConhece ? 'Já conhecido' : 'Adicionar aos rituais'}
-                                        disabled={jaConhece}
+                                        title={
+                                            jaConhece
+                                                ? 'Já conhecido'
+                                                : bloqueadoPorNex
+                                                    ? `Seu NEX só libera até o ${circuloLiberado}º círculo`
+                                                    : 'Adicionar aos rituais'
+                                        }
+                                        disabled={jaConhece || bloqueadoPorNex}
                                         onClick={ev => { ev.stopPropagation(); onAdicionar(ritual); }}
                                     >
                                         {jaConhece ? '✓' : '+'}

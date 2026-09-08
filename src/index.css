@@ -1749,8 +1749,15 @@ h3 {
 
 .modal-item-card-add:active { transform: scale(0.96); }
 
-.modal-item-card-add.added,
-.modal-item-card-add:disabled {
+/* "Já conhecido" (✓) é um estado positivo -- o jogador já tem o
+   ritual -- por isso mantém o verde. "Bloqueado" (NEX insuficiente pro
+   círculo, ver bloqueadoPorNex em RitualCatalogModal.jsx) é um estado
+   bem diferente: a ação não está disponível, então reaproveita o
+   mesmo tratamento de opacidade reduzida + sem cor de destaque já
+   usado em .trilha-poder-bloqueado, em vez do verde de "adicionado"
+   (que antes cobria os dois casos e lia como se a ação tivesse dado
+   certo mesmo estando bloqueada). */
+.modal-item-card-add.added {
     background-image: linear-gradient(145deg, #43a047, #2e7d32);
     border-color: #81c784;
     cursor: default;
@@ -1758,6 +1765,17 @@ h3 {
 }
 
 .modal-item-card-add.added:hover { transform: none; box-shadow: none; }
+
+.modal-item-card-add:disabled:not(.added) {
+    background-image: none;
+    background-color: var(--color-surface);
+    border-color: #444;
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.modal-item-card-add:disabled:not(.added):hover { transform: none; box-shadow: none; }
 
 .modal-item-card-remove {
     flex-shrink: 0;

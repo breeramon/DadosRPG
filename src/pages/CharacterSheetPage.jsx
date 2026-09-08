@@ -556,6 +556,17 @@ export default function CharacterSheetPage() {
             toast.error(`Você já conhece "${catalogRitual.nome}".`);
             return;
         }
+        // Mesma checagem que já vira o selo "NEX insuficiente" e desabilita
+        // o "+" dentro do RitualCatalogModal -- repetida aqui como
+        // segunda linha de defesa (igual ao "já conhece" acima), já que
+        // onAdicionar é a única porta de entrada real pra essa lista.
+        if (trilha === 'Ocultista') {
+            const liberado = OP.circuloRitualLiberado(nex);
+            if (catalogRitual.circulo > liberado) {
+                toast.error(`Seu NEX só libera até o ${liberado}º círculo — "${catalogRitual.nome}" é ${catalogRitual.circulo}º.`);
+                return;
+            }
+        }
         atualizarRituais([...rituais, { ...catalogRitual }]);
         toast.success(`"${catalogRitual.nome}" adicionado aos rituais.`);
     }
