@@ -54,6 +54,7 @@ export default function RitualTab({
     trilha,
     nex,
     rituais,
+    quota,
     expandidos,
     onToggleExpandido,
     onAbrirModal,
@@ -61,6 +62,7 @@ export default function RitualTab({
     onConjurar,
 }) {
     const circuloLiberado = trilha === 'Ocultista' ? OP.circuloRitualLiberado(nex) : 0;
+    const quotaEsgotada = rituais.length >= quota;
 
     return (
         <div className="tab-panel-rituais">
@@ -69,12 +71,17 @@ export default function RitualTab({
                 <button type="button" className="btn-add-item" title="Adicionar ritual" onClick={onAbrirModal}>+</button>
             </div>
 
-            {trilha === 'Ocultista' && (
-                <div className="rituals-nex-info">
-                    Seu NEX libera até o{' '}
-                    <strong>{circuloLiberado > 0 ? `${circuloLiberado}º círculo` : 'nenhum círculo ainda'}</strong>.
-                </div>
-            )}
+            <div className="rituals-nex-info">
+                {trilha === 'Ocultista' && (
+                    <span>
+                        Seu NEX libera até o{' '}
+                        <strong>{circuloLiberado > 0 ? `${circuloLiberado}º círculo` : 'nenhum círculo ainda'}</strong>.
+                    </span>
+                )}
+                <span className={quotaEsgotada ? 'rituais-cota-cheia' : ''}>
+                    Rituais conhecidos: <strong>{rituais.length} / {quota}</strong>
+                </span>
+            </div>
 
             <div className="rituals-list">
                 {rituais.length === 0 && (

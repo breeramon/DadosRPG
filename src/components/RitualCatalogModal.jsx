@@ -81,7 +81,7 @@ export function TrashIcon() {
 //                         decide se aceita (duplicata etc.) e mostra o
 //                         aviso (toast — ver App.jsx) de sucesso/erro
 // ---------------------------------------------------------------
-export default function RitualCatalogModal({ aberto, onFechar, trilha, nex, rituaisConhecidos, onAdicionar }) {
+export default function RitualCatalogModal({ aberto, onFechar, trilha, nex, rituaisConhecidos, quotaEsgotada, onAdicionar }) {
     const [elementoAtivo, setElementoAtivo] = useState(OPR.ELEMENTOS_RITUAL[0]);
     const [circuloFiltro, setCirculoFiltro] = useState(0); // 0 = todos os círculos
     const [busca, setBusca] = useState('');
@@ -191,6 +191,7 @@ export default function RitualCatalogModal({ aberto, onFechar, trilha, nex, ritu
                         const abertoCard = expandidos.has(ritual.nome);
                         const jaConhece = rituaisConhecidos.some(r => r.nome === ritual.nome);
                         const bloqueadoPorNex = trilha === 'Ocultista' && ritual.circulo > circuloLiberado;
+                        const bloqueadoPorQuota = !jaConhece && !bloqueadoPorNex && quotaEsgotada;
                         return (
                             <div className={`modal-item-card ritual-card elemento-${elementoSlug(ritual.elemento)}${abertoCard ? ' expanded' : ''}`} key={ritual.nome}>
                                 <div
@@ -224,9 +225,11 @@ export default function RitualCatalogModal({ aberto, onFechar, trilha, nex, ritu
                                                 ? 'Já conhecido'
                                                 : bloqueadoPorNex
                                                     ? `Seu NEX só libera até o ${circuloLiberado}º círculo`
-                                                    : 'Adicionar aos rituais'
+                                                    : bloqueadoPorQuota
+                                                        ? 'Você atingiu seu limite de rituais conhecidos'
+                                                        : 'Adicionar aos rituais'
                                         }
-                                        disabled={jaConhece || bloqueadoPorNex}
+                                        disabled={jaConhece || bloqueadoPorNex || bloqueadoPorQuota}
                                         onClick={ev => { ev.stopPropagation(); onAdicionar(ritual); }}
                                     >
                                         {jaConhece ? '✓' : '+'}

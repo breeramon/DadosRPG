@@ -1,4 +1,4 @@
-import { passosDeNex } from './pericias';
+import { passosDeNex, circuloRitualLiberado } from './pericias';
 
 export const ATAQUE_ESPECIAL_COMBATENTE = [
     { nex: 5, pe: 2, bonus: 5 },
@@ -24,6 +24,7 @@ export function slotsPoderCombatenteLiberados(nex) {
 }
 
 export const PODERES_COMBATENTE = [
+    { nome: 'Aprender Ritual', descricao: 'Você aprende uma quantidade de rituais igual ao dobro do seu Intelecto (mínimo 1). Pode escolher este poder várias vezes.', preRequisito: null, repetivel: true },
     { nome: 'Armamento Pesado', descricao: 'Você recebe proficiência com armas pesadas.', preRequisito: 'For 2' },
     { nome: 'Artista Marcial', descricao: 'Seus ataques desarmados causam 1d6 pontos de dano, podem causar dano letal e contam como armas ágeis. Em NEX 35%, o dano aumenta para 1d8 e, em NEX 70%, para 1d10.', preRequisito: null },
     { nome: 'Ataque de Oportunidade', descricao: 'Sempre que um ser sair voluntariamente de um espaço adjacente ao seu, você pode gastar uma reação e 1 PE para fazer um ataque corpo a corpo contra ele.', preRequisito: null },
@@ -137,6 +138,7 @@ export function slotsPoderEspecialistaLiberados(nex) {
 }
 
 export const PODERES_ESPECIALISTA = [
+    { nome: 'Aprender Ritual', descricao: 'Você aprende uma quantidade de rituais igual ao dobro do seu Intelecto (mínimo 1). Pode escolher este poder várias vezes.', preRequisito: null, repetivel: true },
     { nome: 'Artista Marcial', descricao: 'Seus ataques desarmados causam 1d6 pontos de dano, podem causar dano letal e contam como armas ágeis. Em NEX 35%, o dano aumenta para 1d8 e, em NEX 70%, para 1d10.', preRequisito: null },
     { nome: 'Balística Avançada', descricao: 'Você recebe proficiência com armas táticas de fogo e +2 em rolagens de dano com armas de fogo.', preRequisito: null },
     { nome: 'Conhecimento Aplicado', descricao: 'Quando faz um teste de perícia (exceto Luta e Pontaria), você pode gastar 2 PE para mudar o atributo-base da perícia para Intelecto.', preRequisito: 'Int 2' },
@@ -223,6 +225,7 @@ export function slotsPoderOcultistaLiberados(nex) {
 }
 
 export const PODERES_OCULTISTA = [
+    { nome: 'Aprender Ritual', descricao: 'Você aprende uma quantidade de rituais igual ao dobro do seu Intelecto (mínimo 1). Pode escolher este poder várias vezes.', preRequisito: null, repetivel: true },
     { nome: 'Camuflar Ocultismo', descricao: 'Você pode gastar uma ação livre para esconder símbolos e sigilos desenhados ou gravados em objetos ou em sua pele, tornando-os invisíveis para outras pessoas além de você. Além disso, quando lança um ritual, pode gastar +2 PE para lançá-lo sem componentes ritualísticos e sem gesticular (mãos presas), usando apenas concentração. Outros seres só percebem que você lançou um ritual se passarem num teste de Ocultismo (DT 25).', preRequisito: null },
     { nome: 'Criar Selo', descricao: 'Você sabe fabricar selos paranormais de rituais que conheça (p.151). Fabricar um selo gasta uma ação de interlúdio e um número de PE igual ao custo de conjurar o ritual. Pode ter um número máximo de selos criados ao mesmo tempo igual à sua Presença.', preRequisito: null },
     { nome: 'Envolto em Mistério', descricao: 'Sua aparência e postura assombrosas permitem manipular e assustar pessoas ignorantes ou supersticiosas (o mestre define quem se encaixa). Como regra geral, você recebe +5 em Enganação e Intimidação contra pessoas não treinadas em Ocultismo.', preRequisito: null },
@@ -326,6 +329,91 @@ export function quotaExtraTreinamentoPericia({
     ];
     const vezes = todos.filter(nome => nome === 'Treinamento em Perícia').length;
     return vezes * PERICIAS_POR_TREINAMENTO;
+}
+
+// Escolhido pelo Outro Lado (habilidade de classe do Ocultista) --
+// quantidade BASE de rituais conhecidos que não depende de nenhum
+// poder escolhido: começa com 3 no NEX 5%, +1 no NEX 10% (4 no total)
+// e +1 no NEX 15% (5 no total), ficando em 5 dali pra frente. Só vale
+// pra trilha Ocultista -- Combatente/Especialista começam com 0 e só
+// ganham acesso a rituais através do poder "Aprender Ritual" (ver
+// quotaExtraAprenderRitual logo abaixo).
+//
+// OBS: o livro também dá bônus de rituais pela trilha secundária
+// Graduado (poderes Saber Ampliado/Grimório Ritualístico, ver
+// TRILHAS_OCULTISTA acima), mas esses rituais são explicitamente
+// descritos como rituais que "não contam no seu limite de rituais
+// conhecidos" -- ou seja, um bônus à parte, não um acréscimo a esta
+// cota base. Ver quotaBonusGraduado logo abaixo, que soma esse bônus
+// separadamente (o total final que a ficha usa pra liberar/bloquear
+// a adição de rituais é a soma desta função + quotaExtraAprenderRitual
+// + quotaBonusGraduado).
+export function quotaBaseRituaisOcultista(nex) {
+    const n = Number(nex) || 0;
+    if (n >= 15) return 5;
+    if (n >= 10) return 4;
+    if (n >= 5) return 3;
+    return 0;
+}
+
+// Aprender Ritual (poder repetível presente nas 3 trilhas, ver
+// PODERES_COMBATENTE/ESPECIALISTA/OCULTISTA acima, liberado a partir
+// do primeiro slot de Poder de Trilha em NEX 15%): cada vez que é
+// escolhido, o personagem aprende uma quantidade de rituais igual ao
+// dobro do seu Intelecto (mínimo 1), somada à cota base (que só existe
+// pra Ocultista -- Combatente e Especialista dependem inteiramente
+// deste poder pra ter qualquer acesso a rituais).
+export function quotaExtraAprenderRitual({
+    poderesCombatenteEscolhidos,
+    poderesEspecialistaEscolhidos,
+    poderesOcultistaEscolhidos,
+    intelecto,
+} = {}) {
+    const todos = [
+        ...(poderesCombatenteEscolhidos || []),
+        ...(poderesEspecialistaEscolhidos || []),
+        ...(poderesOcultistaEscolhidos || []),
+    ];
+    const vezes = todos.filter(nome => nome === 'Aprender Ritual').length;
+    const porVez = Math.max(1, 2 * (Number(intelecto) || 0));
+    return vezes * porVez;
+}
+
+// Bônus de rituais da trilha secundária Graduado (só Ocultista, ver
+// TRILHAS_OCULTISTA acima): os poderes Saber Ampliado e Grimório
+// Ritualístico dão rituais extra que o livro descreve como "não
+// contam no seu limite de rituais conhecidos" -- por isso entram como
+// uma soma à parte, e não como parte de quotaBaseRituaisOcultista.
+//
+// Saber Ampliado (NEX 10): aprende 1 ritual de 1º círculo ao ganhar o
+// poder, +1 ritual toda vez que libera um círculo novo depois disso.
+// Como o 1º círculo já libera em NEX 5 (antes do poder existir), o
+// total acumulado é sempre igual à quantidade de círculos já
+// liberados (circuloRitualLiberado) a partir do momento que o
+// personagem tem NEX 10 -- 1 no NEX 10-24, 2 no NEX 25-54, e assim por
+// diante.
+//
+// Grimório Ritualístico (NEX 40): aprende uma quantidade de rituais de
+// 1º ou 2º círculo igual ao Intelecto (sem mínimo, ao contrário de
+// Aprender Ritual) ao ganhar o poder, +1 a cada círculo novo liberado
+// depois disso. Como no NEX 40 já há 2 círculos liberados (1º e 2º),
+// o "a cada círculo novo" só conta a partir do 3º -- daí o
+// Math.max(0, circulos - 2).
+//
+// Simplificação assumida: a restrição de "só 1º/2º círculo" dos slots
+// do Grimório não é reforçada separadamente da liberação geral por
+// NEX (igual já acontece com os slots de Aprender Ritual, que também
+// não têm essa granularidade) -- os bônus só somam ao total geral que
+// libera/bloqueia a adição de qualquer ritual já liberado pelo círculo
+// do NEX.
+export function quotaBonusGraduado({ trilha, trilhaOcultistaEscolhida, nex, intelecto } = {}) {
+    if (trilha !== 'Ocultista' || trilhaOcultistaEscolhida !== 'Graduado') return 0;
+    const n = Number(nex) || 0;
+    const circulos = circuloRitualLiberado(n);
+    let bonus = 0;
+    if (n >= 10) bonus += circulos;
+    if (n >= 40) bonus += Math.max(0, Number(intelecto) || 0) + Math.max(0, circulos - 2);
+    return bonus;
 }
 
 export function bonusNumericoDosPoderes({

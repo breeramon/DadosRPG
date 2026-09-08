@@ -395,6 +395,28 @@ export default function CharacterFormPage() {
         setPericiasState(prev => ({ ...prev, [nomePericia]: { ...prev[nomePericia], bonusExtra: v } }));
     }
 
+    // Quota de QUANTIDADE de rituais conhecidos: base "Escolhido pelo
+    // Outro Lado" (só Ocultista, 3/4/5 por NEX 5/10/15 -- ver
+    // quotaBaseRituaisOcultista em trilhas.js) + o poder repetível
+    // "Aprender Ritual" (Intelecto x2 por vez escolhido, disponível nas
+    // 3 trilhas -- é o único jeito de Combatente/Especialista terem
+    // acesso a rituais) + o bônus da trilha secundária Graduado
+    // (Saber Ampliado/Grimório Ritualístico -- ver quotaBonusGraduado
+    // em trilhas.js).
+    const quotaRituais = useMemo(
+        () =>
+            (trilha === 'Ocultista' ? OPT.quotaBaseRituaisOcultista(nex) : 0) +
+            OPT.quotaExtraAprenderRitual({
+                poderesCombatenteEscolhidos,
+                poderesEspecialistaEscolhidos,
+                poderesOcultistaEscolhidos,
+                intelecto: atributos.int,
+            }) +
+            OPT.quotaBonusGraduado({ trilha, trilhaOcultistaEscolhida, nex, intelecto: atributos.int }),
+        [trilha, nex, poderesCombatenteEscolhidos, poderesEspecialistaEscolhidos, poderesOcultistaEscolhidos, trilhaOcultistaEscolhida, atributos.int]
+    );
+    const quotaRituaisEsgotada = rituais.length >= quotaRituais;
+
     function adicionarRitual(catalogRitual) {
         if (rituais.some(r => r.nome === catalogRitual.nome)) {
             toast.error(`Você já conhece "${catalogRitual.nome}".`);
@@ -410,6 +432,10 @@ export default function CharacterFormPage() {
                 toast.error(`Seu NEX só libera até o ${liberado}º círculo — "${catalogRitual.nome}" é ${catalogRitual.circulo}º.`);
                 return;
             }
+        }
+        if (quotaRituaisEsgotada) {
+            toast.error(`Você atingiu seu limite de ${quotaRituais} ritual(is) conhecido(s).`);
+            return;
         }
         setRituais(prev => [...prev, { ...catalogRitual }]);
         toast.success(`"${catalogRitual.nome}" adicionado aos rituais.`);
@@ -755,6 +781,7 @@ export default function CharacterFormPage() {
                                 trilha={trilha}
                                 nex={nex}
                                 rituais={rituais}
+                                quota={quotaRituais}
                                 expandidos={expandidosConhecidos}
                                 onToggleExpandido={toggleExpandidoConhecido}
                                 onAbrirModal={() => setModalRitualAberto(true)}
@@ -833,6 +860,7 @@ export default function CharacterFormPage() {
                 trilha={trilha}
                 nex={nex}
                 rituaisConhecidos={rituais}
+                quotaEsgotada={quotaRituaisEsgotada}
                 onAdicionar={adicionarRitual}
             />
 

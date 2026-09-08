@@ -542,6 +542,30 @@ export default function CharacterSheetPage() {
     // circuloLiberado (só pro aviso de círculo liberado por NEX,
     // Ocultista) agora é calculado dentro do RitualTab.jsx e do
     // RitualCatalogModal.jsx, que já recebem trilha/nex.
+    //
+    // Quota de QUANTIDADE de rituais conhecidos: base "Escolhido pelo
+    // Outro Lado" (só Ocultista, 3/4/5 por NEX 5/10/15 -- ver
+    // quotaBaseRituaisOcultista em trilhas.js) + o poder repetível
+    // "Aprender Ritual" (Intelecto x2 por vez escolhido, disponível nas
+    // 3 trilhas -- é o único jeito de Combatente/Especialista terem
+    // acesso a rituais) + o bônus da trilha secundária Graduado
+    // (Saber Ampliado/Grimório Ritualístico -- ver quotaBonusGraduado
+    // em trilhas.js). Combina os três numa cota só que a modal e a
+    // lista usam pra saber quando bloquear novas adições.
+    const quotaRituais = useMemo(
+        () =>
+            (trilha === 'Ocultista' ? OPT.quotaBaseRituaisOcultista(nex) : 0) +
+            OPT.quotaExtraAprenderRitual({
+                poderesCombatenteEscolhidos,
+                poderesEspecialistaEscolhidos,
+                poderesOcultistaEscolhidos,
+                intelecto: atributos.int,
+            }) +
+            OPT.quotaBonusGraduado({ trilha, trilhaOcultistaEscolhida, nex, intelecto: atributos.int }),
+        [trilha, nex, poderesCombatenteEscolhidos, poderesEspecialistaEscolhidos, poderesOcultistaEscolhidos, trilhaOcultistaEscolhida, atributos.int]
+    );
+    const quotaRituaisEsgotada = rituais.length >= quotaRituais;
+
     function atualizarRituais(novosRituais) {
         setRituais(novosRituais);
         salvarCampos({ rituais: novosRituais });
@@ -566,6 +590,10 @@ export default function CharacterSheetPage() {
                 toast.error(`Seu NEX só libera até o ${liberado}º círculo — "${catalogRitual.nome}" é ${catalogRitual.circulo}º.`);
                 return;
             }
+        }
+        if (quotaRituaisEsgotada) {
+            toast.error(`Você atingiu seu limite de ${quotaRituais} ritual(is) conhecido(s).`);
+            return;
         }
         atualizarRituais([...rituais, { ...catalogRitual }]);
         toast.success(`"${catalogRitual.nome}" adicionado aos rituais.`);
@@ -864,6 +892,7 @@ export default function CharacterSheetPage() {
                                 trilha={trilha}
                                 nex={nex}
                                 rituais={rituais}
+                                quota={quotaRituais}
                                 expandidos={expandidosConhecidos}
                                 onToggleExpandido={toggleExpandidoConhecido}
                                 onAbrirModal={() => setModalRitualAberto(true)}
@@ -961,6 +990,7 @@ export default function CharacterSheetPage() {
                 trilha={trilha}
                 nex={nex}
                 rituaisConhecidos={rituais}
+                quotaEsgotada={quotaRituaisEsgotada}
                 onAdicionar={adicionarRitual}
             />
 
