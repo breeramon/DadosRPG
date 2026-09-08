@@ -13,6 +13,12 @@ import { origemPorNome, bonusNumericoDaOrigem } from '@/lib/origens';
 import * as OPT from '@/lib/trilhas';
 import OrigemCatalogModal from '@/components/OrigemCatalogModal';
 import DiceThemeModal from '@/components/DiceThemeModal';
+import NovoAtaqueModal from '@/components/NovoAtaqueModal';
+import AdicionarItemModal from '@/components/AdicionarItemModal';
+import VitalsPanel from '@/components/VitalsPanel';
+import PericiasTable from '@/components/PericiasTable';
+import CombateTab from '@/components/CombateTab';
+import TrilhaTab from '@/components/TrilhaTab';
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll';
 
 const ATTR_MAP = [
@@ -35,19 +41,6 @@ function TrashIcon() {
     );
 }
 
-function DiceIcon() {
-    return (
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <rect x="3" y="3" width="18" height="18" rx="4" />
-            <circle cx="8" cy="8" r="1.6" fill="currentColor" stroke="none" />
-            <circle cx="16" cy="8" r="1.6" fill="currentColor" stroke="none" />
-            <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
-            <circle cx="8" cy="16" r="1.6" fill="currentColor" stroke="none" />
-            <circle cx="16" cy="16" r="1.6" fill="currentColor" stroke="none" />
-        </svg>
-    );
-}
-
 function GearIcon() {
     return (
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -64,15 +57,6 @@ function GearIcon() {
     );
 }
 
-function D20Icon() {
-    return (
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M12 3L19.8 7.5V16.5L12 21L4.2 16.5V7.5Z" />
-            <path d="M12 12L12 3M12 12L19.8 16.5M12 12L4.2 16.5" />
-        </svg>
-    );
-}
-
 function RitualSparkIcon() {
     return (
         <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" stroke="none" aria-hidden="true">
@@ -81,7 +65,6 @@ function RitualSparkIcon() {
     );
 }
 
-const GRAU_ABREV = { treinado: 'T', veterano: 'V', expert: 'E' };
 const MAX_LOG_ENTRIES = 4;
 let proximoLogId = 1;
 
@@ -95,39 +78,6 @@ function nomesPericiasProtegidasPelaTrilha(trilhaNome, periciasSalvas) {
     return protegidos;
 }
 
-function subcategoriaTexto(item) {
-    if (item.grupo === 'armas') {
-        return item.tipoArma === 'distancia'
-            ? `Arma de Fogo/Distância — Alcance ${item.alcance || '—'}`
-            : 'Arma Branca — Corpo a Corpo';
-    }
-    if (item.grupo === 'protecoes') return 'Proteção corporal';
-    if (item.grupo === 'municoes') return 'Munição';
-    return item.categoria || 'Item Geral';
-}
-
-function statsDoItem(item) {
-    const stats = [{ label: 'Categoria', valor: item.categoria || '—' }];
-    if (item.grupo === 'armas') {
-        stats.push({ label: 'Dano', valor: item.dano || '—' });
-        stats.push({ label: 'Crítico', valor: item.critico || '—' });
-        stats.push({ label: 'Tipo', valor: item.tipoDano || '—' });
-        stats.push({ label: 'Espaços', valor: `${item.espacos || 0}` });
-        if (item.tipoArma === 'distancia') {
-            stats.push({ label: 'Munição', valor: item.municao || '—' });
-        }
-    } else if (item.grupo === 'protecoes') {
-        stats.push({ label: 'Defesa', valor: `+${item.defesaBonus || 0}` });
-        stats.push({ label: 'Espaços', valor: `${item.espacos || 0}` });
-    } else if (item.grupo === 'municoes') {
-        stats.push({ label: 'Compatível', valor: item.compativel || '—' });
-        stats.push({ label: 'Espaços', valor: `${item.espacos || 0}` });
-    } else {
-        stats.push({ label: 'Espaços', valor: `${item.espacos || 0}` });
-    }
-    return stats;
-}
-
 // Vira nome de classe CSS (sem acento, minúsculo) — os 5 elementos de
 // rituais.js (Conhecimento/Energia/Morte/Sangue/Medo) não têm acento,
 // mas a normalização fica aqui pra não quebrar se algum dia mudar.
@@ -135,8 +85,9 @@ function elementoSlug(elemento) {
     return String(elemento || '').trim().toLowerCase();
 }
 
-// Texto curto embaixo do nome no cartão de ritual (igual em espírito a
-// subcategoriaTexto, mas os campos de ritual são outros).
+// Texto curto embaixo do nome no cartão de ritual (igual em espírito à
+// subcategoriaTexto de AdicionarItemModal.jsx, mas os campos de ritual
+// são outros).
 function subtituloRitual(ritual) {
     return `${ritual.execucao || '—'} · Alcance ${ritual.alcance || '—'}`;
 }
@@ -204,23 +155,11 @@ export default function CharacterSheetPage() {
 
     // --- Modal "Novo Ataque" ---
     const [modalAtaqueAberto, setModalAtaqueAberto] = useState(false);
-    const [ataqueNome, setAtaqueNome] = useState('');
-    const [ataqueDano, setAtaqueDano] = useState('');
-    const [ataqueCritico, setAtaqueCritico] = useState('');
-    const [ataqueAlcance, setAtaqueAlcance] = useState('');
-    const [ataqueObs, setAtaqueObs] = useState('');
     const [buscaAtaque, setBuscaAtaque] = useState('');
     const [expandidosAtaques, setExpandidosAtaques] = useState(() => new Set());
 
     // --- Modal "Adicionar Item" ---
     const [modalAberto, setModalAberto] = useState(false);
-    const [modalTab, setModalTab] = useState('catalogo');
-    const [grupoAtivo, setGrupoAtivo] = useState(OPI.GRUPOS[0]?.chave || 'armas');
-    const [busca, setBusca] = useState('');
-    const [expandidos, setExpandidos] = useState(() => new Set());
-    const [customNome, setCustomNome] = useState('');
-    const [customEspacos, setCustomEspacos] = useState(1);
-    const [customEfeito, setCustomEfeito] = useState('');
 
     // --- Modal "Adicionar Ritual" (mesmo espírito da de item, mas
     // filtrando por Elemento + Círculo em vez de grupo/categoria) ---
@@ -235,7 +174,7 @@ export default function CharacterSheetPage() {
 
     // Enquanto qualquer uma das modais desta tela estiver aberta: trava
     // o scroll da página por trás dela
-    useLockBodyScroll(modalAtaqueAberto || modalAberto || modalRitualAberto);
+    useLockBodyScroll(modalRitualAberto);
 
     // --- Rolagem personalizada ---
     const [dieSides, setDieSides] = useState(20);
@@ -427,22 +366,7 @@ export default function CharacterSheetPage() {
         [trilhaCombatenteEscolhida, nex]
     );
     const ataqueEspecialAtual = useMemo(() => OPT.ataqueEspecialMaximo(nex), [nex]);
-    const slotsPoderCombatente = useMemo(() => OPT.slotsPoderCombatenteLiberados(nex), [nex]);
-    const trilhaCombatenteInfo = useMemo(
-        () => OPT.trilhaCombatentePorNome(trilhaCombatenteEscolhida),
-        [trilhaCombatenteEscolhida]
-    );
     const peritoEspecialistaAtual = useMemo(() => OPT.peritoEspecialistaMaximo(nex), [nex]);
-    const slotsPoderEspecialista = useMemo(() => OPT.slotsPoderEspecialistaLiberados(nex), [nex]);
-    const trilhaEspecialistaInfo = useMemo(
-        () => OPT.trilhaEspecialistaPorNome(trilhaEspecialistaEscolhida),
-        [trilhaEspecialistaEscolhida]
-    );
-    const slotsPoderOcultista = useMemo(() => OPT.slotsPoderOcultistaLiberados(nex), [nex]);
-    const trilhaOcultistaInfo = useMemo(
-        () => OPT.trilhaOcultistaPorNome(trilhaOcultistaEscolhida),
-        [trilhaOcultistaEscolhida]
-    );
 
     const bonusPoderes = useMemo(
         () => OPT.bonusNumericoDosPoderes({
@@ -654,56 +578,13 @@ export default function CharacterSheetPage() {
         toast.success(`"${catalogItem.nome}" adicionado ao inventário.`);
     }
 
-    function handleAdicionarCustom() {
-        const nome = customNome.trim();
-        if (!nome) {
-            window.alert('Dê um nome para o item personalizado.');
-            return;
-        }
-        const espacos = parseInt(customEspacos, 10) || 0;
-        const efeito = customEfeito.trim();
+    // Recebe { nome, espacos, efeito } já validados (nome não vazio,
+    // espacos já numérico) de AdicionarItemModal.jsx -- só decide como
+    // persistir e avisar o usuário.
+    function handleAdicionarItemCustom({ nome, espacos, efeito }) {
         atualizarInventario([...inventario, { nome, categoria: 'Personalizado', espacos, efeito, quantidade: 1, equipado: false, custom: true }]);
         toast.success(`"${nome}" adicionado ao inventário.`);
-        setCustomNome('');
-        setCustomEspacos(1);
-        setCustomEfeito('');
     }
-
-    function abrirModal() {
-        setModalTab('catalogo');
-        setBusca('');
-        setExpandidos(new Set());
-        setModalAberto(true);
-    }
-    function fecharModal() {
-        setModalAberto(false);
-    }
-
-    useEffect(() => {
-        if (!modalAberto) return;
-        function onKeyDown(ev) {
-            if (ev.key === 'Escape') fecharModal();
-        }
-        document.addEventListener('keydown', onKeyDown);
-        return () => document.removeEventListener('keydown', onKeyDown);
-    }, [modalAberto]);
-
-    function toggleExpandido(nome) {
-        setExpandidos(prev => {
-            const next = new Set(prev);
-            if (next.has(nome)) next.delete(nome); else next.add(nome);
-            return next;
-        });
-    }
-
-    const cardsFiltrados = useMemo(() => {
-        const termo = busca.trim().toLowerCase();
-        return OPI.ITENS_CATALOGO.filter(item => {
-            if (item.grupo !== grupoAtivo) return false;
-            if (termo && !item.nome.toLowerCase().includes(termo)) return false;
-            return true;
-        });
-    }, [grupoAtivo, busca]);
 
     // ---------------------------------------------------------------
     // Rituais
@@ -831,41 +712,11 @@ export default function CharacterSheetPage() {
         });
     }
 
-    function abrirModalAtaque() {
-        setAtaqueNome('');
-        setAtaqueDano('');
-        setAtaqueCritico('');
-        setAtaqueAlcance('');
-        setAtaqueObs('');
-        setModalAtaqueAberto(true);
-    }
-    function fecharModalAtaque() {
-        setModalAtaqueAberto(false);
-    }
-
-    useEffect(() => {
-        if (!modalAtaqueAberto) return;
-        function onKeyDown(ev) {
-            if (ev.key === 'Escape') fecharModalAtaque();
-        }
-        document.addEventListener('keydown', onKeyDown);
-        return () => document.removeEventListener('keydown', onKeyDown);
-    }, [modalAtaqueAberto]);
-
-    function handleAdicionarAtaque() {
-        const nome = ataqueNome.trim();
-        if (!nome) {
-            window.alert('Dê um nome para o ataque.');
-            return;
-        }
-        atualizarAtaques([...ataques, {
-            nome,
-            dano: ataqueDano.trim(),
-            critico: ataqueCritico.trim(),
-            alcance: ataqueAlcance.trim(),
-            observacoes: ataqueObs.trim(),
-        }]);
-        fecharModalAtaque();
+    // Formulário (nome/dano/crítico/alcance/observações) e validação de
+    // nome vazio agora moram dentro de NovoAtaqueModal.jsx -- aqui só
+    // decide o que fazer com o ataque já pronto.
+    function handleAdicionarAtaque(novoAtaque) {
+        atualizarAtaques([...ataques, novoAtaque]);
     }
 
     async function rollAtaque(ataque) {
@@ -959,127 +810,30 @@ export default function CharacterSheetPage() {
                         </div>
                     </div>
 
-                    <div className="vitals-block">
-                        <div className="vital-row">
-                            <div className="vital-label">VIDA</div>
-                            <div className="vital-bar-wrap">
-                                <button className="vital-btn" title="-5" aria-label="Diminuir vida em 5" onClick={() => ajustarVida(-5)}>«</button>
-                                <button className="vital-btn" title="-1" aria-label="Diminuir vida em 1" onClick={() => ajustarVida(-1)}>‹</button>
-                                <div className="vital-bar vida-bar">
-                                    <div className="vital-bar-fill vida-fill" style={{ width: `${vidaMax > 0 ? Math.max(0, Math.min(100, (vidaAtual / vidaMax) * 100)) : 0}%` }}></div>
-                                    <span className="vital-bar-text">{vidaAtual} / {vidaMax}</span>
-                                </div>
-                                <button className="vital-btn" title="+1" aria-label="Aumentar vida em 1" onClick={() => ajustarVida(1)}>&rsaquo;</button>
-                                <button className="vital-btn" title="+5" aria-label="Aumentar vida em 5" onClick={() => ajustarVida(5)}>&raquo;</button>
-                            </div>
-                        </div>
-
-                        <div className="vital-row">
-                            <div className="vital-label">PE <small className="vital-label-sub">Pontos de Esforço</small></div>
-                            <div className="vital-bar-wrap">
-                                <button className="vital-btn" title="-5" aria-label="Diminuir PE em 5" onClick={() => ajustarDet(-5)}>«</button>
-                                <button className="vital-btn" title="-1" aria-label="Diminuir PE em 1" onClick={() => ajustarDet(-1)}>‹</button>
-                                <div key={peFlash} className={`vital-bar det-bar${peFlash > 0 ? ' pe-spent-flash' : ''}`}>
-                                    <div className="vital-bar-fill det-fill" style={{ width: `${detMax > 0 ? Math.max(0, Math.min(100, (detAtual / detMax) * 100)) : 0}%` }}></div>
-                                    <span className="vital-bar-text">{detAtual} / {detMax}</span>
-                                </div>
-                                <button className="vital-btn" title="+1" aria-label="Aumentar PE em 1" onClick={() => ajustarDet(1)}>&rsaquo;</button>
-                                <button className="vital-btn" title="+5" aria-label="Aumentar PE em 5" onClick={() => ajustarDet(5)}>&raquo;</button>
-                            </div>
-                        </div>
-
-                        {sanidadeAtiva && (
-                            <div className="vital-row">
-                                <div className="vital-label">SANIDADE <small className="vital-label-sub">SAN</small></div>
-                                <div className="vital-bar-wrap">
-                                    <button className="vital-btn" title="-5" aria-label="Diminuir sanidade em 5" onClick={() => ajustarSanidade(-5)}>«</button>
-                                    <button className="vital-btn" title="-1" aria-label="Diminuir sanidade em 1" onClick={() => ajustarSanidade(-1)}>‹</button>
-                                    <div className="vital-bar san-bar">
-                                        <div className="vital-bar-fill san-fill" style={{ width: `${sanidadeMax > 0 ? Math.max(0, Math.min(100, (sanidadeAtual / sanidadeMax) * 100)) : 0}%` }}></div>
-                                        <span className="vital-bar-text">{sanidadeAtual} / {sanidadeMax}</span>
-                                    </div>
-                                    <button className="vital-btn" title="+1" aria-label="Aumentar sanidade em 1" onClick={() => ajustarSanidade(1)}>&rsaquo;</button>
-                                    <button className="vital-btn" title="+5" aria-label="Aumentar sanidade em 5" onClick={() => ajustarSanidade(5)}>&raquo;</button>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="vital-sanidade-toggle-row">
-                            <button
-                                type="button"
-                                className="vital-sanidade-toggle"
-                                onClick={alternarSanidade}
-                                aria-pressed={sanidadeAtiva}
-                                aria-label={sanidadeAtiva ? 'Ocultar recurso de Sanidade desta ficha' : 'Ativar recurso de Sanidade nesta ficha'}
-                                title={sanidadeAtiva ? 'Ocultar Sanidade' : 'Ativar Sanidade'}
-                            >
-                                {sanidadeAtiva ? '− Ocultar Sanidade' : '+ Ativar Sanidade'}
-                            </button>
-                        </div>
-
-                        <div className="defesa-row">
-                            <div className="defesa-box">
-                                <span className="defesa-label">DEFESA</span>
-                                <span
-                                    className="defesa-total"
-                                    title={bonusPoderes.defesa ? `Inclui +${bonusPoderes.defesa} de poder de trilha` : undefined}
-                                >
-                                    {defesaTotal}
-                                </span>
-                            </div>
-                            <div className="defesa-formula">
-                                10 + AGI +
-                                <span className="defesa-input defesa-equip-readonly" title="Vem da proteção equipada no Inventário">{defesaEquip}</span>
-                                <small>equip.</small> +
-                                <input
-                                    type="number"
-                                    className="defesa-input"
-                                    value={defesaOutros}
-                                    title="Outros bônus (talentos, condições)"
-                                    onChange={e => handleDefesaOutrosChange(e.target.value)}
-                                />
-                                <small>outros</small>
-                            </div>
-                        </div>
-
-                        <div className="protecao-resistencias-block">
-                            <div className="identity-field">
-                                <span className="identity-field-label">Proteção</span>
-                                <span className="identity-field-value" title="Vem da proteção equipada no Inventário">{protecaoTexto}</span>
-                            </div>
-                            <div className="identity-field">
-                                <label className="identity-field-label" htmlFor="campo-resistencias">Resistências</label>
-                                <input
-                                    id="campo-resistencias"
-                                    type="text"
-                                    placeholder="Ex: Resistência a Sangue 2 (colete)"
-                                    value={resistencias}
-                                    onChange={e => handleResistenciasChange(e.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        {origemEscolhida && (
-                            <div className="origem-resumo">
-                                <div className="origem-resumo-header">
-                                    <span className="origem-resumo-nome">{origemEscolhida.nome}</span>
-                                    <button type="button" className="btn-secondary" onClick={() => setModalOrigemAberto(true)}>Trocar Origem</button>
-                                </div>
-                                <div className="origem-resumo-detalhes">
-                                    <div className="origem-campo">
-                                        <span className="modal-item-stat-label">Perícias Treinadas</span>
-                                        <span className="modal-item-stat-value">
-                                            {origemEscolhida.periciasTreinadas.length ? origemEscolhida.periciasTreinadas.join(', ') : (origemEscolhida.notaPericias || '—')}
-                                        </span>
-                                    </div>
-                                    <div className="origem-campo">
-                                        <span className="modal-item-stat-label">Poder de Origem — {origemEscolhida.poder.nome}</span>
-                                        <span className="modal-item-stat-value">{origemEscolhida.poder.descricao}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    <VitalsPanel
+                        vidaAtual={vidaAtual}
+                        vidaMax={vidaMax}
+                        onAjustarVida={ajustarVida}
+                        detAtual={detAtual}
+                        detMax={detMax}
+                        peFlash={peFlash}
+                        onAjustarDet={ajustarDet}
+                        sanidadeAtiva={sanidadeAtiva}
+                        sanidadeAtual={sanidadeAtual}
+                        sanidadeMax={sanidadeMax}
+                        onAjustarSanidade={ajustarSanidade}
+                        onAlternarSanidade={alternarSanidade}
+                        defesaTotal={defesaTotal}
+                        bonusDefesaPoder={bonusPoderes.defesa}
+                        defesaEquip={defesaEquip}
+                        defesaOutros={defesaOutros}
+                        onDefesaOutrosChange={handleDefesaOutrosChange}
+                        protecaoTexto={protecaoTexto}
+                        resistencias={resistencias}
+                        onResistenciasChange={handleResistenciasChange}
+                        origemEscolhida={origemEscolhida}
+                        onTrocarOrigem={() => setModalOrigemAberto(true)}
+                    />
                     <div className="dice-box-wrap">
                         <div id="dice-box"></div>
                         <button
@@ -1117,63 +871,12 @@ export default function CharacterSheetPage() {
                     </div>
                 </section>
 
-                <section className="skills-section">
-                    <h3>Perícias</h3>
-                    <div className="skills-header">
-                        <span>Nome</span>
-                        <span>Dados</span>
-                        <span>Bônus</span>
-                        <span>Treino</span>
-                        <span>Ação</span>
-                    </div>
-                    <div className="skills-list">
-                        {OP.PERICIAS_CATALOGO.map(catItem => {
-                            const salva = salvasPorNome[catItem.nome];
-                            const treinado = !!(salva && salva.treinado);
-                            const valorAtributo = Number(atributos[catItem.atributo]) || 0;
-                            const bonusBase = treinado ? (Number(salva.bonus) || 0) : 0;
-                            // Bônus de poder de trilha (ex: Hacker +5 Tecnologia) soma
-                            // independente de treino/destreino — é um bônus concedido
-                            // pelo poder escolhido, não pelo grau de treinamento.
-                            const bonusPoder = bonusPoderes.pericias[catItem.nome] || 0;
-                            const bonus = bonusBase + bonusPoder;
-                            const grau = treinado ? (salva.grau || 'treinado') : null;
-                            const bloqueada = !!catItem.somenteTreinada && !treinado;
-                            const labelAtributo = ATTR_MAP.find(a => a.key === catItem.atributo)?.label || '?';
-
-                            return (
-                                <div className={`skill-item${treinado ? ' treinada' : ''}${bloqueada ? ' bloqueada' : ''}`} key={catItem.nome}>
-                                    <span className="skill-name">
-                                        {catItem.nome}{catItem.somenteTreinada ? '*' : ''}{' '}
-                                        <span className="skill-attr-ref">({labelAtributo})</span>
-                                    </span>
-                                    <span className="skill-dice">{valorAtributo > 0 ? `${valorAtributo}d20` : '2d20↓'}</span>
-                                    <span
-                                        className="skill-bonus"
-                                        title={bonusPoder ? `Base: ${bonusBase >= 0 ? '+' + bonusBase : bonusBase} · Poderes de trilha: +${bonusPoder}` : undefined}
-                                    >
-                                        {bonus >= 0 ? `+${bonus}` : `${bonus}`}
-                                    </span>
-                                    <span
-                                        className="skill-treino"
-                                        title={treinado ? (OP.GRAU_LABEL[grau] || 'Treinado') : (bloqueada ? 'Só pode ser usada treinada' : 'Destreinado')}
-                                    >
-                                        {treinado ? (GRAU_ABREV[grau] || 'T') : '-'}
-                                    </span>
-                                    <button
-                                        className="btn-roll-skill"
-                                        disabled={bloqueada}
-                                        title={`Rolar ${catItem.nome}`}
-                                        aria-label={`Rolar ${catItem.nome}`}
-                                        onClick={() => rollSkill(catItem.nome, valorAtributo, bonus)}
-                                    >
-                                        <D20Icon />
-                                    </button>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </section>
+                <PericiasTable
+                    atributos={atributos}
+                    salvasPorNome={salvasPorNome}
+                    bonusPericias={bonusPoderes.pericias}
+                    onRollSkill={rollSkill}
+                />
 
                 <section className="sheet-tabs-section">
                     <nav className="sheet-tabs-nav">
@@ -1209,130 +912,25 @@ export default function CharacterSheetPage() {
 
                     <div className="sheet-tab-panel">
                         {abaAtiva === 'combate' && (
-                            <div className="tab-panel-combate">
-                                <div className="ataques-section-header">
-                                    <input
-                                        type="text"
-                                        className="modal-search-input tab-filter-input"
-                                        placeholder="Filtrar ataques..."
-                                        value={buscaAtaque}
-                                        onChange={e => setBuscaAtaque(e.target.value)}
-                                    />
-                                    <button type="button" className="btn-add-item" title="Novo ataque" onClick={abrirModalAtaque}>+</button>
-                                </div>
-
-                                <div className="ataques-list">
-                                    {ataquesFiltrados.length === 0 && (
-                                        <div className="inventory-empty">
-                                            {ataquesCombinados.length === 0 ? 'Nenhum ataque cadastrado ainda.' : 'Nenhum ataque encontrado.'}
-                                        </div>
-                                    )}
-                                    {ataquesFiltrados.map((ataque, index) => {
-                                        const aberto = expandidosAtaques.has(ataque.nome);
-                                        return (
-                                            <div className={`modal-item-card ataque-card${aberto ? ' expanded' : ''}`} key={`${ataque.nome}-${index}`}>
-                                                <div
-                                                    className="modal-item-card-header"
-                                                    role="button"
-                                                    tabIndex={0}
-                                                    aria-expanded={aberto}
-                                                    aria-label={`Detalhes de ${ataque.nome}`}
-                                                    onClick={() => toggleExpandidoAtaque(ataque.nome)}
-                                                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpandidoAtaque(ataque.nome); } }}
-                                                >
-                                                    <span className="modal-item-card-chevron">▶</span>
-                                                    <div className="modal-item-card-info">
-                                                        <div className="modal-item-card-title-row">
-                                                            <span className="modal-item-card-nome">{ataque.nome}</span>
-                                                            {ataque.dano && <span className="modal-item-card-badge">Dano: {ataque.dano}</span>}
-                                                            {ataque.critico && <span className="modal-item-card-badge">Crítico: {ataque.critico}</span>}
-                                                            {ataque.auto && (
-                                                                <span className="modal-item-card-badge badge-auto" title="Gerado automaticamente a partir da arma no Inventário">
-                                                                    Inventário
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        {ataque.alcance && <div className="modal-item-card-sub">Alcance {ataque.alcance}</div>}
-                                                    </div>
-                                                    <div className="ataque-card-actions">
-                                                        <button
-                                                            type="button"
-                                                            className="btn-roll-icon"
-                                                            title="Rolar dano"
-                                                            aria-label="Rolar dano"
-                                                            onClick={ev => { ev.stopPropagation(); rollAtaque(ataque); }}
-                                                        >
-                                                            <DiceIcon />
-                                                        </button>
-                                                        {!ataque.auto && (
-                                                            <button
-                                                                type="button"
-                                                                className="modal-item-card-remove"
-                                                                title="Remover ataque"
-                                                                onClick={ev => { ev.stopPropagation(); handleRemoverAtaque(ataque); }}
-                                                            >
-                                                                <TrashIcon />
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                {ataque.observacoes && (
-                                                    <div className={`modal-item-card-body${aberto ? '' : ' hidden'}`}>
-                                                        <div className="modal-item-card-efeito">{ataque.observacoes}</div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-
-                                <div className="custom-roller">
-                                    <h3>Rolagem Personalizada</h3>
-
-                                    <div className="dice-type-selector">
-                                        {[4, 6, 8, 10, 12, 20, 100].map(sides => (
-                                            <button
-                                                key={sides}
-                                                className={`die-btn${dieSides === sides ? ' active' : ''}`}
-                                                onClick={() => setDieSides(sides)}
-                                            >
-                                                d{sides}
-                                            </button>
-                                        ))}
-                                    </div>
-
-                                    <div className="dice-controls">
-                                        <div className="control-group">
-                                            <label>Qtd.</label>
-                                            <input type="number" min={1} value={diceQty} onChange={e => setDiceQty(e.target.value)} />
-                                        </div>
-                                        <div className="control-group">
-                                            <label>Bônus</label>
-                                            <input type="number" value={diceMod} onChange={e => setDiceMod(e.target.value)} />
-                                        </div>
-                                        <button className="btn-action" onClick={handleRollSelectedDice}>ROLAR</button>
-                                    </div>
-                                </div>
-
-                                <div className="log-container">
-                                    {rollLog.length === 0 ? (
-                                        <div className="log-entry system-msg">Sessão iniciada.</div>
-                                    ) : (
-                                        rollLog.map(entry => entry.system ? (
-                                            <div className="log-entry system-msg" key={entry.id}>{entry.title}</div>
-                                        ) : (
-                                            <div
-                                                className={`log-entry${entry.type === 'crit' ? ' crit-success' : ''}${entry.type === 'fail' ? ' crit-fail' : ''}`}
-                                                key={entry.id}
-                                            >
-                                                <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{entry.title}</div>
-                                                <div style={{ color: '#aaa', fontSize: '0.85em' }}>{entry.details}</div>
-                                                <div className="result-highlight">{entry.result}</div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-                            </div>
+                            <CombateTab
+                                buscaAtaque={buscaAtaque}
+                                onBuscaAtaqueChange={setBuscaAtaque}
+                                onNovoAtaque={() => setModalAtaqueAberto(true)}
+                                ataquesFiltrados={ataquesFiltrados}
+                                ataquesVazio={ataquesCombinados.length === 0}
+                                expandidosAtaques={expandidosAtaques}
+                                onToggleExpandidoAtaque={toggleExpandidoAtaque}
+                                onRollAtaque={rollAtaque}
+                                onRemoverAtaque={handleRemoverAtaque}
+                                dieSides={dieSides}
+                                onDieSidesChange={setDieSides}
+                                diceQty={diceQty}
+                                onDiceQtyChange={setDiceQty}
+                                diceMod={diceMod}
+                                onDiceModChange={setDiceMod}
+                                onRollSelectedDice={handleRollSelectedDice}
+                                rollLog={rollLog}
+                            />
                         )}
 
                         {abaAtiva === 'rituais' && (
@@ -1418,7 +1016,7 @@ export default function CharacterSheetPage() {
                             <div className="tab-panel-inventario">
                                 <div className="inventory-section-header">
                                     <h3>Inventário</h3>
-                                    <button type="button" className="btn-add-item" title="Adicionar item" onClick={abrirModal}>+</button>
+                                    <button type="button" className="btn-add-item" title="Adicionar item" onClick={() => setModalAberto(true)}>+</button>
                                 </div>
 
                                 <div className="inventory-carga-info">
@@ -1484,242 +1082,53 @@ export default function CharacterSheetPage() {
                         {abaAtiva === 'trilha' && (
                             <div className="tab-panel-trilha">
                                 {trilha === 'Combatente' ? (
-                                    <>
-                                        <div className="trilha-numero-limpo">
-                                            <span className="trilha-numero-limpo-label">Ataque Especial</span>
-                                            <span className="trilha-numero-limpo-valor">
-                                                {ataqueEspecialAtual
-                                                    ? `até ${ataqueEspecialAtual.pe} PE por +${ataqueEspecialAtual.bonus} (no ataque ou no dano)`
-                                                    : '—'}
-                                            </span>
-                                        </div>
-
-                                        <div className="trilha-secundaria-picker">
-                                            <label htmlFor="trilha-combatente-select">Trilha de Combatente</label>
-                                            <select
-                                                id="trilha-combatente-select"
-                                                value={trilhaCombatenteEscolhida}
-                                                onChange={e => handleEscolherTrilhaCombatente(e.target.value)}
-                                            >
-                                                <option value="">— Escolher (liberado em NEX 10%) —</option>
-                                                {OPT.TRILHAS_COMBATENTE.map(t => (
-                                                    <option key={t.nome} value={t.nome}>{t.nome}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        {trilhaCombatenteInfo && (
-                                            <div className="trilha-secundaria-poderes">
-                                                <p className="trilha-secundaria-descricao">{trilhaCombatenteInfo.descricao}</p>
-                                                {trilhaCombatenteInfo.poderes.map(poder => {
-                                                    const liberado = nex >= poder.nex;
-                                                    return (
-                                                        <div
-                                                            className={`trilha-poder-card${liberado ? '' : ' trilha-poder-bloqueado'}`}
-                                                            key={poder.nome}
-                                                        >
-                                                            <div className="trilha-poder-card-header">
-                                                                <strong>{poder.nome}</strong>
-                                                                <span className="trilha-poder-nex">NEX {poder.nex}%{liberado ? '' : ' (bloqueado)'}</span>
-                                                            </div>
-                                                            <p className="trilha-poder-descricao">{poder.descricao}</p>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
-
-                                        <div className="trilha-poder-slots">
-                                            <h3>Poderes de Combatente</h3>
-                                            {slotsPoderCombatente === 0 ? (
-                                                <p className="trilha-em-breve">Libera o primeiro em NEX 15%.</p>
-                                            ) : (
-                                                Array.from({ length: slotsPoderCombatente }).map((_, indice) => (
-                                                    <div className="trilha-poder-slot" key={indice}>
-                                                        <label htmlFor={`poder-combatente-${indice}`}>
-                                                            Poder {indice + 1} <small>(NEX {OPT.PODER_COMBATENTE_MARCOS[indice]}%)</small>
-                                                        </label>
-                                                        <select
-                                                            id={`poder-combatente-${indice}`}
-                                                            value={poderesCombatenteEscolhidos[indice] || ''}
-                                                            onChange={e => handleEscolherPoderCombatente(indice, e.target.value)}
-                                                        >
-                                                            <option value="">— Escolher —</option>
-                                                            {OPT.poderesDisponiveisParaSlot(OPT.PODERES_COMBATENTE, poderesCombatenteEscolhidos, indice).map(p => (
-                                                                <option key={p.nome} value={p.nome}>{p.nome}</option>
-                                                            ))}
-                                                        </select>
-                                                        {poderesCombatenteEscolhidos[indice] && (() => {
-                                                            const escolhido = OPT.PODERES_COMBATENTE.find(p => p.nome === poderesCombatenteEscolhidos[indice]);
-                                                            return escolhido ? (
-                                                                <p className="trilha-poder-descricao">
-                                                                    {escolhido.descricao}
-                                                                    {escolhido.preRequisito && (
-                                                                        <em className="trilha-poder-prereq"> (Pré-requisito: {escolhido.preRequisito})</em>
-                                                                    )}
-                                                                </p>
-                                                            ) : null;
-                                                        })()}
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
-                                    </>
+                                    <TrilhaTab
+                                        trilha="Combatente"
+                                        nex={nex}
+                                        numeroLimpo={{
+                                            label: 'Ataque Especial',
+                                            texto: ataqueEspecialAtual
+                                                ? `até ${ataqueEspecialAtual.pe} PE por +${ataqueEspecialAtual.bonus} (no ataque ou no dano)`
+                                                : '—',
+                                        }}
+                                        catalogoSecundario={OPT.TRILHAS_COMBATENTE}
+                                        trilhaSecundariaEscolhida={trilhaCombatenteEscolhida}
+                                        onEscolherTrilhaSecundaria={handleEscolherTrilhaCombatente}
+                                        poderMarcos={OPT.PODER_COMBATENTE_MARCOS}
+                                        poderCatalogo={OPT.PODERES_COMBATENTE}
+                                        poderesEscolhidos={poderesCombatenteEscolhidos}
+                                        onEscolherPoder={handleEscolherPoderCombatente}
+                                    />
                                 ) : trilha === 'Especialista' ? (
-                                    <>
-                                        <div className="trilha-numero-limpo">
-                                            <span className="trilha-numero-limpo-label">Eclético / Perito</span>
-                                            <span className="trilha-numero-limpo-valor">
-                                                {peritoEspecialistaAtual
-                                                    ? `até ${peritoEspecialistaAtual.pe} PE por +${peritoEspecialistaAtual.dado} numa perícia (Eclético/Perito)`
-                                                    : '—'}
-                                            </span>
-                                        </div>
-
-                                        <div className="trilha-secundaria-picker">
-                                            <label htmlFor="trilha-especialista-select">Trilha de Especialista</label>
-                                            <select
-                                                id="trilha-especialista-select"
-                                                value={trilhaEspecialistaEscolhida}
-                                                onChange={e => handleEscolherTrilhaEspecialista(e.target.value)}
-                                            >
-                                                <option value="">— Escolher (liberado em NEX 10%) —</option>
-                                                {OPT.TRILHAS_ESPECIALISTA.map(t => (
-                                                    <option key={t.nome} value={t.nome}>{t.nome}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        {trilhaEspecialistaInfo && (
-                                            <div className="trilha-secundaria-poderes">
-                                                <p className="trilha-secundaria-descricao">{trilhaEspecialistaInfo.descricao}</p>
-                                                {trilhaEspecialistaInfo.poderes.map(poder => {
-                                                    const liberado = nex >= poder.nex;
-                                                    return (
-                                                        <div
-                                                            className={`trilha-poder-card${liberado ? '' : ' trilha-poder-bloqueado'}`}
-                                                            key={poder.nome}
-                                                        >
-                                                            <div className="trilha-poder-card-header">
-                                                                <strong>{poder.nome}</strong>
-                                                                <span className="trilha-poder-nex">NEX {poder.nex}%{liberado ? '' : ' (bloqueado)'}</span>
-                                                            </div>
-                                                            <p className="trilha-poder-descricao">{poder.descricao}</p>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
-
-                                        <div className="trilha-poder-slots">
-                                            <h3>Poderes de Especialista</h3>
-                                            {slotsPoderEspecialista === 0 ? (
-                                                <p className="trilha-em-breve">Libera o primeiro em NEX 15%.</p>
-                                            ) : (
-                                                Array.from({ length: slotsPoderEspecialista }).map((_, indice) => (
-                                                    <div className="trilha-poder-slot" key={indice}>
-                                                        <label htmlFor={`poder-especialista-${indice}`}>
-                                                            Poder {indice + 1} <small>(NEX {OPT.PODER_ESPECIALISTA_MARCOS[indice]}%)</small>
-                                                        </label>
-                                                        <select
-                                                            id={`poder-especialista-${indice}`}
-                                                            value={poderesEspecialistaEscolhidos[indice] || ''}
-                                                            onChange={e => handleEscolherPoderEspecialista(indice, e.target.value)}
-                                                        >
-                                                            <option value="">— Escolher —</option>
-                                                            {OPT.poderesDisponiveisParaSlot(OPT.PODERES_ESPECIALISTA, poderesEspecialistaEscolhidos, indice).map(p => (
-                                                                <option key={p.nome} value={p.nome}>{p.nome}</option>
-                                                            ))}
-                                                        </select>
-                                                        {poderesEspecialistaEscolhidos[indice] && (() => {
-                                                            const escolhido = OPT.PODERES_ESPECIALISTA.find(p => p.nome === poderesEspecialistaEscolhidos[indice]);
-                                                            return escolhido ? (
-                                                                <p className="trilha-poder-descricao">
-                                                                    {escolhido.descricao}
-                                                                    {escolhido.preRequisito && (
-                                                                        <em className="trilha-poder-prereq"> (Pré-requisito: {escolhido.preRequisito})</em>
-                                                                    )}
-                                                                </p>
-                                                            ) : null;
-                                                        })()}
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
-                                    </>
+                                    <TrilhaTab
+                                        trilha="Especialista"
+                                        nex={nex}
+                                        numeroLimpo={{
+                                            label: 'Eclético / Perito',
+                                            texto: peritoEspecialistaAtual
+                                                ? `até ${peritoEspecialistaAtual.pe} PE por +${peritoEspecialistaAtual.dado} numa perícia (Eclético/Perito)`
+                                                : '—',
+                                        }}
+                                        catalogoSecundario={OPT.TRILHAS_ESPECIALISTA}
+                                        trilhaSecundariaEscolhida={trilhaEspecialistaEscolhida}
+                                        onEscolherTrilhaSecundaria={handleEscolherTrilhaEspecialista}
+                                        poderMarcos={OPT.PODER_ESPECIALISTA_MARCOS}
+                                        poderCatalogo={OPT.PODERES_ESPECIALISTA}
+                                        poderesEscolhidos={poderesEspecialistaEscolhidos}
+                                        onEscolherPoder={handleEscolherPoderEspecialista}
+                                    />
                                 ) : trilha === 'Ocultista' ? (
-                                    <>
-                                        <div className="trilha-secundaria-picker">
-                                            <label htmlFor="trilha-ocultista-select">Trilha de Ocultista</label>
-                                            <select
-                                                id="trilha-ocultista-select"
-                                                value={trilhaOcultistaEscolhida}
-                                                onChange={e => handleEscolherTrilhaOcultista(e.target.value)}
-                                            >
-                                                <option value="">— Escolher (liberado em NEX 10%) —</option>
-                                                {OPT.TRILHAS_OCULTISTA.map(t => (
-                                                    <option key={t.nome} value={t.nome}>{t.nome}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        {trilhaOcultistaInfo && (
-                                            <div className="trilha-secundaria-poderes">
-                                                <p className="trilha-secundaria-descricao">{trilhaOcultistaInfo.descricao}</p>
-                                                {trilhaOcultistaInfo.poderes.map(poder => {
-                                                    const liberado = nex >= poder.nex;
-                                                    return (
-                                                        <div
-                                                            className={`trilha-poder-card${liberado ? '' : ' trilha-poder-bloqueado'}`}
-                                                            key={poder.nome}
-                                                        >
-                                                            <div className="trilha-poder-card-header">
-                                                                <strong>{poder.nome}</strong>
-                                                                <span className="trilha-poder-nex">NEX {poder.nex}%{liberado ? '' : ' (bloqueado)'}</span>
-                                                            </div>
-                                                            <p className="trilha-poder-descricao">{poder.descricao}</p>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
-
-                                        <div className="trilha-poder-slots">
-                                            <h3>Poderes de Ocultista</h3>
-                                            {slotsPoderOcultista === 0 ? (
-                                                <p className="trilha-em-breve">Libera o primeiro em NEX 15%.</p>
-                                            ) : (
-                                                Array.from({ length: slotsPoderOcultista }).map((_, indice) => (
-                                                    <div className="trilha-poder-slot" key={indice}>
-                                                        <label htmlFor={`poder-ocultista-${indice}`}>
-                                                            Poder {indice + 1} <small>(NEX {OPT.PODER_OCULTISTA_MARCOS[indice]}%)</small>
-                                                        </label>
-                                                        <select
-                                                            id={`poder-ocultista-${indice}`}
-                                                            value={poderesOcultistaEscolhidos[indice] || ''}
-                                                            onChange={e => handleEscolherPoderOcultista(indice, e.target.value)}
-                                                        >
-                                                            <option value="">— Escolher —</option>
-                                                            {OPT.poderesDisponiveisParaSlot(OPT.PODERES_OCULTISTA, poderesOcultistaEscolhidos, indice).map(p => (
-                                                                <option key={p.nome} value={p.nome}>{p.nome}</option>
-                                                            ))}
-                                                        </select>
-                                                        {poderesOcultistaEscolhidos[indice] && (() => {
-                                                            const escolhido = OPT.PODERES_OCULTISTA.find(p => p.nome === poderesOcultistaEscolhidos[indice]);
-                                                            return escolhido ? (
-                                                                <p className="trilha-poder-descricao">
-                                                                    {escolhido.descricao}
-                                                                    {escolhido.preRequisito && (
-                                                                        <em className="trilha-poder-prereq"> (Pré-requisito: {escolhido.preRequisito})</em>
-                                                                    )}
-                                                                </p>
-                                                            ) : null;
-                                                        })()}
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
-                                    </>
+                                    <TrilhaTab
+                                        trilha="Ocultista"
+                                        nex={nex}
+                                        catalogoSecundario={OPT.TRILHAS_OCULTISTA}
+                                        trilhaSecundariaEscolhida={trilhaOcultistaEscolhida}
+                                        onEscolherTrilhaSecundaria={handleEscolherTrilhaOcultista}
+                                        poderMarcos={OPT.PODER_OCULTISTA_MARCOS}
+                                        poderCatalogo={OPT.PODERES_OCULTISTA}
+                                        poderesEscolhidos={poderesOcultistaEscolhidos}
+                                        onEscolherPoder={handleEscolherPoderOcultista}
+                                    />
                                 ) : (
                                     <p className="trilha-em-breve">
                                         Poderes de trilha para {trilha || 'essa trilha'} ainda não foram
@@ -1732,116 +1141,12 @@ export default function CharacterSheetPage() {
                 </section>
             </div>
 
-            {modalAberto && (
-                <div className="modal-overlay">
-                    <div className="modal-box">
-                        <div className="modal-header">
-                            <h3>Adicionar Item</h3>
-                            <button type="button" className="modal-close" title="Fechar" onClick={fecharModal}>&times;</button>
-                        </div>
-
-                        <div className="modal-item-tabs">
-                            <button type="button" className={`modal-tab${modalTab === 'catalogo' ? ' active' : ''}`} onClick={() => setModalTab('catalogo')}>Catálogo</button>
-                            <button type="button" className={`modal-tab${modalTab === 'personalizado' ? ' active' : ''}`} onClick={() => setModalTab('personalizado')}>Personalizado</button>
-                        </div>
-
-                        {modalTab === 'catalogo' && (
-                            <div className="modal-tab-content">
-                                <div className="modal-catalogo-subtabs">
-                                    {OPI.GRUPOS.map(g => (
-                                        <button
-                                            type="button"
-                                            key={g.chave}
-                                            className={`modal-subtab${g.chave === grupoAtivo ? ' active' : ''}`}
-                                            onClick={() => setGrupoAtivo(g.chave)}
-                                        >
-                                            {g.label}
-                                        </button>
-                                    ))}
-                                </div>
-
-                                <input
-                                    type="text"
-                                    className="modal-search-input"
-                                    placeholder="Buscar item..."
-                                    value={busca}
-                                    onChange={e => setBusca(e.target.value)}
-                                />
-
-                                <div className="modal-item-cards">
-                                    {cardsFiltrados.length === 0 && (
-                                        <div className="modal-item-cards-empty">Nenhum item encontrado.</div>
-                                    )}
-                                    {cardsFiltrados.map(item => {
-                                        const aberto = expandidos.has(item.nome);
-                                        return (
-                                            <div className={`modal-item-card${aberto ? ' expanded' : ''}`} key={item.nome}>
-                                                <div
-                                                    className="modal-item-card-header"
-                                                    role="button"
-                                                    tabIndex={0}
-                                                    aria-expanded={aberto}
-                                                    aria-label={`Detalhes de ${item.nome}`}
-                                                    onClick={() => toggleExpandido(item.nome)}
-                                                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpandido(item.nome); } }}
-                                                >
-                                                    <span className="modal-item-card-chevron">▶</span>
-                                                    <div className="modal-item-card-info">
-                                                        <div className="modal-item-card-title-row">
-                                                            <span className="modal-item-card-nome">{item.nome}</span>
-                                                            <span className="modal-item-card-badge">{item.categoria || '—'}</span>
-                                                        </div>
-                                                        <div className="modal-item-card-sub">{subcategoriaTexto(item)}</div>
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        className="modal-item-card-add"
-                                                        title="Adicionar ao inventário"
-                                                        onClick={ev => { ev.stopPropagation(); adicionarAoInventario(item); }}
-                                                    >
-                                                        +
-                                                    </button>
-                                                </div>
-                                                <div className={`modal-item-card-body${aberto ? '' : ' hidden'}`}>
-                                                    <div className="modal-item-stats-grid">
-                                                        {statsDoItem(item).map(({ label, valor }) => (
-                                                            <div className="modal-item-stat" key={label}>
-                                                                <span className="modal-item-stat-label">{label}</span>
-                                                                <span className="modal-item-stat-value">{valor}</span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                    {item.efeito && <div className="modal-item-card-efeito">{item.efeito}</div>}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
-
-                        {modalTab === 'personalizado' && (
-                            <div className="modal-tab-content">
-                                <div className="control-group full">
-                                    <label>Nome do item</label>
-                                    <input type="text" placeholder="Ex: Amuleto de família" value={customNome} onChange={e => setCustomNome(e.target.value)} />
-                                </div>
-                                <div className="control-group full">
-                                    <label>Espaços ocupados</label>
-                                    <input type="number" min={0} value={customEspacos} onChange={e => setCustomEspacos(e.target.value)} />
-                                </div>
-                                <div className="control-group full">
-                                    <label>Descrição / efeito (opcional)</label>
-                                    <textarea rows={3} placeholder="Pra que serve, bônus, restrições..." value={customEfeito} onChange={e => setCustomEfeito(e.target.value)}></textarea>
-                                </div>
-                                <div className="modal-item-actions">
-                                    <button type="button" className="btn-action" onClick={handleAdicionarCustom}>Adicionar</button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
+            <AdicionarItemModal
+                aberto={modalAberto}
+                onFechar={() => setModalAberto(false)}
+                onAdicionar={adicionarAoInventario}
+                onAdicionarCustom={handleAdicionarItemCustom}
+            />
 
             {modalRitualAberto && (
                 <div className="modal-overlay">
@@ -1954,44 +1259,11 @@ export default function CharacterSheetPage() {
                 </div>
             )}
 
-            {modalAtaqueAberto && (
-                <div className="modal-overlay">
-                    <div className="modal-box">
-                        <div className="modal-header">
-                            <h3>Novo Ataque</h3>
-                            <button type="button" className="modal-close" title="Fechar" onClick={fecharModalAtaque}>&times;</button>
-                        </div>
-
-                        <div className="modal-tab-content">
-                            <div className="control-group full">
-                                <label>Nome do ataque</label>
-                                <input type="text" placeholder="Ex: Revólver" value={ataqueNome} onChange={e => setAtaqueNome(e.target.value)} />
-                            </div>
-                            <div className="ataque-form-row">
-                                <div className="control-group">
-                                    <label>Dano</label>
-                                    <input type="text" placeholder="Ex: 2d6" value={ataqueDano} onChange={e => setAtaqueDano(e.target.value)} />
-                                </div>
-                                <div className="control-group">
-                                    <label>Crítico</label>
-                                    <input type="text" placeholder="Ex: 19/x3" value={ataqueCritico} onChange={e => setAtaqueCritico(e.target.value)} />
-                                </div>
-                                <div className="control-group">
-                                    <label>Alcance</label>
-                                    <input type="text" placeholder="Ex: Curto" value={ataqueAlcance} onChange={e => setAtaqueAlcance(e.target.value)} />
-                                </div>
-                            </div>
-                            <div className="control-group full">
-                                <label>Observações (opcional)</label>
-                                <textarea rows={3} placeholder="Munição, propriedades especiais..." value={ataqueObs} onChange={e => setAtaqueObs(e.target.value)}></textarea>
-                            </div>
-                            <div className="modal-item-actions">
-                                <button type="button" className="btn-action" onClick={handleAdicionarAtaque}>Adicionar</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <NovoAtaqueModal
+                aberto={modalAtaqueAberto}
+                onFechar={() => setModalAtaqueAberto(false)}
+                onAdicionar={handleAdicionarAtaque}
+            />
 
             <OrigemCatalogModal
                 aberto={modalOrigemAberto}
