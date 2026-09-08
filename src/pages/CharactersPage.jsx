@@ -55,9 +55,9 @@ export default function CharactersPage() {
         }
     }
 
-    // Fecha a modal de exclusão com Esc, mesmo padrão das modais da ficha
-    // (ver fecharModal/fecharModalRituais/fecharModalAtaque em
-    // CharacterSheetPage.jsx).
+    // Fecha a modal de exclusão com Esc, mesmo padrão usado pelas modais
+    // extraídas em src/components/ (ver o useEffect de Esc dentro de
+    // RitualCatalogModal.jsx, por exemplo).
     useEffect(() => {
         if (!personagemParaExcluir) return;
         function onKeyDown(ev) {

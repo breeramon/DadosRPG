@@ -19,7 +19,9 @@ import VitalsPanel from '@/components/VitalsPanel';
 import PericiasTable from '@/components/PericiasTable';
 import CombateTab from '@/components/CombateTab';
 import TrilhaTab from '@/components/TrilhaTab';
-import { useLockBodyScroll } from '@/hooks/useLockBodyScroll';
+import InventarioTab from '@/components/InventarioTab';
+import RitualTab from '@/components/RitualTab';
+import RitualCatalogModal from '@/components/RitualCatalogModal';
 
 const ATTR_MAP = [
     { key: 'agi', nome: 'Agilidade', label: 'AGI', posClass: 'pos-agi' },
@@ -28,18 +30,6 @@ const ATTR_MAP = [
     { key: 'pre', nome: 'Presença', label: 'PRE', posClass: 'pos-pre' },
     { key: 'for', nome: 'Força', label: 'FOR', posClass: 'pos-for' },
 ];
-
-function TrashIcon() {
-    return (
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M3 6h18" />
-            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-            <path d="M10 11v6" />
-            <path d="M14 11v6" />
-        </svg>
-    );
-}
 
 function GearIcon() {
     return (
@@ -57,14 +47,6 @@ function GearIcon() {
     );
 }
 
-function RitualSparkIcon() {
-    return (
-        <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" stroke="none" aria-hidden="true">
-            <path d="M12 3L14.1 9.9L21 12L14.1 14.1L12 21L9.9 14.1L3 12L9.9 9.9Z" />
-        </svg>
-    );
-}
-
 const MAX_LOG_ENTRIES = 4;
 let proximoLogId = 1;
 
@@ -78,37 +60,10 @@ function nomesPericiasProtegidasPelaTrilha(trilhaNome, periciasSalvas) {
     return protegidos;
 }
 
-// Vira nome de classe CSS (sem acento, minúsculo) — os 5 elementos de
-// rituais.js (Conhecimento/Energia/Morte/Sangue/Medo) não têm acento,
-// mas a normalização fica aqui pra não quebrar se algum dia mudar.
-function elementoSlug(elemento) {
-    return String(elemento || '').trim().toLowerCase();
-}
-
-// Texto curto embaixo do nome no cartão de ritual (igual em espírito à
-// subcategoriaTexto de AdicionarItemModal.jsx, mas os campos de ritual
-// são outros).
-function subtituloRitual(ritual) {
-    return `${ritual.execucao || '—'} · Alcance ${ritual.alcance || '—'}`;
-}
-
-// Monta os pares label/valor da "linha de estatísticas" do cartão de
-// ritual expandido — características fixas de todo ritual (ver
-// rituais.js), mais o custo em PE (que vem do círculo, não do próprio
-// ritual — ver CUSTO_PE_POR_CIRCULO) e o dano/cura só quando existe.
-function statsDoRitual(ritual) {
-    const stats = [
-        { label: 'Execução', valor: ritual.execucao || '—' },
-        { label: 'Alcance', valor: ritual.alcance || '—' },
-        { label: ritual.area ? 'Área' : 'Alvo', valor: ritual.area || ritual.alvo || '—' },
-        { label: 'Duração', valor: ritual.duracao || '—' },
-    ];
-    if (ritual.resistencia) stats.push({ label: 'Resistência', valor: ritual.resistencia });
-    stats.push({ label: 'Custo', valor: `${OPR.CUSTO_PE_POR_CIRCULO[ritual.circulo] || '?'} PE` });
-    if (ritual.dano) stats.push({ label: 'Dano/Cura', valor: ritual.dano });
-    return stats;
-}
-
+// elementoSlug/subtituloRitual/statsDoRitual (helpers de exibição de
+// ritual) saíram daqui -- agora vivem em RitualCatalogModal.jsx (que já
+// os exportava pro Formulário usar) e são importados de lá também por
+// RitualTab.jsx.
 function parseNotacaoDano(str) {
     const m = /(\d+)\s*d\s*(\d+)(?:\s*([+-])\s*(\d+))?/i.exec(String(str || ''));
     if (!m) return null;
@@ -161,20 +116,14 @@ export default function CharacterSheetPage() {
     // --- Modal "Adicionar Item" ---
     const [modalAberto, setModalAberto] = useState(false);
 
-    // --- Modal "Adicionar Ritual" (mesmo espírito da de item, mas
-    // filtrando por Elemento + Círculo em vez de grupo/categoria) ---
+    // --- Modal "Adicionar Ritual" -- desde a extração do RitualTab.jsx
+    // e do compartilhamento do RitualCatalogModal.jsx (mesmo usado pelo
+    // Formulário), o filtro/busca/expansão dos cartões DENTRO da modal
+    // viraram estado interno dela; aqui só sobra se está aberta e o Set
+    // de expandidos da lista de "Rituais Conhecidos" (que é outra
+    // coisa -- fica na aba, não na modal). ---
     const [modalRitualAberto, setModalRitualAberto] = useState(false);
-    const [elementoAtivo, setElementoAtivo] = useState(OPR.ELEMENTOS_RITUAL[0]);
-    const [circuloFiltro, setCirculoFiltro] = useState(0); // 0 = todos os círculos
-    const [buscaRitual, setBuscaRitual] = useState('');
-    const [expandidosRituais, setExpandidosRituais] = useState(() => new Set());
-    // Expandir/recolher os cartões da lista de "Rituais Conhecidos" na
-    // própria ficha (Set separado do usado dentro da modal).
     const [expandidosConhecidos, setExpandidosConhecidos] = useState(() => new Set());
-
-    // Enquanto qualquer uma das modais desta tela estiver aberta: trava
-    // o scroll da página por trás dela
-    useLockBodyScroll(modalRitualAberto);
 
     // --- Rolagem personalizada ---
     const [dieSides, setDieSides] = useState(20);
@@ -590,11 +539,9 @@ export default function CharacterSheetPage() {
     // Rituais
     // ---------------------------------------------------------------
 
-    const circuloLiberado = useMemo(
-        () => (trilha === 'Ocultista' ? OP.circuloRitualLiberado(nex) : 0),
-        [trilha, nex]
-    );
-
+    // circuloLiberado (só pro aviso de círculo liberado por NEX,
+    // Ocultista) agora é calculado dentro do RitualTab.jsx e do
+    // RitualCatalogModal.jsx, que já recebem trilha/nex.
     function atualizarRituais(novosRituais) {
         setRituais(novosRituais);
         salvarCampos({ rituais: novosRituais });
@@ -613,34 +560,10 @@ export default function CharacterSheetPage() {
         toast.success(`"${catalogRitual.nome}" adicionado aos rituais.`);
     }
 
-    function abrirModalRituais() {
-        setElementoAtivo(OPR.ELEMENTOS_RITUAL[0]);
-        setCirculoFiltro(0);
-        setBuscaRitual('');
-        setExpandidosRituais(new Set());
-        setModalRitualAberto(true);
-    }
-    function fecharModalRituais() {
-        setModalRitualAberto(false);
-    }
-
-    useEffect(() => {
-        if (!modalRitualAberto) return;
-        function onKeyDown(ev) {
-            if (ev.key === 'Escape') fecharModalRituais();
-        }
-        document.addEventListener('keydown', onKeyDown);
-        return () => document.removeEventListener('keydown', onKeyDown);
-    }, [modalRitualAberto]);
-
-    function toggleExpandidoRitual(nome) {
-        setExpandidosRituais(prev => {
-            const next = new Set(prev);
-            if (next.has(nome)) next.delete(nome); else next.add(nome);
-            return next;
-        });
-    }
-
+    // abrirModalRituais/fecharModalRituais, o handler de Esc e o filtro
+    // de cardsFiltradosRituais saíram daqui -- o RitualCatalogModal.jsx
+    // compartilhado com o Formulário já cuida disso tudo sozinho
+    // (reset de filtros ao abrir, Esc pra fechar, trava de scroll).
     function toggleExpandidoConhecido(nome) {
         setExpandidosConhecidos(prev => {
             const next = new Set(prev);
@@ -648,15 +571,6 @@ export default function CharacterSheetPage() {
             return next;
         });
     }
-
-    const cardsFiltradosRituais = useMemo(() => {
-        const termo = buscaRitual.trim().toLowerCase();
-        return OPR.rituaisDoElemento(elementoAtivo).filter(ritual => {
-            if (circuloFiltro && ritual.circulo !== circuloFiltro) return false;
-            if (termo && !ritual.nome.toLowerCase().includes(termo)) return false;
-            return true;
-        });
-    }, [elementoAtivo, circuloFiltro, buscaRitual]);
 
     function conjurarRitual(ritual) {
         const custo = OPR.CUSTO_PE_POR_CIRCULO[ritual.circulo] || 0;
@@ -934,149 +848,31 @@ export default function CharacterSheetPage() {
                         )}
 
                         {abaAtiva === 'rituais' && (
-                            <div className="tab-panel-rituais">
-                                <div className="rituals-section-header">
-                                    <h3>Rituais Conhecidos</h3>
-                                    <button type="button" className="btn-add-item" title="Adicionar ritual" onClick={abrirModalRituais}>+</button>
-                                </div>
-
-                                {trilha === 'Ocultista' && (
-                                    <div className="rituals-nex-info">
-                                        Seu NEX libera até o{' '}
-                                        <strong>{circuloLiberado > 0 ? `${circuloLiberado}º círculo` : 'nenhum círculo ainda'}</strong>.
-                                    </div>
-                                )}
-
-                                <div className="rituals-list">
-                                    {rituais.length === 0 && (
-                                        <div className="inventory-empty">Nenhum ritual conhecido ainda.</div>
-                                    )}
-                                    {rituais.map((ritual, index) => {
-                                        const aberto = expandidosConhecidos.has(ritual.nome);
-                                        const custo = OPR.CUSTO_PE_POR_CIRCULO[ritual.circulo] || 0;
-                                        return (
-                                            <div className={`modal-item-card ritual-card elemento-${elementoSlug(ritual.elemento)}${aberto ? ' expanded' : ''}`} key={ritual.nome}>
-                                                <div
-                                                    className="modal-item-card-header"
-                                                    role="button"
-                                                    tabIndex={0}
-                                                    aria-expanded={aberto}
-                                                    aria-label={`Detalhes de ${ritual.nome}`}
-                                                    onClick={() => toggleExpandidoConhecido(ritual.nome)}
-                                                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpandidoConhecido(ritual.nome); } }}
-                                                >
-                                                    <span className="modal-item-card-chevron">▶</span>
-                                                    <div className="modal-item-card-info">
-                                                        <div className="modal-item-card-title-row">
-                                                            <span className="modal-item-card-nome">{ritual.nome}</span>
-                                                            <span className={`modal-item-card-badge badge-elemento-${elementoSlug(ritual.elemento)}`}>{ritual.elemento}</span>
-                                                            <span className="modal-item-card-badge badge-circulo">{ritual.circulo}º círc.</span>
-                                                        </div>
-                                                        <div className="modal-item-card-sub">{subtituloRitual(ritual)}</div>
-                                                    </div>
-                                                    <div className="ataque-card-actions">
-                                                        <button
-                                                            type="button"
-                                                            className="btn-conjurar"
-                                                            title={`Conjurar (-${custo} PE)`}
-                                                            onClick={ev => { ev.stopPropagation(); conjurarRitual(ritual); }}
-                                                        >
-                                                            <RitualSparkIcon />
-                                                            Conjurar
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            className="modal-item-card-remove"
-                                                            title="Esquecer ritual"
-                                                            onClick={ev => { ev.stopPropagation(); handleRemoverRitual(index); }}
-                                                        >
-                                                            <TrashIcon />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div className={`modal-item-card-body${aberto ? '' : ' hidden'}`}>
-                                                    <div className="modal-item-stats-grid">
-                                                        {statsDoRitual(ritual).map(({ label, valor }) => (
-                                                            <div className="modal-item-stat" key={label}>
-                                                                <span className="modal-item-stat-label">{label}</span>
-                                                                <span className="modal-item-stat-value">{valor}</span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                    {ritual.descricao && <div className="modal-item-card-efeito">{ritual.descricao}</div>}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
+                            <RitualTab
+                                titulo="Rituais Conhecidos"
+                                trilha={trilha}
+                                nex={nex}
+                                rituais={rituais}
+                                expandidos={expandidosConhecidos}
+                                onToggleExpandido={toggleExpandidoConhecido}
+                                onAbrirModal={() => setModalRitualAberto(true)}
+                                onRemoverRitual={handleRemoverRitual}
+                                onConjurar={conjurarRitual}
+                            />
                         )}
 
                         {abaAtiva === 'inventario' && (
-                            <div className="tab-panel-inventario">
-                                <div className="inventory-section-header">
-                                    <h3>Inventário</h3>
-                                    <button type="button" className="btn-add-item" title="Adicionar item" onClick={() => setModalAberto(true)}>+</button>
-                                </div>
-
-                                <div className="inventory-carga-info">
-                                    <span>Carga: <strong>{usados} / {espacosMax}</strong> espaços</span>
-                                    <div className="inventory-carga-bar">
-                                        <div
-                                            className={`inventory-carga-bar-fill${estadoCarga !== 'normal' ? ' ' + estadoCarga : ''}`}
-                                            style={{ width: `${Math.min(100, (usados / Math.max(1, espacosLimite)) * 100)}%` }}
-                                        ></div>
-                                    </div>
-                                    {estadoCarga === 'sobrecarregado' && (
-                                        <span className="inventory-carga-aviso">
-                                            Sobrecarregado (acima de {espacosMax}): -5 em Atletismo/Furtividade, -3m de deslocamento.
-                                        </span>
-                                    )}
-                                    {estadoCarga === 'excesso' && (
-                                        <span className="inventory-carga-aviso excesso">
-                                            Acima do limite absoluto ({espacosLimite}) — remova itens ou aumente a Força.
-                                        </span>
-                                    )}
-                                </div>
-
-                                <div className="inventory-list">
-                                    {inventario.length === 0 && (
-                                        <div className="inventory-empty">Nenhum item no inventário ainda.</div>
-                                    )}
-                                    {inventario.map((item, index) => (
-                                        <div className={`inventory-item${item.equipado ? ' equipado' : ''}`} key={index}>
-                                            <span className="inventory-item-nome">{item.nome}</span>
-                                            <span className="inventory-item-categoria">{item.categoria || 'Personalizado'}</span>
-                                            <span className="inventory-item-espacos">{item.espacos || 0} esp.</span>
-                                            <div className="inventory-item-qty">
-                                                <button type="button" onClick={() => handleQtyDelta(index, -1)}>−</button>
-                                                <span>x{Number(item.quantidade) || 1}</span>
-                                                <button type="button" onClick={() => handleQtyDelta(index, 1)}>+</button>
-                                            </div>
-                                            <div className="inventory-item-acoes">
-                                                {item.grupo === 'protecoes' && (
-                                                    <button
-                                                        type="button"
-                                                        className={`btn-equipar${item.equipado ? ' equipado' : ''}`}
-                                                        onClick={() => handleEquiparToggle(index)}
-                                                    >
-                                                        {item.equipado ? 'Equipado' : 'Equipar'}
-                                                    </button>
-                                                )}
-                                                <button
-                                                    type="button"
-                                                    className="modal-item-card-remove"
-                                                    title="Remover item"
-                                                    onClick={() => handleRemoverItem(index)}
-                                                >
-                                                    <TrashIcon />
-                                                </button>
-                                            </div>
-                                            {item.efeito && <span className="inventory-item-efeito">{item.efeito}</span>}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            <InventarioTab
+                                usados={usados}
+                                espacosMax={espacosMax}
+                                espacosLimite={espacosLimite}
+                                estadoCarga={estadoCarga}
+                                inventario={inventario}
+                                onAbrirModal={() => setModalAberto(true)}
+                                onQtyDelta={handleQtyDelta}
+                                onEquiparToggle={handleEquiparToggle}
+                                onRemoverItem={handleRemoverItem}
+                            />
                         )}
 
                         {abaAtiva === 'trilha' && (
@@ -1148,116 +944,14 @@ export default function CharacterSheetPage() {
                 onAdicionarCustom={handleAdicionarItemCustom}
             />
 
-            {modalRitualAberto && (
-                <div className="modal-overlay">
-                    <div className="modal-box wide">
-                        <div className="modal-header">
-                            <h3>Adicionar Ritual</h3>
-                            <button type="button" className="modal-close" title="Fechar" onClick={fecharModalRituais}>&times;</button>
-                        </div>
-
-                        <div className="modal-catalogo-subtabs">
-                            {OPR.ELEMENTOS_RITUAL.map(el => (
-                                <button
-                                    type="button"
-                                    key={el}
-                                    className={`modal-subtab elemento-${elementoSlug(el)}${el === elementoAtivo ? ' active' : ''}`}
-                                    onClick={() => setElementoAtivo(el)}
-                                >
-                                    {el}
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="modal-catalogo-subtabs modal-circulo-filtro">
-                            {[0, 1, 2, 3, 4].map(c => (
-                                <button
-                                    type="button"
-                                    key={c}
-                                    className={`modal-subtab${c === circuloFiltro ? ' active' : ''}`}
-                                    onClick={() => setCirculoFiltro(c)}
-                                >
-                                    {c === 0 ? 'Todos os círculos' : `${c}º círculo`}
-                                </button>
-                            ))}
-                        </div>
-
-                        <input
-                            type="text"
-                            className="modal-search-input"
-                            placeholder="Buscar ritual..."
-                            value={buscaRitual}
-                            onChange={e => setBuscaRitual(e.target.value)}
-                        />
-
-                        {trilha === 'Ocultista' && (
-                            <div className="rituals-nex-info">
-                                Seu NEX libera até o{' '}
-                                <strong>{circuloLiberado > 0 ? `${circuloLiberado}º círculo` : 'nenhum círculo ainda'}</strong>.
-                            </div>
-                        )}
-
-                        <div className="modal-item-cards">
-                            {cardsFiltradosRituais.length === 0 && (
-                                <div className="modal-item-cards-empty">Nenhum ritual encontrado.</div>
-                            )}
-                            {cardsFiltradosRituais.map(ritual => {
-                                const aberto = expandidosRituais.has(ritual.nome);
-                                const jaConhece = rituais.some(r => r.nome === ritual.nome);
-                                const bloqueadoPorNex = trilha === 'Ocultista' && ritual.circulo > circuloLiberado;
-                                return (
-                                    <div className={`modal-item-card ritual-card elemento-${elementoSlug(ritual.elemento)}${aberto ? ' expanded' : ''}`} key={ritual.nome}>
-                                        <div
-                                            className="modal-item-card-header"
-                                            role="button"
-                                            tabIndex={0}
-                                            aria-expanded={aberto}
-                                            aria-label={`Detalhes de ${ritual.nome}`}
-                                            onClick={() => toggleExpandidoRitual(ritual.nome)}
-                                            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpandidoRitual(ritual.nome); } }}
-                                        >
-                                            <span className="modal-item-card-chevron">▶</span>
-                                            <div className="modal-item-card-info">
-                                                <div className="modal-item-card-title-row">
-                                                    <span className="modal-item-card-nome">{ritual.nome}</span>
-                                                    <span className={`modal-item-card-badge badge-elemento-${elementoSlug(ritual.elemento)}`}>{ritual.elemento}</span>
-                                                    <span className="modal-item-card-badge badge-circulo">{ritual.circulo}º círc.</span>
-                                                    {bloqueadoPorNex && (
-                                                        <span className="modal-item-card-badge badge-locked" title={`Seu NEX só libera até o ${circuloLiberado}º círculo`}>
-                                                            NEX insuficiente
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div className="modal-item-card-sub">{subtituloRitual(ritual)}</div>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                className={`modal-item-card-add${jaConhece ? ' added' : ''}`}
-                                                title={jaConhece ? 'Já conhecido' : 'Adicionar aos rituais'}
-                                                disabled={jaConhece}
-                                                onClick={ev => { ev.stopPropagation(); adicionarRitual(ritual); }}
-                                            >
-                                                {jaConhece ? '✓' : '+'}
-                                            </button>
-                                        </div>
-                                        <div className={`modal-item-card-body${aberto ? '' : ' hidden'}`}>
-                                            <div className="modal-item-stats-grid">
-                                                {statsDoRitual(ritual).map(({ label, valor }) => (
-                                                    <div className="modal-item-stat" key={label}>
-                                                        <span className="modal-item-stat-label">{label}</span>
-                                                        <span className="modal-item-stat-value">{valor}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            {ritual.descricao && <div className="modal-item-card-efeito">{ritual.descricao}</div>}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
-            )}
+            <RitualCatalogModal
+                aberto={modalRitualAberto}
+                onFechar={() => setModalRitualAberto(false)}
+                trilha={trilha}
+                nex={nex}
+                rituaisConhecidos={rituais}
+                onAdicionar={adicionarRitual}
+            />
 
             <NovoAtaqueModal
                 aberto={modalAtaqueAberto}

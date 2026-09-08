@@ -2,22 +2,19 @@
 // RitualCatalogModal.jsx
 //
 // A modal "Adicionar Ritual" (catálogo filtrável por Elemento + Círculo,
-// com busca), extraída da versão que já existia embutida em
+// com busca), extraída originalmente da versão que existia embutida em
 // CharacterSheetPage.jsx pra poder ser reaproveitada também na tela de
 // Criar/Editar Personagem (CharacterFormPage.jsx) — antes só dava pra
 // escolher rituais depois de já ter criado o personagem, direto na
 // ficha.
 //
-// A ficha (CharacterSheetPage.jsx) continua com sua própria cópia
-// inline dessa modal por enquanto (não foi mexida nesta mudança, pra
-// não arriscar regressão num arquivo grande e já testado) — esta versão
-// exportada é a usada pelo formulário. Os dois ficam visualmente
-// idênticos porque a marcação/classes CSS são as mesmas
-// (.modal-item-card, .modal-subtab, etc. — ver index.css).
+// Depois a Ficha também passou a usar esta mesma modal (em vez de
+// manter sua própria cópia inline duplicada) -- agora as duas telas
+// (Ficha e Formulário) compartilham exatamente este componente.
 //
 // Também exporta os pequenos helpers de exibição (elementoSlug,
-// subtituloRitual, statsDoRitual, TrashIcon) usados tanto pela modal
-// quanto pela lista de "Rituais Conhecidos" do formulário.
+// subtituloRitual, statsDoRitual, TrashIcon), usados por esta modal e
+// por RitualTab.jsx (a lista de "Rituais Conhecidos" nas duas telas).
 // ============================================================
 
 import { useEffect, useMemo, useState } from 'react';

@@ -3,7 +3,8 @@ import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { Characters } from '@/services/firebase';
 import AttributePentagram from '@/components/AttributePentagram';
-import RitualCatalogModal, { elementoSlug, subtituloRitual, statsDoRitual, TrashIcon } from '@/components/RitualCatalogModal';
+import RitualCatalogModal from '@/components/RitualCatalogModal';
+import RitualTab from '@/components/RitualTab';
 import OrigemCatalogModal from '@/components/OrigemCatalogModal';
 import TrilhaTab from '@/components/TrilhaTab';
 import * as OP from '@/lib/pericias';
@@ -20,6 +21,14 @@ const ATRIBUTOS = [
 ];
 
 const ATRIBUTOS_ZERO = { agi: 0, int: 0, vig: 0, pre: 0, for: 0 };
+
+// NEX (Nível de Exposição) sobe de 5 em 5, de 5% até 95%, com 99% como
+// marco final especial (não é múltiplo de 5 -- ver OP.clampNex em
+// pericias.js, que arredonda qualquer valor pro múltiplo de 5 mais
+// próximo e trata 99 como teto). Antes era um <input type="number">
+// com step={5}; virou <select> pra deixar essas opções explícitas em
+// vez de depender do usuário acertar o passo com as setinhas.
+const NEX_OPCOES = [...Array.from({ length: 19 }, (_, i) => (i + 1) * 5), 99];
 
 function catalogoInicial() {
     const estado = {};
@@ -280,7 +289,8 @@ export default function CharacterFormPage() {
     const cotaEsgotada = livresUsadas >= quotaLivre;
     const quotaLivreExcedida = livresUsadas > quotaLivre;
     const regraTrilha = OP.TRILHA_REGRAS[trilha] || OP.TRILHA_REGRAS.Combatente;
-    const circuloOcultista = trilha === 'Ocultista' ? OP.circuloRitualLiberado(nex) : 0;
+    // circuloOcultista (aviso de círculo de rituais liberado por NEX)
+    // agora é calculado dentro do RitualTab.jsx / RitualCatalogModal.jsx.
     // slotsPoderX / trilhaXInfo (Combatente/Especialista/Ocultista) não
     // moram mais aqui -- viraram cálculo interno do TrilhaTab.jsx, que
     // recebe só nex/catalogoSecundario/trilhaSecundariaEscolhida.
@@ -566,16 +576,16 @@ export default function CharacterFormPage() {
                         </div>
 
                         <div className="control-group full">
-                            <label>NEX (Nível de Exposição)</label>
-                            <input
-                                type="number"
-                                min={5}
-                                max={99}
-                                step={5}
+                            <label htmlFor="form-nex-select">NEX (Nível de Exposição)</label>
+                            <select
+                                id="form-nex-select"
                                 value={nex}
-                                onChange={e => setNex(parseInt(e.target.value, 10) || 5)}
-                                onBlur={e => handleNexChange(e.target.value)}
-                            />
+                                onChange={e => handleNexChange(e.target.value)}
+                            >
+                                {NEX_OPCOES.map(valor => (
+                                    <option key={valor} value={valor}>{valor}%</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
 
@@ -729,65 +739,16 @@ export default function CharacterFormPage() {
 
                     <div className="sheet-tab-panel">
                         {abaAtiva === 'rituais' && (
-                            <div className="tab-panel-rituais">
-                                <div className="rituals-section-header">
-                                    <h3>Rituais</h3>
-                                    <button type="button" className="btn-add-item" title="Adicionar ritual" onClick={() => setModalRitualAberto(true)}>+</button>
-                                </div>
-
-                                {trilha === 'Ocultista' && (
-                                    <div className="rituais-info">
-                                        {circuloOcultista > 0
-                                            ? `Círculo de Rituais liberado neste NEX: até o ${circuloOcultista}º círculo.`
-                                            : 'NEX ainda não libera nenhum círculo de rituais.'}
-                                    </div>
-                                )}
-
-                                <div className="rituals-list">
-                                    {rituais.length === 0 && (
-                                        <div className="inventory-empty">Nenhum ritual conhecido ainda.</div>
-                                    )}
-                                    {rituais.map((ritual, index) => {
-                                        const aberto = expandidosConhecidos.has(ritual.nome);
-                                        return (
-                                            <div className={`modal-item-card ritual-card elemento-${elementoSlug(ritual.elemento)}${aberto ? ' expanded' : ''}`} key={ritual.nome}>
-                                                <div className="modal-item-card-header" onClick={() => toggleExpandidoConhecido(ritual.nome)}>
-                                                    <span className="modal-item-card-chevron">▶</span>
-                                                    <div className="modal-item-card-info">
-                                                        <div className="modal-item-card-title-row">
-                                                            <span className="modal-item-card-nome">{ritual.nome}</span>
-                                                            <span className={`modal-item-card-badge badge-elemento-${elementoSlug(ritual.elemento)}`}>{ritual.elemento}</span>
-                                                            <span className="modal-item-card-badge badge-circulo">{ritual.circulo}º círc.</span>
-                                                        </div>
-                                                        <div className="modal-item-card-sub">{subtituloRitual(ritual)}</div>
-                                                    </div>
-                                                    <div className="ataque-card-actions">
-                                                        <button
-                                                            type="button"
-                                                            className="modal-item-card-remove"
-                                                            title="Esquecer ritual"
-                                                            onClick={ev => { ev.stopPropagation(); handleRemoverRitual(index); }}
-                                                        >
-                                                            <TrashIcon />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div className={`modal-item-card-body${aberto ? '' : ' hidden'}`}>
-                                                    <div className="modal-item-stats-grid">
-                                                        {statsDoRitual(ritual).map(({ label, valor }) => (
-                                                            <div className="modal-item-stat" key={label}>
-                                                                <span className="modal-item-stat-label">{label}</span>
-                                                                <span className="modal-item-stat-value">{valor}</span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                    {ritual.descricao && <div className="modal-item-card-efeito">{ritual.descricao}</div>}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
+                            <RitualTab
+                                titulo="Rituais"
+                                trilha={trilha}
+                                nex={nex}
+                                rituais={rituais}
+                                expandidos={expandidosConhecidos}
+                                onToggleExpandido={toggleExpandidoConhecido}
+                                onAbrirModal={() => setModalRitualAberto(true)}
+                                onRemoverRitual={handleRemoverRitual}
+                            />
                         )}
 
                         {abaAtiva === 'trilha' && (
