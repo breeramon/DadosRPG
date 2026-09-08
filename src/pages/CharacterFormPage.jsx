@@ -11,11 +11,11 @@ import { origemPorNome } from '@/lib/origens';
 import * as OPT from '@/lib/trilhas';
 
 const ATRIBUTOS = [
-    { key: 'agi', label: 'AGI', posClass: 'pos-agi' },
-    { key: 'int', label: 'INT', posClass: 'pos-int' },
-    { key: 'vig', label: 'VIG', posClass: 'pos-vig' },
-    { key: 'pre', label: 'PRE', posClass: 'pos-pre' },
-    { key: 'for', label: 'FOR', posClass: 'pos-for' },
+    { key: 'agi', label: 'AGI', nome: 'Agilidade', posClass: 'pos-agi' },
+    { key: 'int', label: 'INT', nome: 'Intelecto', posClass: 'pos-int' },
+    { key: 'vig', label: 'VIG', nome: 'Vigor', posClass: 'pos-vig' },
+    { key: 'pre', label: 'PRE', nome: 'Presença', posClass: 'pos-pre' },
+    { key: 'for', label: 'FOR', nome: 'Força', posClass: 'pos-for' },
 ];
 
 const ATRIBUTOS_ZERO = { agi: 0, int: 0, vig: 0, pre: 0, for: 0 };
@@ -477,20 +477,20 @@ export default function CharacterFormPage() {
         return <div className="app-loading">Carregando...</div>;
     }
 
-    const pentagramNodes = ATRIBUTOS.map(({ key, label, posClass }) => ({
+    const pentagramNodes = ATRIBUTOS.map(({ key, label, nome, posClass }) => ({
         key,
         label,
         posClass,
         content: (
             <div className="attr-stepper">
-                <button type="button" className="attr-stepper-btn" onClick={() => handleAttrStepper(key, -1)} title="-1">{'−'}</button>
+                <button type="button" className="attr-stepper-btn" aria-label={`Diminuir ${nome} em 1`} onClick={() => handleAttrStepper(key, -1)} title="-1">{'−'}</button>
                 <input
                     type="number"
                     className={`attr-value-input${atributosForaDoLimite.some(a => a.key === key) ? ' attr-value-input-erro' : ''}`}
                     value={atributos[key]}
                     onChange={e => handleAttrChange(key, e.target.value)}
                 />
-                <button type="button" className="attr-stepper-btn" onClick={() => handleAttrStepper(key, 1)} title="+1">+</button>
+                <button type="button" className="attr-stepper-btn" aria-label={`Aumentar ${nome} em 1`} onClick={() => handleAttrStepper(key, 1)} title="+1">+</button>
             </div>
         ),
     }));
