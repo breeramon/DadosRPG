@@ -996,7 +996,11 @@ h3 {
 
 .trilha-secundaria-descricao {
     font-size: 0.8rem;
-    color: var(--color-text-dim);
+    /* Descreve a sub-trilha escolhida (regra, não decoração) -- o
+       jogador precisa conseguir ler isso, então --color-text-subtle
+       (~4.7-5.3:1) em vez de --color-text-dim (~2.9-3.3:1, abaixo do
+       mínimo de 4.5:1 do WCAG AA). */
+    color: var(--color-text-subtle);
     font-style: italic;
     margin: 0 0 8px;
 }
@@ -1038,7 +1042,9 @@ h3 {
 }
 
 .trilha-poder-prereq {
-    color: var(--color-text-dim);
+    /* Pré-requisito de poder é regra mecânica, não legenda descartável
+       -- mesmo motivo do ajuste em .trilha-secundaria-descricao acima. */
+    color: var(--color-text-subtle);
 }
 
 .trilha-poder-slots h3 {
