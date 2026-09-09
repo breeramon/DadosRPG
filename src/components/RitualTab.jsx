@@ -4,7 +4,8 @@
 // Conteúdo da aba "Rituais" -- a lista de rituais já conhecidos pelo
 // personagem (cartão expansível com estatísticas, igual ao padrão dos
 // cartões de item/ataque), com o aviso de círculo liberado pelo NEX
-// (só pra Ocultista) e o botão "+" que abre o RitualCatalogModal.
+// (pras 3 trilhas -- ver RitualCatalogModal.jsx) e o botão "+" que
+// abre o RitualCatalogModal.
 //
 // Extraído de CharacterSheetPage.jsx (que tinha essa lista MAIS uma
 // cópia inteira duplicada do RitualCatalogModal só pra si) e
@@ -25,8 +26,26 @@
 // Props:
 //   titulo              -- "Rituais Conhecidos" (Ficha) ou "Rituais"
 //                          (Formulário), texto do cabeçalho
-//   trilha, nex          -- só pro aviso de círculo liberado (Ocultista)
-//   rituais              -- array dos rituais já conhecidos
+//   trilha, nex          -- pro aviso de círculo liberado (pras 3
+//                          trilhas)
+//   rituais              -- array dos rituais já conhecidos (contam
+//                          pra cota -- ver quota/quotaDetalhe)
+//   quota                -- total de rituais que a cota permite (ver
+//                          quotaRituais no pai, soma de
+//                          quotaBaseRituaisOcultista +
+//                          quotaExtraAprenderRitual +
+//                          quotaBonusGraduado em lib/trilhas.js)
+//   quotaDetalhe          -- string opcional pro tooltip explicando de
+//                          onde vem cada parte da cota (o pai já monta
+//                          o texto, igual à cota de perícias)
+//   automaticos           -- array de rituais concedidos automaticamente
+//                          por poder de sub-trilha (ver
+//                          rituaisAutomaticosSubTrilha em lib/trilhas.js
+//                          + ritualPorNome em lib/rituais.js) -- entram
+//                          na lista igual aos outros, com um selo
+//                          "Automático" e sem botão de remover (não
+//                          contam pra cota, então não afetam
+//                          quotaEsgotada nem o "X / Y" do cabeçalho)
 //   expandidos           -- Set com os nomes dos cartões abertos
 //   onToggleExpandido(nome)
 //   onAbrirModal()       -- chamado pelo botão "+" do cabeçalho
@@ -55,14 +74,24 @@ export default function RitualTab({
     nex,
     rituais,
     quota,
+    quotaDetalhe,
+    automaticos = [],
     expandidos,
     onToggleExpandido,
     onAbrirModal,
     onRemoverRitual,
     onConjurar,
 }) {
-    const circuloLiberado = trilha === 'Ocultista' ? OP.circuloRitualLiberado(nex) : 0;
+    const circuloLiberado = OP.circuloRitualLiberado(nex);
     const quotaEsgotada = rituais.length >= quota;
+    // Lista combinada só pra exibição: os automáticos entram junto dos
+    // rituais "de verdade" na mesma lista visual, mas sem um índice no
+    // array `rituais` (não fazem parte dele) -- por isso index fica
+    // null e o botão de remover não aparece pra eles.
+    const listaExibida = [
+        ...rituais.map((ritual, index) => ({ ritual, index, automatico: false })),
+        ...automaticos.map(ritual => ({ ritual, index: null, automatico: true })),
+    ];
 
     return (
         <div className="tab-panel-rituais">
@@ -72,22 +101,25 @@ export default function RitualTab({
             </div>
 
             <div className="rituals-nex-info">
-                {trilha === 'Ocultista' && (
-                    <span>
-                        Seu NEX libera até o{' '}
-                        <strong>{circuloLiberado > 0 ? `${circuloLiberado}º círculo` : 'nenhum círculo ainda'}</strong>.
-                    </span>
-                )}
-                <span className={quotaEsgotada ? 'rituais-cota-cheia' : ''}>
+                <span>
+                    Seu NEX libera até o{' '}
+                    <strong>{circuloLiberado > 0 ? `${circuloLiberado}º círculo` : 'nenhum círculo ainda'}</strong>.
+                </span>
+                <span className={quotaEsgotada ? 'rituais-cota-cheia' : ''} title={quotaDetalhe}>
                     Rituais conhecidos: <strong>{rituais.length} / {quota}</strong>
                 </span>
+                {quota === 0 && (
+                    <span className="rituals-quota-hint">
+                        (escolha o poder "Aprender Ritual"{trilha === 'Ocultista' ? ', ou aumente o NEX,' : ''} pra desbloquear)
+                    </span>
+                )}
             </div>
 
             <div className="rituals-list">
-                {rituais.length === 0 && (
+                {listaExibida.length === 0 && (
                     <div className="inventory-empty">Nenhum ritual conhecido ainda.</div>
                 )}
-                {rituais.map((ritual, index) => {
+                {listaExibida.map(({ ritual, index, automatico }) => {
                     const aberto = expandidos.has(ritual.nome);
                     const custo = OPR.CUSTO_PE_POR_CIRCULO[ritual.circulo] || 0;
                     return (
@@ -107,6 +139,11 @@ export default function RitualTab({
                                         <span className="modal-item-card-nome">{ritual.nome}</span>
                                         <span className={`modal-item-card-badge badge-elemento-${elementoSlug(ritual.elemento)}`}>{ritual.elemento}</span>
                                         <span className="modal-item-card-badge badge-circulo">{ritual.circulo}º círc.</span>
+                                        {automatico && (
+                                            <span className="modal-item-card-badge badge-auto" title="Concedido automaticamente por um poder de sub-trilha — não conta na sua cota de rituais conhecidos">
+                                                Automático
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="modal-item-card-sub">{subtituloRitual(ritual)}</div>
                                 </div>
@@ -122,14 +159,16 @@ export default function RitualTab({
                                             Conjurar
                                         </button>
                                     )}
-                                    <button
-                                        type="button"
-                                        className="modal-item-card-remove"
-                                        title="Esquecer ritual"
-                                        onClick={ev => { ev.stopPropagation(); onRemoverRitual(index); }}
-                                    >
-                                        <TrashIcon />
-                                    </button>
+                                    {!automatico && (
+                                        <button
+                                            type="button"
+                                            className="modal-item-card-remove"
+                                            title="Esquecer ritual"
+                                            onClick={ev => { ev.stopPropagation(); onRemoverRitual(index); }}
+                                        >
+                                            <TrashIcon />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                             <div className={`modal-item-card-body${aberto ? '' : ' hidden'}`}>

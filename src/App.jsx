@@ -18,6 +18,7 @@ import LoginPage from '@/pages/LoginPage';
 import CharactersPage from '@/pages/CharactersPage';
 import CharacterFormPage from '@/pages/CharacterFormPage';
 import CharacterSheetPage from '@/pages/CharacterSheetPage';
+import SobrePage from '@/pages/SobrePage';
 
 // Notificações "toast" (react-hot-toast) — usadas em toda a ficha e no
 // formulário pra avisos rápidos e transitórios (item/ritual adicionado,
@@ -71,6 +72,7 @@ export default function App() {
                     <Route path="/form" element={<CharacterFormPage />} />
                     <Route path="/form/:id" element={<CharacterFormPage />} />
                     <Route path="/sheet/:id" element={<CharacterSheetPage />} />
+                    <Route path="/sobre" element={<SobrePage />} />
                 </Route>
             </Routes>
         </>

@@ -76,6 +76,21 @@ export const ATRIBUTOS_NEX_MARCOS = [20, 50, 80, 95];
 export const ATRIBUTOS_BASE = { total: 9, maxPorAtributo: 3, minPorAtributo: 0 };
 export const ATRIBUTOS_TETO_ABSOLUTO = 5; // nenhum atributo passa disso por essa conta
 
+// Os 5 atributos do sistema (Agilidade/Intelecto/Vigor/Presença/
+// Força) e os metadados de exibição de cada um (label curto pro
+// pentagrama, classe CSS de posicionamento). Usado tanto pela Ficha
+// (CharacterSheetPage.jsx, só leitura -- rola o dado) quanto pelo
+// Formulário (CharacterFormPage.jsx, distribuição de pontos na
+// criação) -- as duas telas tinham essa mesma lista de 5 objetos
+// duplicada localmente (ATTR_MAP/ATRIBUTOS) antes de virar isto aqui.
+export const ATRIBUTOS = [
+    { key: 'agi', nome: 'Agilidade', label: 'AGI', posClass: 'pos-agi' },
+    { key: 'int', nome: 'Intelecto', label: 'INT', posClass: 'pos-int' },
+    { key: 'vig', nome: 'Vigor', label: 'VIG', posClass: 'pos-vig' },
+    { key: 'pre', nome: 'Presença', label: 'PRE', posClass: 'pos-pre' },
+    { key: 'for', nome: 'Força', label: 'FOR', posClass: 'pos-for' },
+];
+
 export function pontosAtributoPorNex(nex) {
     const n = clampNex(nex);
     const marcosAtingidos = ATRIBUTOS_NEX_MARCOS.filter(m => n >= m).length;

@@ -71,10 +71,13 @@ export function TrashIcon() {
 // Props:
 //   aberto             — controla se a modal é renderizada
 //   onFechar()          — chamado ao clicar fora, no X ou apertar Esc
-//   trilha, nex         — só pra mostrar o aviso "seu NEX libera até o
-//                         Xº círculo" (Ocultista) — não impede escolher
-//                         um ritual de círculo mais alto, só avisa,
-//                         igual ao inventário com o limite de carga
+//   trilha, nex         — nex alimenta o aviso "seu NEX libera até o
+//                         Xº círculo" E a trava de círculo (pras 3
+//                         trilhas, não só Ocultista -- Combatente/
+//                         Especialista com "Aprender Ritual" também
+//                         ficam presos ao círculo liberado pelo NEX);
+//                         trilha só decide o texto/cota, não muda essa
+//                         trava
 //   rituaisConhecidos  — array dos já conhecidos, pra marcar "já
 //                         conhecido" (✓, desabilitado) nos cartões
 //   onAdicionar(ritual) — chamado ao clicar "+" num cartão; quem chama
@@ -110,10 +113,13 @@ export default function RitualCatalogModal({ aberto, onFechar, trilha, nex, ritu
         return () => document.removeEventListener('keydown', onKeyDown);
     }, [aberto, onFechar]);
 
-    const circuloLiberado = useMemo(
-        () => (trilha === 'Ocultista' ? OP.circuloRitualLiberado(nex) : 0),
-        [trilha, nex]
-    );
+    // circuloLiberado (e a trava por NEX que ele alimenta) valia só pro
+    // Ocultista antes -- mas Combatente/Especialista com o poder
+    // "Aprender Ritual" também aprendem rituais, e nada nas regras
+    // desse poder dá acesso livre a qualquer círculo, então a mesma
+    // trava por NEX (ver CIRCULOS_RITUAL em lib/pericias.js) agora
+    // vale pras 3 trilhas.
+    const circuloLiberado = useMemo(() => OP.circuloRitualLiberado(nex), [nex]);
 
     const cardsFiltrados = useMemo(() => {
         const termo = busca.trim().toLowerCase();
@@ -176,12 +182,10 @@ export default function RitualCatalogModal({ aberto, onFechar, trilha, nex, ritu
                     onChange={e => setBusca(e.target.value)}
                 />
 
-                {trilha === 'Ocultista' && (
-                    <div className="rituals-nex-info">
-                        Seu NEX libera até o{' '}
-                        <strong>{circuloLiberado > 0 ? `${circuloLiberado}º círculo` : 'nenhum círculo ainda'}</strong>.
-                    </div>
-                )}
+                <div className="rituals-nex-info">
+                    Seu NEX libera até o{' '}
+                    <strong>{circuloLiberado > 0 ? `${circuloLiberado}º círculo` : 'nenhum círculo ainda'}</strong>.
+                </div>
 
                 <div className="modal-item-cards">
                     {cardsFiltrados.length === 0 && (
@@ -190,7 +194,7 @@ export default function RitualCatalogModal({ aberto, onFechar, trilha, nex, ritu
                     {cardsFiltrados.map(ritual => {
                         const abertoCard = expandidos.has(ritual.nome);
                         const jaConhece = rituaisConhecidos.some(r => r.nome === ritual.nome);
-                        const bloqueadoPorNex = trilha === 'Ocultista' && ritual.circulo > circuloLiberado;
+                        const bloqueadoPorNex = ritual.circulo > circuloLiberado;
                         const bloqueadoPorQuota = !jaConhece && !bloqueadoPorNex && quotaEsgotada;
                         return (
                             <div className={`modal-item-card ritual-card elemento-${elementoSlug(ritual.elemento)}${abertoCard ? ' expanded' : ''}`} key={ritual.nome}>

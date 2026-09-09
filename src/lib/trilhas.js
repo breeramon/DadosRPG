@@ -252,7 +252,7 @@ export const TRILHAS_OCULTISTA = [
             { nex: 10, nome: 'Ampliar Ritual', descricao: 'Quando lança um ritual, você pode gastar +2 PE para aumentar seu alcance em um passo (de curto para médio, de médio para longo ou de longo para extremo) ou dobrar sua área de efeito.' },
             { nex: 40, nome: 'Acelerar Ritual', descricao: 'Uma vez por rodada, você pode aumentar o custo de um ritual em 4 PE para conjurá-lo como uma ação livre.' },
             { nex: 65, nome: 'Anular Ritual', descricao: 'Quando for alvo de um ritual, você pode gastar uma quantidade de PE igual ao custo pago por esse ritual e fazer um teste oposto de Ocultismo contra o conjurador. Se vencer, você anula o ritual, cancelando todos os seus efeitos.' },
-            { nex: 99, nome: 'Canalizar o Medo', descricao: 'Você aprende o ritual Canalizar o Medo.' },
+            { nex: 99, nome: 'Canalizar o Medo', descricao: 'Você aprende o ritual Canalizar o Medo.', ritualConcedido: 'Canalizar o Medo' },
         ],
     },
     {
@@ -262,7 +262,7 @@ export const TRILHAS_OCULTISTA = [
             { nex: 10, nome: 'Poder do Flagelo', descricao: 'Ao conjurar um ritual, você pode gastar seus próprios pontos de vida para pagar o custo em pontos de esforço, à taxa de 2 PV por PE pago. Pontos de vida gastos dessa forma só podem ser recuperados com descanso.' },
             { nex: 40, nome: 'Abraçar a Dor', descricao: 'Sempre que sofrer dano não paranormal, você pode gastar uma reação e 2 PE para reduzir esse dano à metade.' },
             { nex: 65, nome: 'Absorver Agonia', descricao: 'Sempre que reduz um ou mais inimigos a 0 PV com um ritual, você recebe uma quantidade de PE temporários igual ao círculo do ritual utilizado (ex: ritual de 2º círculo dá 2 PE temporários).' },
-            { nex: 99, nome: 'Medo Tangível', descricao: 'Você aprende o ritual Medo Tangível.' },
+            { nex: 99, nome: 'Medo Tangível', descricao: 'Você aprende o ritual Medo Tangível.', ritualConcedido: 'Medo Tangível' },
         ],
     },
     {
@@ -272,7 +272,7 @@ export const TRILHAS_OCULTISTA = [
             { nex: 10, nome: 'Mente Sã', descricao: 'Você compreende melhor as entidades do Outro Lado e passa a ser menos abalado por seus efeitos. Você recebe resistência paranormal +5 (+5 em testes de resistência contra efeitos paranormais).' },
             { nex: 40, nome: 'Presença Poderosa', descricao: 'Sua resiliência mental faz com que você possa extrair mais do Outro Lado. Você adiciona sua Presença ao seu limite de PE por turno, mas apenas para conjurar rituais (não para DT).' },
             { nex: 65, nome: 'Inabalável', descricao: 'Você recebe resistência a dano mental e paranormal 10. Além disso, quando é alvo de um efeito paranormal que permite um teste de Vontade para reduzir o dano à metade, você não sofre dano algum se passar.' },
-            { nex: 99, nome: 'Presença do Medo', descricao: 'Você aprende o ritual Presença do Medo.' },
+            { nex: 99, nome: 'Presença do Medo', descricao: 'Você aprende o ritual Presença do Medo.', ritualConcedido: 'Presença do Medo' },
         ],
     },
     {
@@ -282,23 +282,52 @@ export const TRILHAS_OCULTISTA = [
             { nex: 10, nome: 'Saber Ampliado', descricao: 'Você aprende um ritual de 1º círculo. Toda vez que ganha acesso a um novo círculo, aprende um ritual adicional daquele círculo. Esses rituais não contam no seu limite de rituais conhecidos.' },
             { nex: 40, nome: 'Grimório Ritualístico', descricao: 'Você cria um grimório especial que armazena rituais que sua mente não seria capaz de guardar. Você aprende uma quantidade de rituais de 1º ou 2º círculos igual ao seu Intelecto (e mais um a cada novo círculo liberado). Esses rituais não contam em seu limite de rituais conhecidos. Para conjurar um ritual armazenado no grimório, precisa antes empunhá-lo e gastar uma ação completa folheando-o. O grimório ocupa 1 espaço no inventário; se perdido, pode ser replicado com duas ações de interlúdio.' },
             { nex: 65, nome: 'Rituais Eficientes', descricao: 'A DT para resistir a todos os seus rituais aumenta em +5.' },
-            { nex: 99, nome: 'Conhecendo o Medo', descricao: 'Você aprende o ritual Conhecendo o Medo.' },
+            { nex: 99, nome: 'Conhecendo o Medo', descricao: 'Você aprende o ritual Conhecendo o Medo.', ritualConcedido: 'Conhecendo o Medo' },
         ],
     },
     {
         nome: 'Lâmina Paranormal',
         descricao: 'Alguns ocultistas preferem ficar fechados em suas bibliotecas estudando livros e rituais. Outros preferem investigar fenômenos paranormais em sua fonte. Já você prefere usar o paranormal como uma arma — aprendeu técnicas de luta mesclando suas habilidades de conjuração com suas capacidades de combate.',
         poderes: [
-            { nex: 10, nome: 'Lâmina Maldita', descricao: 'Você aprende o ritual Amaldiçoar Arma (se já o conhece, seu custo é reduzido em -1 PE). Além disso, quando conjura esse ritual, pode usar testes de Ocultismo (em vez de Luta ou Pontaria) para testes de ataque com a arma amaldiçoada.' },
+            { nex: 10, nome: 'Lâmina Maldita', descricao: 'Você aprende o ritual Amaldiçoar Arma (se já o conhece, seu custo é reduzido em -1 PE). Além disso, quando conjura esse ritual, pode usar testes de Ocultismo (em vez de Luta ou Pontaria) para testes de ataque com a arma amaldiçoada.', ritualConcedido: 'Amaldiçoar Arma' },
             { nex: 40, nome: 'Gladiador Paranormal', descricao: 'Sempre que acerta um ataque corpo a corpo em um inimigo, você recebe 2 PE temporários (máximo por cena igual ao seu limite de PE). PE temporários desaparecem no final da cena.' },
             { nex: 65, nome: 'Conjuração Marcial', descricao: 'Uma vez por rodada, quando lança um ritual com execução de uma ação padrão, pode gastar 2 PE para fazer um ataque corpo a corpo como uma ação livre.' },
-            { nex: 99, nome: 'Lâmina do Medo', descricao: 'Você aprende o ritual Lâmina do Medo.' },
+            { nex: 99, nome: 'Lâmina do Medo', descricao: 'Você aprende o ritual Lâmina do Medo.', ritualConcedido: 'Lâmina do Medo' },
         ],
     },
 ];
 
 export function trilhaOcultistaPorNome(nome) {
     return TRILHAS_OCULTISTA.find(t => t.nome === nome) || null;
+}
+
+// Rituais de assinatura concedidos automaticamente pelas sub-trilhas
+// do Ocultista (poderes com o campo ritualConcedido, ver
+// TRILHAS_OCULTISTA acima) -- diferente do bônus do Graduado (que dá
+// SLOTS livres pra escolher qualquer ritual dentro de uma regra), aqui
+// o livro nomeia um ritual específico que o personagem passa a
+// conhecer assim que atinge o NEX do poder, com a sub-trilha certa
+// escolhida -- sem custar nada da cota normal (ver quotaRituais nas
+// páginas) e sem exigir que o jogador vá até o catálogo escolher.
+//
+// Devolve só os NOMES; quem chama resolve pro objeto do ritual (ver
+// ritualPorNome em lib/rituais.js) e decide o que fazer se o nome não
+// estiver no catálogo -- caso do próximo comentário.
+//
+// OBS: "Lâmina Maldita" (Lâmina Paranormal, NEX 10%) concede o ritual
+// "Amaldiçoar Arma", que ainda não foi cadastrado em rituais.js (falta
+// a ficha técnica dele). Ele continua listado aqui pra não perder essa
+// informação, mas ritualPorNome vai devolver null pra ele até esse
+// ritual ser adicionado ao catálogo -- por isso quem consome esta
+// função precisa filtrar os nulls, não confiar que todo nome resolve.
+export function rituaisAutomaticosSubTrilha({ trilha, trilhaOcultistaEscolhida, nex } = {}) {
+    if (trilha !== 'Ocultista') return [];
+    const sub = trilhaOcultistaPorNome(trilhaOcultistaEscolhida);
+    if (!sub) return [];
+    const n = Number(nex) || 0;
+    return sub.poderes
+        .filter(p => p.ritualConcedido && n >= p.nex)
+        .map(p => p.ritualConcedido);
 }
 
 export function poderesDisponiveisParaSlot(catalogo, escolhidos, indice) {

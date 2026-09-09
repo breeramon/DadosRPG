@@ -1332,6 +1332,12 @@ h3 {
     color: var(--color-danger-light);
 }
 
+.rituals-quota-hint {
+    color: var(--color-text-subtle);
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
 .rituals-list {
     display: flex;
     flex-direction: column;
@@ -2565,6 +2571,86 @@ h3 {
 .character-card-actions {
     display: flex;
     gap: 8px;
+}
+
+/* ============================================================
+   TELA: SOBRE ESTA FICHA
+   ============================================================ */
+.screen-sobre {
+    padding: 40px 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.sobre-panel {
+    width: 100%;
+    max-width: 760px;
+}
+
+.sobre-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.sobre-header h2 {
+    margin: 0;
+}
+
+.sobre-intro {
+    color: var(--color-text-body);
+    line-height: 1.6;
+    margin-bottom: 26px;
+}
+
+.sobre-section {
+    margin-bottom: 28px;
+}
+
+.sobre-section-intro {
+    color: var(--color-text-muted);
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+.sobre-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-left: 20px;
+    color: var(--color-text-body);
+    line-height: 1.5;
+}
+
+.sobre-callout {
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.sobre-callout:last-child {
+    margin-bottom: 0;
+}
+
+.sobre-callout strong {
+    color: var(--color-text);
+}
+
+.sobre-callout-info {
+    background-color: rgba(74, 20, 140, 0.18);
+    border: 1px solid var(--color-primary-900);
+    color: var(--color-primary-100);
+}
+
+.sobre-callout-aviso {
+    background-color: rgba(255, 143, 0, 0.1);
+    border: 1px solid #ff8f00;
+    color: #ffcc80;
 }
 
 /* ============================================================

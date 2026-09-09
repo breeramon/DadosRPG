@@ -117,3 +117,13 @@ export function rituaisDoElemento(elemento) {
 export function rituaisDoCirculo(circulo) {
     return RITUAIS_CATALOGO.filter(r => r.circulo === Number(circulo));
 }
+
+// Devolve o objeto de um ritual pelo nome exato, ou null se não
+// estiver no catálogo. Usado pra resolver os rituais concedidos
+// automaticamente por poder de sub-trilha (ver
+// rituaisAutomaticosSubTrilha em lib/trilhas.js) -- alguns desses
+// poderes citam um ritual que ainda não foi cadastrado aqui (ver OBS
+// lá), daí o retorno null em vez de estourar erro.
+export function ritualPorNome(nome) {
+    return RITUAIS_CATALOGO.find(r => r.nome === nome) || null;
+}

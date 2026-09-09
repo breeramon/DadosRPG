@@ -23,14 +23,6 @@ import InventarioTab from '@/components/InventarioTab';
 import RitualTab from '@/components/RitualTab';
 import RitualCatalogModal from '@/components/RitualCatalogModal';
 
-const ATTR_MAP = [
-    { key: 'agi', nome: 'Agilidade', label: 'AGI', posClass: 'pos-agi' },
-    { key: 'int', nome: 'Intelecto', label: 'INT', posClass: 'pos-int' },
-    { key: 'vig', nome: 'Vigor', label: 'VIG', posClass: 'pos-vig' },
-    { key: 'pre', nome: 'Presença', label: 'PRE', posClass: 'pos-pre' },
-    { key: 'for', nome: 'Força', label: 'FOR', posClass: 'pos-for' },
-];
-
 function GearIcon() {
     return (
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -551,20 +543,44 @@ export default function CharacterSheetPage() {
     // acesso a rituais) + o bônus da trilha secundária Graduado
     // (Saber Ampliado/Grimório Ritualístico -- ver quotaBonusGraduado
     // em trilhas.js). Combina os três numa cota só que a modal e a
-    // lista usam pra saber quando bloquear novas adições.
-    const quotaRituais = useMemo(
-        () =>
-            (trilha === 'Ocultista' ? OPT.quotaBaseRituaisOcultista(nex) : 0) +
-            OPT.quotaExtraAprenderRitual({
-                poderesCombatenteEscolhidos,
-                poderesEspecialistaEscolhidos,
-                poderesOcultistaEscolhidos,
-                intelecto: atributos.int,
-            }) +
-            OPT.quotaBonusGraduado({ trilha, trilhaOcultistaEscolhida, nex, intelecto: atributos.int }),
-        [trilha, nex, poderesCombatenteEscolhidos, poderesEspecialistaEscolhidos, poderesOcultistaEscolhidos, trilhaOcultistaEscolhida, atributos.int]
-    );
+    // lista usam pra saber quando bloquear novas adições -- e monta um
+    // texto de tooltip (quotaRituaisDetalhe) explicando de onde vem
+    // cada parte, igual à cota de perícias no Formulário.
+    const { quotaRituais, quotaRituaisDetalhe } = useMemo(() => {
+        const base = trilha === 'Ocultista' ? OPT.quotaBaseRituaisOcultista(nex) : 0;
+        const aprender = OPT.quotaExtraAprenderRitual({
+            poderesCombatenteEscolhidos,
+            poderesEspecialistaEscolhidos,
+            poderesOcultistaEscolhidos,
+            intelecto: atributos.int,
+        });
+        const graduado = OPT.quotaBonusGraduado({ trilha, trilhaOcultistaEscolhida, nex, intelecto: atributos.int });
+        const partes = [];
+        if (trilha === 'Ocultista') partes.push(`Escolhido pelo Outro Lado: ${base}`);
+        if (aprender > 0) partes.push(`Aprender Ritual: +${aprender}`);
+        if (graduado > 0) partes.push(`Graduado: +${graduado}`);
+        return {
+            quotaRituais: base + aprender + graduado,
+            quotaRituaisDetalhe: partes.length ? partes.join(' · ') : undefined,
+        };
+    }, [trilha, nex, poderesCombatenteEscolhidos, poderesEspecialistaEscolhidos, poderesOcultistaEscolhidos, trilhaOcultistaEscolhida, atributos.int]);
     const quotaRituaisEsgotada = rituais.length >= quotaRituais;
+
+    // Rituais de assinatura concedidos automaticamente por poder de
+    // sub-trilha do Ocultista (ex: "Conhecendo o Medo" no Graduado,
+    // NEX 99% -- ver rituaisAutomaticosSubTrilha em trilhas.js). Não
+    // entram no array `rituais` (não são "escolhidos" pelo jogador) e
+    // não contam na cota -- só aparecem já prontos na lista (ver
+    // RitualTab.jsx) e são tratados como "já conhecidos" na modal do
+    // catálogo (ver rituaisConhecidos logo abaixo), pra não dar pra
+    // adicionar de novo por engano.
+    const rituaisAutomaticos = useMemo(
+        () =>
+            OPT.rituaisAutomaticosSubTrilha({ trilha, trilhaOcultistaEscolhida, nex })
+                .map(OPR.ritualPorNome)
+                .filter(Boolean),
+        [trilha, trilhaOcultistaEscolhida, nex]
+    );
 
     function atualizarRituais(novosRituais) {
         setRituais(novosRituais);
@@ -702,7 +718,7 @@ export default function CharacterSheetPage() {
         return <div className="app-loading">Carregando...</div>;
     }
 
-    const pentagramNodes = ATTR_MAP.map(({ key, nome, label, posClass }) => {
+    const pentagramNodes = OP.ATRIBUTOS.map(({ key, nome, label, posClass }) => {
         const valor = Number(atributos[key]) || 0;
         return {
             key,
@@ -893,6 +909,8 @@ export default function CharacterSheetPage() {
                                 nex={nex}
                                 rituais={rituais}
                                 quota={quotaRituais}
+                                quotaDetalhe={quotaRituaisDetalhe}
+                                automaticos={rituaisAutomaticos}
                                 expandidos={expandidosConhecidos}
                                 onToggleExpandido={toggleExpandidoConhecido}
                                 onAbrirModal={() => setModalRitualAberto(true)}
@@ -951,7 +969,7 @@ export default function CharacterSheetPage() {
                 onFechar={() => setModalRitualAberto(false)}
                 trilha={trilha}
                 nex={nex}
-                rituaisConhecidos={rituais}
+                rituaisConhecidos={[...rituais, ...rituaisAutomaticos]}
                 quotaEsgotada={quotaRituaisEsgotada}
                 onAdicionar={adicionarRitual}
             />

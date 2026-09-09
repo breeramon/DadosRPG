@@ -81,6 +81,9 @@ export default function CharactersPage() {
                         <button className="btn-action" onClick={() => navigate('/form')}>
                             + Novo Personagem
                         </button>
+                        <button className="btn-secondary" onClick={() => navigate('/sobre')}>
+                            Sobre esta Ficha
+                        </button>
                         <button className="btn-secondary" onClick={handleLogout}>Sair</button>
                     </div>
                 </div>

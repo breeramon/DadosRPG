@@ -12,13 +12,9 @@ import * as OPR from '@/lib/rituais';
 import { origemPorNome } from '@/lib/origens';
 import * as OPT from '@/lib/trilhas';
 
-const ATRIBUTOS = [
-    { key: 'agi', label: 'AGI', nome: 'Agilidade', posClass: 'pos-agi' },
-    { key: 'int', label: 'INT', nome: 'Intelecto', posClass: 'pos-int' },
-    { key: 'vig', label: 'VIG', nome: 'Vigor', posClass: 'pos-vig' },
-    { key: 'pre', label: 'PRE', nome: 'Presença', posClass: 'pos-pre' },
-    { key: 'for', label: 'FOR', nome: 'Força', posClass: 'pos-for' },
-];
+// ATRIBUTOS agora mora em lib/pericias.js (era duplicado com o ATTR_MAP
+// da Ficha -- ver comentário lá).
+const { ATRIBUTOS } = OP;
 
 const ATRIBUTOS_ZERO = { agi: 0, int: 0, vig: 0, pre: 0, for: 0 };
 
@@ -402,20 +398,44 @@ export default function CharacterFormPage() {
     // 3 trilhas -- é o único jeito de Combatente/Especialista terem
     // acesso a rituais) + o bônus da trilha secundária Graduado
     // (Saber Ampliado/Grimório Ritualístico -- ver quotaBonusGraduado
-    // em trilhas.js).
-    const quotaRituais = useMemo(
-        () =>
-            (trilha === 'Ocultista' ? OPT.quotaBaseRituaisOcultista(nex) : 0) +
-            OPT.quotaExtraAprenderRitual({
-                poderesCombatenteEscolhidos,
-                poderesEspecialistaEscolhidos,
-                poderesOcultistaEscolhidos,
-                intelecto: atributos.int,
-            }) +
-            OPT.quotaBonusGraduado({ trilha, trilhaOcultistaEscolhida, nex, intelecto: atributos.int }),
-        [trilha, nex, poderesCombatenteEscolhidos, poderesEspecialistaEscolhidos, poderesOcultistaEscolhidos, trilhaOcultistaEscolhida, atributos.int]
-    );
+    // em trilhas.js) -- e monta um texto de tooltip (quotaRituaisDetalhe)
+    // explicando de onde vem cada parte, igual à cota de perícias
+    // acima.
+    const { quotaRituais, quotaRituaisDetalhe } = useMemo(() => {
+        const base = trilha === 'Ocultista' ? OPT.quotaBaseRituaisOcultista(nex) : 0;
+        const aprender = OPT.quotaExtraAprenderRitual({
+            poderesCombatenteEscolhidos,
+            poderesEspecialistaEscolhidos,
+            poderesOcultistaEscolhidos,
+            intelecto: atributos.int,
+        });
+        const graduado = OPT.quotaBonusGraduado({ trilha, trilhaOcultistaEscolhida, nex, intelecto: atributos.int });
+        const partes = [];
+        if (trilha === 'Ocultista') partes.push(`Escolhido pelo Outro Lado: ${base}`);
+        if (aprender > 0) partes.push(`Aprender Ritual: +${aprender}`);
+        if (graduado > 0) partes.push(`Graduado: +${graduado}`);
+        return {
+            quotaRituais: base + aprender + graduado,
+            quotaRituaisDetalhe: partes.length ? partes.join(' · ') : undefined,
+        };
+    }, [trilha, nex, poderesCombatenteEscolhidos, poderesEspecialistaEscolhidos, poderesOcultistaEscolhidos, trilhaOcultistaEscolhida, atributos.int]);
     const quotaRituaisEsgotada = rituais.length >= quotaRituais;
+
+    // Rituais de assinatura concedidos automaticamente por poder de
+    // sub-trilha do Ocultista (ex: "Conhecendo o Medo" no Graduado,
+    // NEX 99% -- ver rituaisAutomaticosSubTrilha em trilhas.js). Não
+    // entram no array `rituais` (não são "escolhidos" pelo jogador) e
+    // não contam na cota -- só aparecem já prontos na lista (ver
+    // RitualTab.jsx) e são tratados como "já conhecidos" na modal do
+    // catálogo (ver rituaisConhecidos logo abaixo), pra não dar pra
+    // adicionar de novo por engano.
+    const rituaisAutomaticos = useMemo(
+        () =>
+            OPT.rituaisAutomaticosSubTrilha({ trilha, trilhaOcultistaEscolhida, nex })
+                .map(OPR.ritualPorNome)
+                .filter(Boolean),
+        [trilha, trilhaOcultistaEscolhida, nex]
+    );
 
     function adicionarRitual(catalogRitual) {
         if (rituais.some(r => r.nome === catalogRitual.nome)) {
@@ -782,6 +802,8 @@ export default function CharacterFormPage() {
                                 nex={nex}
                                 rituais={rituais}
                                 quota={quotaRituais}
+                                quotaDetalhe={quotaRituaisDetalhe}
+                                automaticos={rituaisAutomaticos}
                                 expandidos={expandidosConhecidos}
                                 onToggleExpandido={toggleExpandidoConhecido}
                                 onAbrirModal={() => setModalRitualAberto(true)}
@@ -819,7 +841,7 @@ export default function CharacterFormPage() {
                 onFechar={() => setModalRitualAberto(false)}
                 trilha={trilha}
                 nex={nex}
-                rituaisConhecidos={rituais}
+                rituaisConhecidos={[...rituais, ...rituaisAutomaticos]}
                 quotaEsgotada={quotaRituaisEsgotada}
                 onAdicionar={adicionarRitual}
             />
