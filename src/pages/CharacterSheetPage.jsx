@@ -341,6 +341,17 @@ export default function CharacterSheetPage() {
         const equipadas = inventario.filter(it => it.grupo === 'protecoes' && it.equipado).map(it => it.nome);
         return equipadas.length ? equipadas.join(', ') : 'Nenhuma';
     }, [inventario]);
+    const resistenciasEquip = useMemo(() => OPI.resistenciasDoInventario(inventario), [inventario]);
+    const resistenciasAutomaticas = useMemo(() => {
+        const mapa = { ...bonusPoderes.resistencias };
+        for (const [tipo, valor] of Object.entries(resistenciasEquip)) {
+            mapa[tipo] = (mapa[tipo] || 0) + valor;
+        }
+        return Object.entries(mapa)
+            .filter(([, valor]) => valor > 0)
+            .map(([tipo, valor]) => ({ tipo, valor }))
+            .sort((a, b) => a.tipo.localeCompare(b.tipo, 'pt-BR'));
+    }, [bonusPoderes.resistencias, resistenciasEquip]);
 
     function handleEscolherOrigem(origemDoCatalogo) {
         const origemAntigaObj = origemEscolhida;
@@ -519,11 +530,28 @@ export default function CharacterSheetPage() {
         toast.success(`"${catalogItem.nome}" adicionado ao inventário.`);
     }
 
-    // Recebe { nome, espacos, efeito } já validados (nome não vazio,
-    // espacos já numérico) de AdicionarItemModal.jsx -- só decide como
-    // persistir e avisar o usuário.
-    function handleAdicionarItemCustom({ nome, espacos, efeito }) {
-        atualizarInventario([...inventario, { nome, categoria: 'Personalizado', espacos, efeito, quantidade: 1, equipado: false, custom: true }]);
+    // Recebe { nome, espacos, efeito, tipoMecanico, ... } já validados
+    // (nome não vazio, espacos já numérico) de AdicionarItemModal.jsx --
+    // decide o `grupo`/campos extras conforme tipoMecanico e como
+    // persistir, e avisa o usuário.
+    function handleAdicionarItemCustom({
+        nome, espacos, efeito, tipoMecanico,
+        dano, critico, tipoDano, alcance,
+        tipoProtecao, defesaBonus, resistencias: resistenciasItem,
+    }) {
+        let novoItem = { nome, categoria: 'Personalizado', espacos, efeito, quantidade: 1, equipado: false, custom: true };
+        if (tipoMecanico === 'arma') {
+            novoItem = { ...novoItem, grupo: 'armas', dano, critico, tipoDano, alcance };
+        } else if (tipoMecanico === 'protecao') {
+            novoItem = {
+                ...novoItem,
+                grupo: 'protecoes',
+                tipoProtecao: tipoProtecao || 'corpo',
+                defesaBonus: Number(defesaBonus) || 0,
+                resistencias: resistenciasItem || [],
+            };
+        }
+        atualizarInventario([...inventario, novoItem]);
         toast.success(`"${nome}" adicionado ao inventário.`);
     }
 
@@ -798,6 +826,7 @@ export default function CharacterSheetPage() {
                         defesaOutros={defesaOutros}
                         onDefesaOutrosChange={handleDefesaOutrosChange}
                         protecaoTexto={protecaoTexto}
+                        resistenciasAutomaticas={resistenciasAutomaticas}
                         resistencias={resistencias}
                         onResistenciasChange={handleResistenciasChange}
                         origemEscolhida={origemEscolhida}

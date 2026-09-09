@@ -1,3 +1,8 @@
+export const DADOS_PRESET = [4, 6, 8, 10, 12, 20, 100];
+export const QUANTIDADES_DANO_PRESET = [1, 2, 3, 4, 5, 6, 8, 10];
+export const TIPOS_DANO_PRESET = ['Corte', 'Perfurante', 'Impacto', 'Balístico', 'Fogo', 'Paranormal'];
+export const ALCANCES_PRESET = ['Corpo a corpo', 'Curto', 'Médio', 'Longo'];
+
 export const ITENS_CATALOGO = [
     // ============================================================
     // ARMAS — Corpo a Corpo
@@ -55,7 +60,7 @@ export const ITENS_CATALOGO = [
     // PROTEÇÕES (alimentam o bônus de Equipamento da Defesa)
     // ============================================================
     { nome: 'Proteção Leve', grupo: 'protecoes', categoria: 'Leve', tipoProtecao: 'corpo', espacos: 2, defesaBonus: 5, efeito: 'Jaqueta de couro pesada ou colete de kevlar, usada por seguranças e policiais. Sem penalidade de carga.', confianca: 2 },
-    { nome: 'Proteção Pesada', grupo: 'protecoes', categoria: 'Pesada', tipoProtecao: 'corpo', espacos: 5, defesaBonus: 10, efeito: 'Capacete, ombreiras, joelheiras, caneleiras e colete de kevlar. Resistência a balístico, corte, impacto e perfuração 2. Penalidade: -5 em testes de perícia afetados por carga. ⚠ Espaços: uma fonte (guia rápido, resumido) diz 2 em vez de 5 — mantido 5 por vir da fonte mais detalhada (livro completo), mas não é 100% certo.', confianca: 1 },
+    { nome: 'Proteção Pesada', grupo: 'protecoes', categoria: 'Pesada', tipoProtecao: 'corpo', espacos: 5, defesaBonus: 10, resistencias: [{ tipo: 'Balístico', valor: 2 }, { tipo: 'Corte', valor: 2 }, { tipo: 'Impacto', valor: 2 }, { tipo: 'Perfurante', valor: 2 }], efeito: 'Capacete, ombreiras, joelheiras, caneleiras e colete de kevlar. Resistência a balístico, corte, impacto e perfuração 2. Penalidade: -5 em testes de perícia afetados por carga. ⚠ Espaços: uma fonte (guia rápido, resumido) diz 2 em vez de 5 — mantido 5 por vir da fonte mais detalhada (livro completo), mas não é 100% certo.', confianca: 1 },
     { nome: 'Escudo', grupo: 'protecoes', categoria: 'Pesada', tipoProtecao: 'escudo', espacos: 1, defesaBonus: 2, efeito: 'Empunhado em uma mão. Conta como proteção pesada para efeitos de proficiência. Bônus acumula com o de outra proteção equipada.', confianca: 1 },
 
     // ============================================================
@@ -119,6 +124,19 @@ export function tipoProtecaoDoItem(item) {
     if (item.tipoProtecao) return item.tipoProtecao;
     const doCatalogo = ITENS_CATALOGO.find(c => c.grupo === 'protecoes' && c.nome === item.nome);
     return doCatalogo ? doCatalogo.tipoProtecao : undefined;
+}
+
+export function resistenciasDoInventario(itens) {
+    const mapa = {};
+    (itens || [])
+        .filter(item => item.grupo === 'protecoes' && item.equipado && Array.isArray(item.resistencias))
+        .forEach(item => {
+            item.resistencias.forEach(({ tipo, valor }) => {
+                if (!tipo) return;
+                mapa[tipo] = (mapa[tipo] || 0) + (Number(valor) || 0);
+            });
+        });
+    return mapa;
 }
 
 export function defesaDoInventario(itens) {

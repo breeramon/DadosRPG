@@ -271,7 +271,7 @@ export const TRILHAS_OCULTISTA = [
         poderes: [
             { nex: 10, nome: 'Mente Sã', descricao: 'Você compreende melhor as entidades do Outro Lado e passa a ser menos abalado por seus efeitos. Você recebe resistência paranormal +5 (+5 em testes de resistência contra efeitos paranormais).' },
             { nex: 40, nome: 'Presença Poderosa', descricao: 'Sua resiliência mental faz com que você possa extrair mais do Outro Lado. Você adiciona sua Presença ao seu limite de PE por turno, mas apenas para conjurar rituais (não para DT).' },
-            { nex: 65, nome: 'Inabalável', descricao: 'Você recebe resistência a dano mental e paranormal 10. Além disso, quando é alvo de um efeito paranormal que permite um teste de Vontade para reduzir o dano à metade, você não sofre dano algum se passar.' },
+            { nex: 65, nome: 'Inabalável', descricao: 'Você recebe resistência a dano mental e paranormal 10. Além disso, quando é alvo de um efeito paranormal que permite um teste de Vontade para reduzir o dano à metade, você não sofre dano algum se passar.', efeitos: [{ tipo: 'resistencia', dano: 'Mental', valor: 10 }, { tipo: 'resistencia', dano: 'Paranormal', valor: 10 }] },
             { nex: 99, nome: 'Presença do Medo', descricao: 'Você aprende o ritual Presença do Medo.', ritualConcedido: 'Presença do Medo' },
         ],
     },
@@ -454,7 +454,7 @@ export function bonusNumericoDosPoderes({
     poderesOcultistaEscolhidos,
     trilhaOcultistaEscolhida,
 } = {}) {
-    const resultado = { defesa: 0, pericias: {} };
+    const resultado = { defesa: 0, pericias: {}, resistencias: {} };
 
     function aplicar(efeitos) {
         if (!Array.isArray(efeitos)) return;
@@ -463,6 +463,8 @@ export function bonusNumericoDosPoderes({
                 resultado.defesa += efeito.valor;
             } else if (efeito.tipo === 'periciaBonus') {
                 resultado.pericias[efeito.pericia] = (resultado.pericias[efeito.pericia] || 0) + efeito.valor;
+            } else if (efeito.tipo === 'resistencia') {
+                resultado.resistencias[efeito.dano] = (resultado.resistencias[efeito.dano] || 0) + efeito.valor;
             }
         }
     }

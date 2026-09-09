@@ -42,6 +42,7 @@ export default function SobrePage() {
                         <li>Atributos (com rolagem de teste direto no pentagrama) e as 20 perícias do livro, com grau de treino, bônus de poder de trilha e a regra de 2d20 (fica com o menor) pra atributo 0.</li>
                         <li>Vida, PE (Pontos de Esforço), Sanidade (opcional, pode ser ocultada), Defesa detalhada e Proteção/Resistências.</li>
                         <li>Inventário com carga (sobrecarga e limite absoluto) e ataques — manuais ou gerados automaticamente pela arma equipada.</li>
+                        <li>Item personalizado (aba Inventário → Adicionar Item → Personalizado) pode ser cadastrado como Arma (gera um ataque automático, igual um item de catálogo) ou Proteção (dá bônus de Defesa e/ou resistência a tipos de dano específicos quando equipado) — ou, se nenhum dos dois, fica só descritivo, como sempre foi.</li>
                         <li>Rituais: catálogo filtrável por Elemento/Círculo, círculo liberado pelo NEX e cota de rituais conhecidos (ver "Extensões" abaixo pra como essa cota é calculada).</li>
                         <li>Poderes de Trilha e sub-trilha das 3 trilhas (Combatente, Especialista, Ocultista), liberados progressivamente pelo NEX.</li>
                         <li>Rolagem de dados 3D animada, com log de rolagens e um gerador comum de números como reserva caso o navegador não consiga rodar a animação.</li>
@@ -84,6 +85,14 @@ export default function SobrePage() {
                         conjurar um ritual armazenado nele) ainda não existe na ficha.
                     </div>
                     <div className="sobre-callout sobre-callout-aviso">
+                        <strong>Resistência a dano condicional</strong> de 3 poderes de trilha não é somada
+                        automaticamente na tela: Casca Grossa e Inquebrável (Combatente Duro na Queda, dependem de
+                        "fazer um bloqueio" ou estar no status "machucado") e Tanque de Guerra (só se aplica com
+                        Proteção Pesada equipada). A ficha não rastreia essas condições de combate, então esses
+                        bônus continuam por conta do jogador anotar/lembrar na hora. Já Inabalável (Ocultista
+                        Intuitivo), que é incondicional, entra automaticamente no total de Resistências.
+                    </div>
+                    <div className="sobre-callout sobre-callout-aviso">
                         Esta ficha é só pro personagem jogador — não tem nada voltado pra NPCs, adversários ou
                         ferramentas de apoio ao mestre.
                     </div>
@@ -94,6 +103,7 @@ export default function SobrePage() {
                     <ul className="sobre-lista">
                         <li>O selo <strong>"Automático"</strong> num ritual indica que ele foi concedido por um poder de sub-trilha (não por escolha sua no catálogo) — não conta na sua cota de rituais conhecidos, e some sozinho se você trocar de sub-trilha ou cair de NEX.</li>
                         <li>Números com um tracejado por baixo, ou textos como "Rituais conhecidos: X / Y", geralmente têm um tooltip (passe o mouse por cima) detalhando de onde vem cada parte daquele total.</li>
+                        <li>Os "chips" verdes em Resistências (bloco Proteção/Resistências, na Ficha) somam automaticamente o que vem de poder de trilha e de proteção equipada — o campo de texto ao lado deles é só pra anotar algo que não vem de nenhum dos dois (ex: dado pelo mestre numa cena específica).</li>
                     </ul>
                 </section>
             </div>

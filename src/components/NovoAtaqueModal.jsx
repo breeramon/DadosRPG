@@ -13,17 +13,26 @@
 //   onFechar()           -- chamado ao clicar no X, apertar Esc ou
 //                           depois de adicionar com sucesso
 //   onAdicionar(ataque)  -- chamado com { nome, dano, critico, alcance,
-//                           observacoes } já validado (nome não vazio)
+//                           observacoes } já validado (nome não vazio).
+//                           dano e alcance vêm de presets (mesmas
+//                           listas de lib/itens.js usadas pelo item
+//                           personalizado tipo "Arma" em
+//                           AdicionarItemModal.jsx, pra não ter duas
+//                           formas diferentes de cadastrar uma arma
+//                           nesta ficha) -- só nome, crítico e
+//                           observações continuam texto livre.
 // ============================================================
 
 import { useEffect, useState } from 'react';
+import * as OPI from '@/lib/itens';
 import { useLockBodyScroll } from '@/hooks/useLockBodyScroll';
 
 export default function NovoAtaqueModal({ aberto, onFechar, onAdicionar }) {
     const [nome, setNome] = useState('');
-    const [dano, setDano] = useState('');
+    const [danoQtd, setDanoQtd] = useState(1);
+    const [danoDado, setDanoDado] = useState(6);
     const [critico, setCritico] = useState('');
-    const [alcance, setAlcance] = useState('');
+    const [alcance, setAlcance] = useState(OPI.ALCANCES_PRESET[0]);
     const [observacoes, setObservacoes] = useState('');
 
     useLockBodyScroll(aberto);
@@ -32,9 +41,10 @@ export default function NovoAtaqueModal({ aberto, onFechar, onAdicionar }) {
     useEffect(() => {
         if (!aberto) return;
         setNome('');
-        setDano('');
+        setDanoQtd(1);
+        setDanoDado(6);
         setCritico('');
-        setAlcance('');
+        setAlcance(OPI.ALCANCES_PRESET[0]);
         setObservacoes('');
     }, [aberto]);
 
@@ -55,9 +65,9 @@ export default function NovoAtaqueModal({ aberto, onFechar, onAdicionar }) {
         }
         onAdicionar({
             nome: nomeLimpo,
-            dano: dano.trim(),
+            dano: `${danoQtd}d${danoDado}`,
             critico: critico.trim(),
-            alcance: alcance.trim(),
+            alcance,
             observacoes: observacoes.trim(),
         });
         onFechar();
@@ -80,16 +90,44 @@ export default function NovoAtaqueModal({ aberto, onFechar, onAdicionar }) {
                     </div>
                     <div className="ataque-form-row">
                         <div className="control-group">
-                            <label>Dano</label>
-                            <input type="text" placeholder="Ex: 2d6" value={dano} onChange={e => setDano(e.target.value)} />
+                            <label htmlFor="novo-ataque-dano-qtd">Dano</label>
+                            <div className="dano-preset-row">
+                                <select
+                                    id="novo-ataque-dano-qtd"
+                                    value={danoQtd}
+                                    onChange={e => setDanoQtd(Number(e.target.value))}
+                                >
+                                    {OPI.QUANTIDADES_DANO_PRESET.map(qtd => (
+                                        <option key={qtd} value={qtd}>{qtd}</option>
+                                    ))}
+                                </select>
+                                <span className="dano-preset-d">d</span>
+                                <select
+                                    aria-label="Lados do dado de dano"
+                                    value={danoDado}
+                                    onChange={e => setDanoDado(Number(e.target.value))}
+                                >
+                                    {OPI.DADOS_PRESET.map(lados => (
+                                        <option key={lados} value={lados}>{lados}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
                         <div className="control-group">
                             <label>Crítico</label>
                             <input type="text" placeholder="Ex: 19/x3" value={critico} onChange={e => setCritico(e.target.value)} />
                         </div>
                         <div className="control-group">
-                            <label>Alcance</label>
-                            <input type="text" placeholder="Ex: Curto" value={alcance} onChange={e => setAlcance(e.target.value)} />
+                            <label htmlFor="novo-ataque-alcance">Alcance</label>
+                            <select
+                                id="novo-ataque-alcance"
+                                value={alcance}
+                                onChange={e => setAlcance(e.target.value)}
+                            >
+                                {OPI.ALCANCES_PRESET.map(op => (
+                                    <option key={op} value={op}>{op}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
                     <div className="control-group full">

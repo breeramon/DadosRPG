@@ -22,7 +22,12 @@
 //     pro tooltip explicar de onde veio o número
 //   defesaEquip, defesaOutros, onDefesaOutrosChange(valor)
 //   protecaoTexto
-//   resistencias, onResistenciasChange(valor)
+//   resistenciasAutomaticas -- array [{ tipo, valor }] já somado (poder
+//     de trilha + proteção equipada, ver resistenciasAutomaticas em
+//     CharacterSheetPage.jsx) -- só leitura, mostrado como "chips".
+//   resistencias, onResistenciasChange(valor) -- campo de texto livre à
+//     parte, pra resistência que não vem de poder/item (ex: dada pelo
+//     mestre numa cena, ou de uma regra que a ficha ainda não modela).
 //   origemEscolhida, onTrocarOrigem()                    -- abre a
 //     modal de Origem (ver OrigemCatalogModal.jsx)
 // ============================================================
@@ -34,6 +39,7 @@ export default function VitalsPanel({
     defesaTotal, bonusDefesaPoder,
     defesaEquip, defesaOutros, onDefesaOutrosChange,
     protecaoTexto,
+    resistenciasAutomaticas = [],
     resistencias, onResistenciasChange,
     origemEscolhida, onTrocarOrigem,
 }) {
@@ -127,11 +133,25 @@ export default function VitalsPanel({
                     <span className="identity-field-value" title="Vem da proteção equipada no Inventário">{protecaoTexto}</span>
                 </div>
                 <div className="identity-field">
-                    <label className="identity-field-label" htmlFor="campo-resistencias">Resistências</label>
+                    <span className="identity-field-label">Resistências (poder / equipamento)</span>
+                    {resistenciasAutomaticas.length > 0 ? (
+                        <div className="resistencias-chips">
+                            {resistenciasAutomaticas.map(({ tipo, valor }) => (
+                                <span className="resistencia-chip" key={tipo} title={`+${valor} de resistência a ${tipo}`}>
+                                    {tipo} <strong>+{valor}</strong>
+                                </span>
+                            ))}
+                        </div>
+                    ) : (
+                        <span className="identity-field-value resistencias-vazio">Nenhuma no momento</span>
+                    )}
+                </div>
+                <div className="identity-field">
+                    <label className="identity-field-label" htmlFor="campo-resistencias">Resistências extras (manual)</label>
                     <input
                         id="campo-resistencias"
                         type="text"
-                        placeholder="Ex: Resistência a Sangue 2 (colete)"
+                        placeholder="Ex: resistência dada pelo mestre numa cena"
                         value={resistencias}
                         onChange={e => onResistenciasChange(e.target.value)}
                     />
