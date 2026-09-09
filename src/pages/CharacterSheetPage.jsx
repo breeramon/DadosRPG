@@ -18,7 +18,7 @@ import AdicionarItemModal from '@/components/AdicionarItemModal';
 import VitalsPanel from '@/components/VitalsPanel';
 import PericiasTable from '@/components/PericiasTable';
 import CombateTab from '@/components/CombateTab';
-import TrilhaTab from '@/components/TrilhaTab';
+import TrilhaPanel from '@/components/TrilhaPanel';
 import InventarioTab from '@/components/InventarioTab';
 import RitualTab from '@/components/RitualTab';
 import RitualCatalogModal from '@/components/RitualCatalogModal';
@@ -916,62 +916,24 @@ export default function CharacterSheetPage() {
                         )}
 
                         {abaAtiva === 'trilha' && (
-                            <div className="tab-panel-trilha">
-                                {trilha === 'Combatente' ? (
-                                    <TrilhaTab
-                                        trilha="Combatente"
-                                        nex={nex}
-                                        numeroLimpo={{
-                                            label: 'Ataque Especial',
-                                            texto: ataqueEspecialAtual
-                                                ? `até ${ataqueEspecialAtual.pe} PE por +${ataqueEspecialAtual.bonus} (no ataque ou no dano)`
-                                                : '—',
-                                        }}
-                                        catalogoSecundario={OPT.TRILHAS_COMBATENTE}
-                                        trilhaSecundariaEscolhida={trilhaCombatenteEscolhida}
-                                        onEscolherTrilhaSecundaria={handleEscolherTrilhaCombatente}
-                                        poderMarcos={OPT.PODER_COMBATENTE_MARCOS}
-                                        poderCatalogo={OPT.PODERES_COMBATENTE}
-                                        poderesEscolhidos={poderesCombatenteEscolhidos}
-                                        onEscolherPoder={handleEscolherPoderCombatente}
-                                    />
-                                ) : trilha === 'Especialista' ? (
-                                    <TrilhaTab
-                                        trilha="Especialista"
-                                        nex={nex}
-                                        numeroLimpo={{
-                                            label: 'Eclético / Perito',
-                                            texto: peritoEspecialistaAtual
-                                                ? `até ${peritoEspecialistaAtual.pe} PE por +${peritoEspecialistaAtual.dado} numa perícia (Eclético/Perito)`
-                                                : '—',
-                                        }}
-                                        catalogoSecundario={OPT.TRILHAS_ESPECIALISTA}
-                                        trilhaSecundariaEscolhida={trilhaEspecialistaEscolhida}
-                                        onEscolherTrilhaSecundaria={handleEscolherTrilhaEspecialista}
-                                        poderMarcos={OPT.PODER_ESPECIALISTA_MARCOS}
-                                        poderCatalogo={OPT.PODERES_ESPECIALISTA}
-                                        poderesEscolhidos={poderesEspecialistaEscolhidos}
-                                        onEscolherPoder={handleEscolherPoderEspecialista}
-                                    />
-                                ) : trilha === 'Ocultista' ? (
-                                    <TrilhaTab
-                                        trilha="Ocultista"
-                                        nex={nex}
-                                        catalogoSecundario={OPT.TRILHAS_OCULTISTA}
-                                        trilhaSecundariaEscolhida={trilhaOcultistaEscolhida}
-                                        onEscolherTrilhaSecundaria={handleEscolherTrilhaOcultista}
-                                        poderMarcos={OPT.PODER_OCULTISTA_MARCOS}
-                                        poderCatalogo={OPT.PODERES_OCULTISTA}
-                                        poderesEscolhidos={poderesOcultistaEscolhidos}
-                                        onEscolherPoder={handleEscolherPoderOcultista}
-                                    />
-                                ) : (
-                                    <p className="trilha-em-breve">
-                                        Poderes de trilha para {trilha || 'essa trilha'} ainda não foram
-                                        modelados nesta ficha.
-                                    </p>
-                                )}
-                            </div>
+                            <TrilhaPanel
+                                trilha={trilha}
+                                nex={nex}
+                                ataqueEspecialAtual={ataqueEspecialAtual}
+                                peritoEspecialistaAtual={peritoEspecialistaAtual}
+                                trilhaCombatenteEscolhida={trilhaCombatenteEscolhida}
+                                onEscolherTrilhaCombatente={handleEscolherTrilhaCombatente}
+                                poderesCombatenteEscolhidos={poderesCombatenteEscolhidos}
+                                onEscolherPoderCombatente={handleEscolherPoderCombatente}
+                                trilhaEspecialistaEscolhida={trilhaEspecialistaEscolhida}
+                                onEscolherTrilhaEspecialista={handleEscolherTrilhaEspecialista}
+                                poderesEspecialistaEscolhidos={poderesEspecialistaEscolhidos}
+                                onEscolherPoderEspecialista={handleEscolherPoderEspecialista}
+                                trilhaOcultistaEscolhida={trilhaOcultistaEscolhida}
+                                onEscolherTrilhaOcultista={handleEscolherTrilhaOcultista}
+                                poderesOcultistaEscolhidos={poderesOcultistaEscolhidos}
+                                onEscolherPoderOcultista={handleEscolherPoderOcultista}
+                            />
                         )}
                     </div>
                 </section>

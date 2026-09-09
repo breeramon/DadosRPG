@@ -6,7 +6,7 @@ import AttributePentagram from '@/components/AttributePentagram';
 import RitualCatalogModal from '@/components/RitualCatalogModal';
 import RitualTab from '@/components/RitualTab';
 import OrigemCatalogModal from '@/components/OrigemCatalogModal';
-import TrilhaTab from '@/components/TrilhaTab';
+import TrilhaPanel from '@/components/TrilhaPanel';
 import * as OP from '@/lib/pericias';
 import * as OPR from '@/lib/rituais';
 import { origemPorNome } from '@/lib/origens';
@@ -790,65 +790,25 @@ export default function CharacterFormPage() {
                         )}
 
                         {abaAtiva === 'trilha' && (
-                            <div className="tab-panel-trilha">
-                                {trilha === 'Combatente' ? (
-                                    <TrilhaTab
-                                        trilha="Combatente"
-                                        nex={nex}
-                                        numeroLimpo={{
-                                            label: 'Ataque Especial',
-                                            texto: ataqueEspecialAtual
-                                                ? `até ${ataqueEspecialAtual.pe} PE por +${ataqueEspecialAtual.bonus} (no ataque ou no dano)`
-                                                : '—',
-                                        }}
-                                        catalogoSecundario={OPT.TRILHAS_COMBATENTE}
-                                        trilhaSecundariaEscolhida={trilhaCombatenteEscolhida}
-                                        onEscolherTrilhaSecundaria={handleEscolherTrilhaCombatente}
-                                        poderMarcos={OPT.PODER_COMBATENTE_MARCOS}
-                                        poderCatalogo={OPT.PODERES_COMBATENTE}
-                                        poderesEscolhidos={poderesCombatenteEscolhidos}
-                                        onEscolherPoder={handleEscolherPoderCombatente}
-                                        idPrefix="form-"
-                                    />
-                                ) : trilha === 'Especialista' ? (
-                                    <TrilhaTab
-                                        trilha="Especialista"
-                                        nex={nex}
-                                        numeroLimpo={{
-                                            label: 'Eclético / Perito',
-                                            texto: peritoEspecialistaAtual
-                                                ? `até ${peritoEspecialistaAtual.pe} PE por +${peritoEspecialistaAtual.dado} numa perícia (Eclético/Perito)`
-                                                : '—',
-                                        }}
-                                        catalogoSecundario={OPT.TRILHAS_ESPECIALISTA}
-                                        trilhaSecundariaEscolhida={trilhaEspecialistaEscolhida}
-                                        onEscolherTrilhaSecundaria={handleEscolherTrilhaEspecialista}
-                                        poderMarcos={OPT.PODER_ESPECIALISTA_MARCOS}
-                                        poderCatalogo={OPT.PODERES_ESPECIALISTA}
-                                        poderesEscolhidos={poderesEspecialistaEscolhidos}
-                                        onEscolherPoder={handleEscolherPoderEspecialista}
-                                        idPrefix="form-"
-                                    />
-                                ) : trilha === 'Ocultista' ? (
-                                    <TrilhaTab
-                                        trilha="Ocultista"
-                                        nex={nex}
-                                        catalogoSecundario={OPT.TRILHAS_OCULTISTA}
-                                        trilhaSecundariaEscolhida={trilhaOcultistaEscolhida}
-                                        onEscolherTrilhaSecundaria={handleEscolherTrilhaOcultista}
-                                        poderMarcos={OPT.PODER_OCULTISTA_MARCOS}
-                                        poderCatalogo={OPT.PODERES_OCULTISTA}
-                                        poderesEscolhidos={poderesOcultistaEscolhidos}
-                                        onEscolherPoder={handleEscolherPoderOcultista}
-                                        idPrefix="form-"
-                                    />
-                                ) : (
-                                    <p className="trilha-em-breve">
-                                        Poderes de trilha para {trilha || 'essa trilha'} ainda não foram modelados
-                                        nesta ficha.
-                                    </p>
-                                )}
-                            </div>
+                            <TrilhaPanel
+                                trilha={trilha}
+                                nex={nex}
+                                ataqueEspecialAtual={ataqueEspecialAtual}
+                                peritoEspecialistaAtual={peritoEspecialistaAtual}
+                                trilhaCombatenteEscolhida={trilhaCombatenteEscolhida}
+                                onEscolherTrilhaCombatente={handleEscolherTrilhaCombatente}
+                                poderesCombatenteEscolhidos={poderesCombatenteEscolhidos}
+                                onEscolherPoderCombatente={handleEscolherPoderCombatente}
+                                trilhaEspecialistaEscolhida={trilhaEspecialistaEscolhida}
+                                onEscolherTrilhaEspecialista={handleEscolherTrilhaEspecialista}
+                                poderesEspecialistaEscolhidos={poderesEspecialistaEscolhidos}
+                                onEscolherPoderEspecialista={handleEscolherPoderEspecialista}
+                                trilhaOcultistaEscolhida={trilhaOcultistaEscolhida}
+                                onEscolherTrilhaOcultista={handleEscolherTrilhaOcultista}
+                                poderesOcultistaEscolhidos={poderesOcultistaEscolhidos}
+                                onEscolherPoderOcultista={handleEscolherPoderOcultista}
+                                idPrefix="form-"
+                            />
                         )}
                     </div>
                 </section>
