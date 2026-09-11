@@ -3136,10 +3136,18 @@ h3 {
         padding: 12px;
     }
 
+    /* Gap maior aqui pra dar respiro visual entre as 4 abas -- sem
+       isso (e com o texto de "Inventário" quase sem folga dentro da
+       própria célula) as abas ficavam praticamente coladas no
+       celular. */
+    .sheet-tabs-nav {
+        gap: 8px;
+    }
+
     .sheet-tab-btn {
-        font-size: 0.72rem;
-        letter-spacing: 0.5px;
-        padding: 8px 2px;
+        font-size: 0.68rem;
+        letter-spacing: 0.2px;
+        padding: 10px 2px;
     }
 
     .attributes-section,
