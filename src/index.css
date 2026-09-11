@@ -3100,6 +3100,20 @@ h3 {
         display: block;
     }
 
+    /* .sheet-tabs-section vira display:block aqui em cima (a coluna
+       única do layout tablet/celular não pode ficar presa numa altura
+       de flex-column) -- só que "gap" não tem efeito nenhum fora de
+       flex/grid, então o respiro de 14px entre as abas (.sheet-tabs-nav)
+       e o conteúdo da aba (.sheet-tab-panel, onde mora o filtro/título/
+       botão de adicionar) sumia sempre que a tela ficava com até 1400px
+       de largura -- caso de qualquer monitor girado pra vertical, não
+       só celular/tablet. Repõe o mesmo respiro via margin, que funciona
+       em block layout.
+    */
+    .sheet-tabs-nav {
+        margin-bottom: 14px;
+    }
+
     .skills-list {
         flex: none;
         max-height: 340px;
