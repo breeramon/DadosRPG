@@ -46,6 +46,7 @@ export default function SobrePage() {
                         <li>Rituais: catálogo filtrável por Elemento/Círculo, círculo liberado pelo NEX e cota de rituais conhecidos (ver "Extensões" abaixo pra como essa cota é calculada).</li>
                         <li>Poderes de Trilha e sub-trilha das 3 trilhas (Combatente, Especialista, Ocultista), liberados progressivamente pelo NEX.</li>
                         <li>Rolagem de dados 3D animada, com log de rolagens e um gerador comum de números como reserva caso o navegador não consiga rodar a animação.</li>
+                        <li>Atalhos de teclado opcionais pra rolagem rápida (botão tracejado abaixo da caixa de dados, desativado por padrão): <strong>R</strong> repete a última perícia rolada e <strong>Espaço</strong> rola um 1d20 avulso. Nunca disparam enquanto você estiver digitando em algum campo ou com qualquer modal aberta.</li>
                     </ul>
                 </section>
 
@@ -104,6 +105,7 @@ export default function SobrePage() {
                         <li>O selo <strong>"Automático"</strong> num ritual indica que ele foi concedido por um poder de sub-trilha (não por escolha sua no catálogo) — não conta na sua cota de rituais conhecidos, e some sozinho se você trocar de sub-trilha ou cair de NEX.</li>
                         <li>Números com um tracejado por baixo, ou textos como "Rituais conhecidos: X / Y", geralmente têm um tooltip (passe o mouse por cima) detalhando de onde vem cada parte daquele total.</li>
                         <li>Os "chips" verdes em Resistências (bloco Proteção/Resistências, na Ficha) somam automaticamente o que vem de poder de trilha e de proteção equipada — o campo de texto ao lado deles é só pra anotar algo que não vem de nenhum dos dois (ex: dado pelo mestre numa cena específica).</li>
+                        <li>Os atalhos de teclado de rolagem (R / Espaço) são uma preferência da sua conta, não desta ficha só — ative uma vez e valem em qualquer personagem, em qualquer aparelho onde você logar.</li>
                     </ul>
                 </section>
             </div>

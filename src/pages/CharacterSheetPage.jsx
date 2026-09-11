@@ -5,6 +5,7 @@ import { Characters } from '@/services/firebase';
 import AttributePentagram from '@/components/AttributePentagram';
 import { useDiceBox } from '@/hooks/useDiceBox';
 import { useDicePreferences } from '@/hooks/useDicePreferences';
+import { useAtalhosPreferences } from '@/hooks/useAtalhosPreferences';
 import { playDiceRollSound, playRitualCastSound } from '@/lib/diceSound';
 import * as OP from '@/lib/pericias';
 import * as OPI from '@/lib/itens';
@@ -88,6 +89,11 @@ export default function CharacterSheetPage() {
     const [resistencias, setResistencias] = useState('');
     const [rollLog, setRollLog] = useState([]);
     const [ultimoResultado, setUltimoResultado] = useState(null);
+    // Última perícia rolada (nome + dados de atributo + bônus já
+    // somado) -- guardada só pra alimentar o atalho de teclado "R"
+    // (repetir), ver useAtalhosPreferences/handleKeyDown mais abaixo.
+    // Não é persistida: reseta ao trocar de ficha/recarregar a página.
+    const [ultimaPericia, setUltimaPericia] = useState(null);
 
     // --- Aba ativa da coluna 3 (Combate / Rituais / Inventário) ---
     const [abaAtiva, setAbaAtiva] = useState('combate');
@@ -128,6 +134,11 @@ export default function CharacterSheetPage() {
     const { prefs: dicePrefs, carregado: dicePrefsCarregado, salvar: salvarDicePrefs } = useDicePreferences(user.uid);
     const [modalTemaDadoAberto, setModalTemaDadoAberto] = useState(false);
 
+    // --- Atalhos de teclado pra rolagem (R = repetir última perícia,
+    // Espaço = 1d20 avulso) -- preferência da conta, desativada por
+    // padrão até o usuário ligar no botão abaixo da caixa de dados.
+    const { ativos: atalhosAtivos, carregado: atalhosCarregado, salvar: salvarAtalhos } = useAtalhosPreferences(user.uid);
+
     // Assim que a preferência salva termina de carregar do Firestore
     // (dicePrefsCarregado vira true), aplica ela na DiceBox já
     // inicializada — sem isso a caixa ficaria sempre no tema "default"
@@ -146,6 +157,18 @@ export default function CharacterSheetPage() {
             setModalTemaDadoAberto(false);
         } catch {
             toast.error('Não foi possível salvar a aparência dos dados agora.');
+        }
+    }
+
+    async function handleToggleAtalhos() {
+        const novo = !atalhosAtivos;
+        try {
+            await salvarAtalhos(novo);
+            toast.success(novo
+                ? 'Atalhos de teclado ativados — R repete a última perícia, Espaço rola 1d20.'
+                : 'Atalhos de teclado desativados.');
+        } catch {
+            toast.error('Não foi possível salvar a preferência de atalhos agora.');
         }
     }
 
@@ -270,6 +293,7 @@ export default function CharacterSheetPage() {
     }
 
     async function rollSkill(skillName, attrDice, bonus) {
+        setUltimaPericia({ skillName, attrDice, bonus });
         let rolls, bestDie;
         if (attrDice > 0) {
             rolls = await rollDice(attrDice, 20);
@@ -283,6 +307,26 @@ export default function CharacterSheetPage() {
         logMessage(skillName, details, total, bestDie === 20 ? 'crit' : 'normal');
     }
 
+    // Atalho "R": refaz a última perícia rolada (mesmo atributo/bônus
+    // de então) -- se nenhuma perícia foi rolada ainda nesta sessão,
+    // avisa em vez de tentar rolar algo inexistente.
+    function repetirUltimaPericia() {
+        if (!ultimaPericia) {
+            toast.error('Nenhuma perícia foi rolada ainda nesta sessão.');
+            return;
+        }
+        rollSkill(ultimaPericia.skillName, ultimaPericia.attrDice, ultimaPericia.bonus);
+    }
+
+    // Atalho "Espaço": rola um 1d20 avulso, sem bônus -- não mexe na
+    // rolagem personalizada (dieSides/diceQty/diceMod) da aba Combate.
+    async function rollD20Rapido() {
+        const rolls = await rollDice(1, 20);
+        const resultado = rolls[0];
+        const type = resultado === 20 ? 'crit' : (resultado === 1 ? 'fail' : 'normal');
+        logMessage('1d20 (atalho)', `[${resultado}]`, resultado, type);
+    }
+
     async function handleRollSelectedDice() {
         const qty = parseInt(diceQty, 10) || 1;
         const mod = parseInt(diceMod, 10) || 0;
@@ -293,6 +337,45 @@ export default function CharacterSheetPage() {
         const details = `[${rolls.join(' + ')}] ${mod !== 0 ? (mod > 0 ? '+ ' + mod : mod) : ''}`;
         logMessage(`Personalizada (${expression})`, details, total);
     }
+
+    // ---------------------------------------------------------------
+    // Atalhos de teclado (R = repetir última perícia, Espaço = 1d20)
+    // ---------------------------------------------------------------
+    // Só liga o listener global quando a preferência está ativa --
+    // enquanto desativada (padrão), nenhuma tecla é interceptada.
+    // Duplo bloqueio pedido pelo usuário: nunca dispara enquanto o
+    // foco estiver num campo editável (input/textarea/select/
+    // contenteditable) OU enquanto qualquer modal estiver aberta
+    // (".modal-overlay" é a marcação genérica usada por todas as
+    // modais desta ficha).
+    useEffect(() => {
+        if (!atalhosAtivos) return;
+
+        function focoEmCampoEditavel() {
+            const el = document.activeElement;
+            if (!el) return false;
+            const tag = el.tagName;
+            return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
+        }
+
+        function handleKeyDown(e) {
+            if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+            if (focoEmCampoEditavel()) return;
+            if (document.querySelector('.modal-overlay')) return;
+
+            if (e.key === 'r' || e.key === 'R') {
+                e.preventDefault();
+                repetirUltimaPericia();
+            } else if (e.code === 'Space' || e.key === ' ') {
+                e.preventDefault();
+                rollD20Rapido();
+            }
+        }
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [atalhosAtivos, ultimaPericia]);
 
     // ---------------------------------------------------------------
     // Vida / Determinação / Defesa
@@ -866,6 +949,19 @@ export default function CharacterSheetPage() {
                                 Animação 3D indisponível neste navegador — mostrando só o resultado.
                             </div>
                         )}
+                    </div>
+
+                    <div className="atalhos-toggle-row">
+                        <button
+                            type="button"
+                            className="atalhos-toggle"
+                            aria-pressed={atalhosAtivos}
+                            disabled={!atalhosCarregado}
+                            title="R = repetir a última perícia rolada · Espaço = rolar 1d20 avulso (não dispara enquanto você digita ou com alguma modal aberta)"
+                            onClick={handleToggleAtalhos}
+                        >
+                            {atalhosAtivos ? '− Desativar atalhos (R / Espaço)' : '+ Ativar atalhos de rolagem (R / Espaço)'}
+                        </button>
                     </div>
                 </section>
 

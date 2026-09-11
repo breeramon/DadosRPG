@@ -188,6 +188,47 @@ button:focus-visible,
     }
 }
 
+/* Atalhos de teclado pra rolagem (R = repetir última perícia, Espaço
+   = 1d20 avulso) -- botão de ligar/desligar a preferência, logo
+   abaixo da caixa de dados 3D. Mesmo estilo tracejado-vira-sólido do
+   toggle de Sanidade (.vital-sanidade-toggle em VitalsPanel.jsx). */
+.atalhos-toggle-row {
+    display: flex;
+    margin-top: 8px;
+}
+
+.atalhos-toggle {
+    width: 100%;
+    min-height: 30px;
+    padding: 6px 10px;
+    background: transparent;
+    border: 1px dashed var(--color-primary-400);
+    border-radius: 6px;
+    color: var(--color-primary-300);
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.atalhos-toggle:hover {
+    border-style: solid;
+    border-color: var(--color-primary-300);
+    color: var(--color-text);
+    background-color: rgba(124, 67, 189, 0.12);
+}
+
+.atalhos-toggle[aria-pressed="true"] {
+    border-style: solid;
+    color: var(--color-text-muted);
+}
+
+.atalhos-toggle:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
 @media (max-width: 1400px) {
     .dice-box-wrap {
         position: relative;
