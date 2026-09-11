@@ -2406,17 +2406,17 @@ h3 {
     to   { opacity: 0.9; }
 }
 
-.auth-card {
+/* --- Contêiner dos dois painéis (identidade + formulário) -- ver
+   .auth-selo-panel/.auth-form-panel logo abaixo. Substitui o antigo
+   card único; a "entrada" ao carregar a tela é a mesma de antes. --- */
+.auth-split {
     position: relative;
     z-index: 1;
-    background-color: rgba(30, 30, 30, 0.92);
-    border: 1px solid rgba(179, 157, 219, 0.18);
-    border-radius: 12px;
-    padding: 34px 30px;
-    width: 100%;
-    max-width: 380px;
+    width: min(820px, 94vw);
+    min-height: min(560px, 88vh);
+    border-radius: 16px;
+    overflow: hidden;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(124, 67, 189, 0.08);
-    text-align: center;
     animation: authCardEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -2425,21 +2425,152 @@ h3 {
     to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.auth-selo-icon {
-    width: 44px;
-    height: 44px;
-    color: var(--color-primary-300);
-    margin-bottom: 10px;
-    filter: drop-shadow(0 0 6px rgba(179, 157, 219, 0.35));
-    animation: authSeloPulse 4s ease-in-out infinite;
+/* Painel de identidade -- sempre visível, só troca de lado (a mesma
+   largura dos dois lados, 42%/58%, é o que garante que o "left"/
+   "right" de baixo façam ele deslizar sem esticar/encolher -- ver
+   nota no --left/--right). O selo grande fica de marca d'água atrás
+   do texto, que é a única parte que troca de conteúdo. */
+.auth-selo-panel {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    /* Como as larguras (42%/58%) não são iguais, os dois painéis se
+       sobrepõem no meio da transição (um "cruza" o outro) -- esse
+       z-index garante que é o painel do selo que fica por cima nesse
+       instante, e o do formulário passa por baixo dele. */
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 22px;
+    background-image: linear-gradient(160deg, var(--color-primary-700), var(--color-primary-900));
+    overflow: hidden;
+    transition: left 0.7s cubic-bezier(0.65, 0, 0.35, 1), right 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* left/right somados sempre dão 100%, então a largura do painel (42%)
+   não muda durante a transição -- só a posição desliza. */
+.auth-selo-panel--left {
+    left: 0;
+    right: 58%;
+}
+
+.auth-selo-panel--right {
+    left: 58%;
+    right: 0;
+}
+
+.auth-selo-panel-mark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60%;
+    max-width: 220px;
+    height: auto;
+    color: var(--color-text);
+    opacity: 0.14;
+    pointer-events: none;
+    animation: authSeloPulse 5s ease-in-out infinite;
 }
 
 @keyframes authSeloPulse {
-    0%, 100% { filter: drop-shadow(0 0 4px rgba(179, 157, 219, 0.25)); opacity: 0.9; }
-    50%      { filter: drop-shadow(0 0 12px rgba(179, 157, 219, 0.55)); opacity: 1; }
+    0%, 100% { opacity: 0.10; }
+    50%      { opacity: 0.20; }
 }
 
-.auth-card h2 {
+.auth-selo-panel-static {
+    position: relative;
+    z-index: 1;
+}
+
+.auth-selo-panel-static h1 {
+    color: var(--color-text);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+    margin: 0 0 16px;
+}
+
+.auth-selo-panel-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+    animation: fadeIn 0.4s ease both;
+}
+
+.auth-selo-panel-content h3 {
+    color: var(--color-text);
+    font-size: 1.05rem;
+    margin: 0;
+}
+
+.auth-selo-panel-content p {
+    color: var(--color-primary-100);
+    font-size: 0.85rem;
+    margin: 0 0 6px;
+    max-width: 220px;
+}
+
+.auth-selo-panel-btn {
+    margin-top: 8px;
+    padding: 9px 26px;
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    border-radius: 30px;
+    background: transparent;
+    color: var(--color-text);
+    font-weight: bold;
+    font-size: 0.85rem;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.auth-selo-panel-btn:hover,
+.auth-selo-panel-btn:focus-visible {
+    background-color: rgba(255, 255, 255, 0.14);
+    border-color: var(--color-text);
+}
+
+/* Painel do formulário -- ocupa o lado oposto ao do selo (58%/42%, o
+   inverso do painel de identidade) e troca de conteúdo (Entrar/Criar
+   conta) por baixo, com o mesmo fadeIn que o resto da ficha já usa. */
+.auth-form-panel {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    background-color: rgba(24, 24, 24, 0.94);
+    overflow-y: auto;
+    transition: left 0.7s cubic-bezier(0.65, 0, 0.35, 1), right 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.auth-form-panel--right {
+    left: 42%;
+    right: 0;
+}
+
+.auth-form-panel--left {
+    left: 0;
+    right: 42%;
+}
+
+.auth-form-panel-inner {
+    width: 100%;
+    padding: 34px 38px;
+    text-align: left;
+    animation: fadeIn 0.35s ease both;
+}
+
+.auth-form-panel-inner h2 {
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-bottom: 8px;
@@ -2556,33 +2687,56 @@ h3 {
     to { transform: rotate(360deg); }
 }
 
-.auth-toggle {
-    margin-top: 18px;
-    text-align: center;
-    font-size: 0.9rem;
-    color: var(--color-text-muted);
-}
-
-.auth-toggle a {
-    color: var(--color-primary-300);
-    text-decoration: none;
-    margin-left: 4px;
-}
-
-.auth-toggle a:hover {
-    text-decoration: underline;
-}
-
 @media (prefers-reduced-motion: reduce) {
     .login-bg-glow,
     .login-bg-stars,
-    .auth-card,
-    .auth-selo-icon,
+    .auth-split,
+    .auth-selo-panel-mark,
+    .auth-selo-panel-content,
+    .auth-form-panel-inner,
     .auth-subtitle,
     .auth-error,
     .form-hint,
     .modal-box {
         animation: none !important;
+    }
+
+    .auth-selo-panel,
+    .auth-form-panel {
+        transition: none !important;
+    }
+}
+
+/* Abaixo de 760px as duas colunas não cabem lado a lado de forma
+   legível -- empilha (selo em cima, formulário embaixo) e desliga a
+   animação de troca de lado (não faz sentido "deslizar" empilhado). */
+@media (max-width: 760px) {
+    .auth-split {
+        width: 100%;
+        max-width: 380px;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .auth-selo-panel,
+    .auth-form-panel {
+        position: static;
+        width: 100%;
+        transition: none;
+    }
+
+    .auth-selo-panel {
+        padding: 22px 20px;
+        min-height: 150px;
+    }
+
+    .auth-selo-panel-mark {
+        max-width: 130px;
+    }
+
+    .auth-form-panel-inner {
+        padding: 26px 24px;
     }
 }
 
@@ -3026,14 +3180,8 @@ h3 {
 }
 
 @media (max-width: 700px) {
-    .characters-panel,
-    .auth-card {
+    .characters-panel {
         padding: 18px;
-    }
-
-    .auth-selo-icon {
-        width: 36px;
-        height: 36px;
     }
 
     .login-bg-glow {

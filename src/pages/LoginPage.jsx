@@ -12,11 +12,14 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { Auth } from '@/services/firebase';
 import { useAuth } from '@/hooks/useAuth';
 
-// Ícone do "selo" no topo do card — símbolo abstrato (círculo + marcações),
-// sem nenhum significado religioso específico, só clima de RPG/oculto.
-function SeloIcon() {
+// Ícone do "selo" -- símbolo abstrato (círculo + marcações), sem nenhum
+// significado religioso específico, só clima de RPG/oculto. Recebe
+// className de fora porque agora tem dois usos bem diferentes: pequeno
+// (não usado mais aqui, mas fica flexível) e grande como "marca d'água"
+// no painel de identidade (ver .auth-selo-panel-mark).
+function SeloIcon({ className = 'auth-selo-icon' }) {
     return (
-        <svg className="auth-selo-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <svg className={className} viewBox="0 0 48 48" fill="none" aria-hidden="true">
             <circle cx="24" cy="24" r="19" stroke="currentColor" strokeWidth="1.4" />
             <circle cx="24" cy="24" r="6.5" stroke="currentColor" strokeWidth="1.4" />
             <circle cx="24" cy="24" r="1.8" fill="currentColor" />
@@ -100,74 +103,88 @@ export default function LoginPage() {
                 <div className="login-bg-vignette" />
             </div>
 
-            <div className="auth-card">
-                <SeloIcon />
-                <h2>Ficha Ordem Paranormal</h2>
-                <p className="auth-subtitle" key={`subtitle-${isSignupMode}`}>
-                    {isSignupMode
-                        ? 'Crie sua conta para começar a jogar.'
-                        : 'Entre com sua conta para ver seus personagens.'}
-                </p>
-
-                {erro && (
-                    <div className="auth-error" role="alert" aria-live="assertive" key={erro}>
-                        {erro}
+            {/* Dois painéis lado a lado (identidade/selo + formulário) que
+                trocam de lado ao alternar Entrar/Criar conta -- ver
+                .auth-selo-panel/.auth-form-panel no index.css. Abaixo de
+                760px eles empilham (ver a mesma media query). */}
+            <div className="auth-split">
+                <div className={`auth-selo-panel ${isSignupMode ? 'auth-selo-panel--right' : 'auth-selo-panel--left'}`}>
+                    <SeloIcon className="auth-selo-panel-mark" />
+                    <div className="auth-selo-panel-static">
+                        <h1>Ficha Ordem Paranormal</h1>
                     </div>
-                )}
-
-                <form className="auth-form" onSubmit={handleSubmit}>
-                    <div className="control-group full">
-                        <label htmlFor="login-email">E-mail</label>
-                        <input
-                            id="login-email"
-                            type="email"
-                            required
-                            autoComplete="email"
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
-                        />
+                    <div className="auth-selo-panel-content" key={`selo-${isSignupMode}`}>
+                        <h3>{isSignupMode ? 'Já tem conta?' : 'Ainda não tem conta?'}</h3>
+                        <p>{isSignupMode ? 'Entre para ver seus personagens.' : 'Crie a sua para começar a jogar.'}</p>
+                        <button type="button" className="auth-selo-panel-btn" onClick={alternarModo}>
+                            {isSignupMode ? 'Entrar' : 'Criar conta'}
+                        </button>
                     </div>
-                    <div className="control-group full">
-                        <label htmlFor="login-senha">Senha</label>
-                        <div className="password-field">
-                            <input
-                                id="login-senha"
-                                type={mostrarSenha ? 'text' : 'password'}
-                                required
-                                minLength={6}
-                                autoComplete={isSignupMode ? 'new-password' : 'current-password'}
-                                value={senha}
-                                onChange={e => setSenha(e.target.value)}
-                            />
-                            <button
-                                type="button"
-                                className="password-toggle"
-                                onClick={() => setMostrarSenha(v => !v)}
-                                aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
-                                aria-pressed={mostrarSenha}
-                                tabIndex={0}
-                            >
-                                {mostrarSenha ? <EyeOffIcon /> : <EyeIcon />}
-                            </button>
-                        </div>
-                        {isSignupMode && (
-                            <span className="form-hint">Mínimo de 6 caracteres.</span>
+                </div>
+
+                <div className={`auth-form-panel ${isSignupMode ? 'auth-form-panel--left' : 'auth-form-panel--right'}`}>
+                    <div className="auth-form-panel-inner" key={`form-${isSignupMode}`}>
+                        <h2>{isSignupMode ? 'Criar conta' : 'Entrar'}</h2>
+                        <p className="auth-subtitle">
+                            {isSignupMode
+                                ? 'Crie sua conta para começar a jogar.'
+                                : 'Entre com sua conta para ver seus personagens.'}
+                        </p>
+
+                        {erro && (
+                            <div className="auth-error" role="alert" aria-live="assertive" key={erro}>
+                                {erro}
+                            </div>
                         )}
-                    </div>
-                    <button type="submit" className="btn-action full" disabled={enviando} aria-busy={enviando}>
-                        {enviando && <span className="btn-spinner" />}
-                        <span key={`btn-${isSignupMode}`}>
-                            {isSignupMode ? 'Criar conta' : 'Entrar'}
-                        </span>
-                    </button>
-                </form>
 
-                <p className="auth-toggle">
-                    <span>{isSignupMode ? 'Já tem conta?' : 'Ainda não tem conta?'}</span>{' '}
-                    <a href="#" onClick={e => { e.preventDefault(); alternarModo(); }}>
-                        {isSignupMode ? 'Entrar' : 'Criar conta'}
-                    </a>
-                </p>
+                        <form className="auth-form" onSubmit={handleSubmit}>
+                            <div className="control-group full">
+                                <label htmlFor="login-email">E-mail</label>
+                                <input
+                                    id="login-email"
+                                    type="email"
+                                    required
+                                    autoComplete="email"
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value)}
+                                />
+                            </div>
+                            <div className="control-group full">
+                                <label htmlFor="login-senha">Senha</label>
+                                <div className="password-field">
+                                    <input
+                                        id="login-senha"
+                                        type={mostrarSenha ? 'text' : 'password'}
+                                        required
+                                        minLength={6}
+                                        autoComplete={isSignupMode ? 'new-password' : 'current-password'}
+                                        value={senha}
+                                        onChange={e => setSenha(e.target.value)}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="password-toggle"
+                                        onClick={() => setMostrarSenha(v => !v)}
+                                        aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                                        aria-pressed={mostrarSenha}
+                                        tabIndex={0}
+                                    >
+                                        {mostrarSenha ? <EyeOffIcon /> : <EyeIcon />}
+                                    </button>
+                                </div>
+                                {isSignupMode && (
+                                    <span className="form-hint">Mínimo de 6 caracteres.</span>
+                                )}
+                            </div>
+                            <button type="submit" className="btn-action full" disabled={enviando} aria-busy={enviando}>
+                                {enviando && <span className="btn-spinner" />}
+                                <span key={`btn-${isSignupMode}`}>
+                                    {isSignupMode ? 'Criar conta' : 'Entrar'}
+                                </span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     );
