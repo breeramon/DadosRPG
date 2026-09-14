@@ -17,6 +17,7 @@
 // ============================================================
 
 import * as OP from '@/lib/pericias';
+import ClickSpark from '@/components/ClickSpark';
 
 const ATTR_LABEL = { agi: 'AGI', int: 'INT', vig: 'VIG', pre: 'PRE', for: 'FOR' };
 const GRAU_ABREV = { treinado: 'T', veterano: 'V', expert: 'E' };
@@ -75,15 +76,23 @@ export default function PericiasTable({ atributos, salvasPorNome, bonusPericias,
                             >
                                 {treinado ? (GRAU_ABREV[grau] || 'T') : '-'}
                             </span>
-                            <button
-                                className="btn-roll-skill"
-                                disabled={bloqueada}
-                                title={`Rolar ${catItem.nome}`}
-                                aria-label={`Rolar ${catItem.nome}`}
-                                onClick={() => onRollSkill(catItem.nome, valorAtributo, bonus)}
-                            >
-                                <D20Icon />
-                            </button>
+                            {/* ClickSpark: teste de "faísca" de partículas no
+                                clique (React Bits, sem dependência nova -- ver
+                                ClickSpark.jsx). className faz ele abraçar o
+                                tamanho do botão (36x36) em vez de esticar pra
+                                célula inteira da grid -- ver .skill-roll-spark
+                                no index.css. */}
+                            <ClickSpark className="skill-roll-spark" sparkColor="#b39ddb" sparkSize={8} sparkRadius={14} sparkCount={6} duration={350}>
+                                <button
+                                    className="btn-roll-skill"
+                                    disabled={bloqueada}
+                                    title={`Rolar ${catItem.nome}`}
+                                    aria-label={`Rolar ${catItem.nome}`}
+                                    onClick={() => onRollSkill(catItem.nome, valorAtributo, bonus)}
+                                >
+                                    <D20Icon />
+                                </button>
+                            </ClickSpark>
                         </div>
                     );
                 })}

@@ -921,17 +921,26 @@ h3 {
     .skill-dice { grid-area: dice; text-align: left; color: var(--color-text-muted); }
     .skill-bonus { grid-area: bonus; text-align: left; color: var(--color-text-muted); }
     .skill-treino { grid-area: treino; text-align: left; color: var(--color-text-muted); }
-    .skill-item .btn-roll-skill {
+    .skill-item .skill-roll-spark {
         grid-area: action;
         justify-self: end;
         align-self: start;
     }
 }
 
+/* Embrulho do ClickSpark ao redor do botão de rolar perícia -- ele
+   quem agora é o item direto da grid (ver PericiasTable.jsx), então a
+   centralização que antes estava em .btn-roll-skill mora aqui. Sem
+   width/height fixo: o wrapper abraça o tamanho do botão (36x36) por
+   dentro, então o clique/faísca ficam restritos à área do próprio
+   botão -- não a célula inteira da linha. */
+.skill-roll-spark {
+    justify-self: center;
+}
+
 .btn-roll-skill {
     width: 36px;
     height: 36px;
-    justify-self: center;
     background-color: transparent;
     border: 1px solid var(--color-primary-900);
     color: var(--color-primary-300);
