@@ -46,6 +46,20 @@ function EyeOffIcon() {
     );
 }
 
+// Logo oficial do Google ("G" colorido) -- as cores seguem as diretrizes
+// de marca do Google para botões de login, por isso não usam
+// currentColor/variáveis do tema como os outros ícones daqui.
+function GoogleIcon() {
+    return (
+        <svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true">
+            <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5Z" />
+            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.6 8.3 6.3 14.7Z" />
+            <path fill="#4CAF50" d="M24 44c5.5 0 10.4-2.1 14.1-5.5l-6.5-5.5c-2 1.5-4.6 2.5-7.6 2.5-5.3 0-9.7-3.4-11.3-8.1l-6.6 5.1C9.5 39.6 16.2 44 24 44Z" />
+            <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.5l6.5 5.5C41.6 35.9 44 30.4 44 24c0-1.3-.1-2.7-.4-3.5Z" />
+        </svg>
+    );
+}
+
 export default function LoginPage() {
     const { user, loading } = useAuth();
     const navigate = useNavigate();
@@ -56,6 +70,7 @@ export default function LoginPage() {
     const [mostrarSenha, setMostrarSenha] = useState(false);
     const [erro, setErro] = useState(null);
     const [enviando, setEnviando] = useState(false);
+    const [enviandoGoogle, setEnviandoGoogle] = useState(false);
 
     function friendlyAuthError(err) {
         if (Auth && typeof Auth.friendlyError === 'function') {
@@ -79,6 +94,23 @@ export default function LoginPage() {
             console.error('[auth] Erro de autenticação:', err);
             setErro(friendlyAuthError(err));
             setEnviando(false);
+        }
+    }
+
+    async function handleGoogleSignIn() {
+        setErro(null);
+        setEnviandoGoogle(true);
+        try {
+            await Auth.signInWithGoogle();
+            navigate('/characters');
+        } catch (err) {
+            // Usuário fechando o popup de propósito não é bem um "erro" --
+            // não precisa poluir a tela com mensagem nesse caso.
+            if (err && err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+                console.error('[auth] Erro no login com Google:', err);
+                setErro(friendlyAuthError(err));
+            }
+            setEnviandoGoogle(false);
         }
     }
 
@@ -176,13 +208,26 @@ export default function LoginPage() {
                                     <span className="form-hint">Mínimo de 6 caracteres.</span>
                                 )}
                             </div>
-                            <button type="submit" className="btn-action full" disabled={enviando} aria-busy={enviando}>
+                            <button type="submit" className="btn-action full" disabled={enviando || enviandoGoogle} aria-busy={enviando}>
                                 {enviando && <span className="btn-spinner" />}
                                 <span key={`btn-${isSignupMode}`}>
                                     {isSignupMode ? 'Criar conta' : 'Entrar'}
                                 </span>
                             </button>
                         </form>
+
+                        <div className="auth-divider"><span>ou</span></div>
+
+                        <button
+                            type="button"
+                            className="btn-google full"
+                            onClick={handleGoogleSignIn}
+                            disabled={enviando || enviandoGoogle}
+                            aria-busy={enviandoGoogle}
+                        >
+                            {enviandoGoogle ? <span className="btn-spinner btn-spinner-dark" /> : <GoogleIcon />}
+                            {isSignupMode ? 'Criar conta com o Google' : 'Entrar com o Google'}
+                        </button>
                     </div>
                 </div>
             </div>

@@ -2713,6 +2713,74 @@ h3 {
     to { transform: rotate(360deg); }
 }
 
+/* Divisor "ou" entre o formulário de e-mail/senha e o login com Google */
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0;
+    color: var(--color-text-hint);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Botão "Entrar/Criar conta com o Google" -- deliberadamente neutro
+   (fundo claro, texto escuro) em vez de seguir o gradiente roxo do
+   .btn-action, pra ficar reconhecível como um botão de OAuth e seguir
+   as diretrizes de marca do Google (ver GoogleIcon em LoginPage.jsx). */
+.btn-google {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px 20px;
+    background-color: #fff;
+    color: #1f1f1f;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    letter-spacing: 0.2px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-google.full {
+    width: 100%;
+}
+
+.btn-google:hover:not(:disabled) {
+    background-color: #f5f5f5;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.3);
+}
+
+.btn-google:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.btn-google:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.btn-spinner-dark {
+    border: 2px solid rgba(0, 0, 0, 0.15);
+    border-top-color: #1f1f1f;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .login-bg-glow,
     .login-bg-stars,

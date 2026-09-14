@@ -20,6 +20,8 @@
 // Expõe:
 //   Auth.signUp(email, senha)   -> Promise<User>
 //   Auth.signIn(email, senha)   -> Promise<User>
+//   Auth.signInWithGoogle()     -> Promise<User> (abre popup de login do
+//                                   Google -- ver LoginPage.jsx)
 //   Auth.signOut()              -> Promise<void>
 //   Auth.onChange(cb)           -> retorna a função de "unsubscribe";
 //                                   chama cb(user | null) sempre que o
@@ -49,6 +51,8 @@ import {
     getAuth,
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
+    signInWithPopup,
+    GoogleAuthProvider,
     signOut as firebaseSignOut,
     onAuthStateChanged,
 } from 'firebase/auth';
@@ -119,6 +123,17 @@ export const Auth = {
         return cred.user;
     },
 
+    // Login via popup do Google -- precisa do provedor "Google" ativado
+    // em Authentication > Método de login no Console do Firebase. Cria a
+    // conta automaticamente no primeiro login (não precisa de um
+    // "signUpWithGoogle" separado).
+    async signInWithGoogle() {
+        checarPronto();
+        const provider = new GoogleAuthProvider();
+        const cred = await signInWithPopup(auth, provider);
+        return cred.user;
+    },
+
     async signOut() {
         checarPronto();
         return firebaseSignOut(auth);
@@ -153,6 +168,10 @@ export const Auth = {
             'auth/weak-password': 'A senha precisa ter pelo menos 6 caracteres.',
             'auth/too-many-requests': 'Muitas tentativas seguidas. Tente novamente em instantes.',
             'auth/network-request-failed': 'Falha de conexão. Verifique sua internet.',
+            'auth/popup-closed-by-user': 'A janela de login do Google foi fechada antes de terminar.',
+            'auth/popup-blocked': 'O navegador bloqueou a janela de login do Google. Permita pop-ups para este site e tente de novo.',
+            'auth/cancelled-popup-request': 'Login cancelado -- já havia outra janela de login aberta.',
+            'auth/account-exists-with-different-credential': 'Já existe uma conta com esse e-mail usando outro método de login.',
         };
         return mensagens[code] || (err && err.message) || 'Não foi possível completar a operação.';
     },
