@@ -14,6 +14,13 @@
 //   bonusPericias   -- mapa nome -> bônus numérico de poder de trilha
 //                      (ver OPT.bonusNumericoDosPoderes(...).pericias)
 //   onRollSkill(nome, valorAtributo, bonus) -- clicou pra rolar
+//   desabilitarRolagem              -- true enquanto já existe uma
+//                                       rolagem em andamento na caixa
+//                                       de dados (ver "rolando" em
+//                                       useDiceBox.js) -- só um
+//                                       rolamento por vez evita que a
+//                                       lib 3D receba dois .roll()
+//                                       sobrepostos e "quebre" à toa
 // ============================================================
 
 import * as OP from '@/lib/pericias';
@@ -31,7 +38,7 @@ function D20Icon() {
     );
 }
 
-export default function PericiasTable({ atributos, salvasPorNome, bonusPericias, onRollSkill }) {
+export default function PericiasTable({ atributos, salvasPorNome, bonusPericias, onRollSkill, desabilitarRolagem = false }) {
     return (
         <section className="skills-section">
             <h3>Perícias</h3>
@@ -85,9 +92,9 @@ export default function PericiasTable({ atributos, salvasPorNome, bonusPericias,
                             <ClickSpark className="skill-roll-spark" sparkColor="#b39ddb" sparkSize={8} sparkRadius={14} sparkCount={6} duration={350}>
                                 <button
                                     className="btn-roll-skill"
-                                    disabled={bloqueada}
-                                    title={`Rolar ${catItem.nome}`}
-                                    aria-label={`Rolar ${catItem.nome}`}
+                                    disabled={bloqueada || desabilitarRolagem}
+                                    title={desabilitarRolagem ? 'Aguarde a rolagem atual terminar' : `Rolar ${catItem.nome}`}
+                                    aria-label={desabilitarRolagem ? 'Aguarde a rolagem atual terminar' : `Rolar ${catItem.nome}`}
                                     onClick={() => onRollSkill(catItem.nome, valorAtributo, bonus)}
                                 >
                                     <D20Icon />

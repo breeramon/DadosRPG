@@ -1182,6 +1182,23 @@ h3 {
 
 .btn-roll-icon:active { transform: scale(0.94); }
 
+/* Só um rolamento por vez: enquanto a caixa de dados 3D já está
+   processando uma rolagem (ver "rolando" em useDiceBox.js), os
+   botões que disparam rolagem ficam visivelmente desabilitados até o
+   resultado aparecer -- pedir um .roll() novo em cima de um que ainda
+   não assentou é o que fazia a lib cair no aviso de "animação 3D
+   indisponível" à toa (o resultado saía certo, só a mensagem de erro
+   que não devia ter aparecido). */
+.attr-btn:disabled,
+.btn-roll-skill:disabled,
+.btn-roll-icon:disabled,
+.custom-roller .btn-action:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
 .btn-conjurar {
     flex-shrink: 0;
     padding: 5px 12px;

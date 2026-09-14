@@ -106,6 +106,22 @@ export function useDiceBox(containerSelector) {
     // gerador local, resultado continua correto).
     const [animacao3dPronta, setAnimacao3dPronta] = useState(null);
 
+    // true enquanto uma rolagem está em andamento (do clique até o
+    // resultado assentar). A lib @3d-dice/dice-box não foi feita pra
+    // receber um .roll() novo enquanto o anterior ainda não assentou —
+    // rolar de novo em cima de uma rolagem em andamento fazia a
+    // promise da SEGUNDA rolagem falhar/estourar o prazo, e isso caía
+    // no catch de rollDiceAnimated abaixo, que marca
+    // animacao3dPronta=false PRA SEMPRE (mesmo a lib continuando
+    // saudável) -- daí o aviso "animação 3D indisponível" aparecer do
+    // nada, mesmo com a animação sempre voltando a funcionar depois.
+    // Em vez de tentar sincronizar rolagens concorrentes dentro da
+    // lib, é mais simples e mais previsível pro jogador só proibir
+    // uma rolagem nova enquanto a de agora não terminou -- ver uso
+    // deste valor pra desabilitar os botões de rolagem em
+    // CharacterSheetPage/PericiasTable/CombateTab.
+    const [rolando, setRolando] = useState(false);
+
     useEffect(() => {
         // Guarda contra o StrictMode do React (dev) rodando o efeito duas
         // vezes na mesma montagem — sem isso, criaríamos dois canvases 3D
@@ -175,29 +191,34 @@ export function useDiceBox(containerSelector) {
         const qty = parseInt(match[1], 10);
         const sides = parseInt(match[2], 10);
 
-        const ready = readyPromiseRef.current ? await readyPromiseRef.current : false;
-        if (!ready || !diceBoxRef.current) {
-            return rollLocally(qty, sides);
-        }
-
+        setRolando(true);
         try {
-            // Prazo um pouco maior que o settleTimeout (6s) configurado na
-            // DiceBox acima — essa lib já tem seu próprio timeout interno
-            // pra quando os dados "não assentam", isso aqui é só uma rede
-            // de segurança extra caso a promise nem isso respeite.
-            const results = await comPrazo(diceBoxRef.current.roll(notation), 8000);
-            if (results === PRAZO_ESTOUROU) {
-                throw new Error('A rolagem animada não respondeu a tempo.');
+            const ready = readyPromiseRef.current ? await readyPromiseRef.current : false;
+            if (!ready || !diceBoxRef.current) {
+                return rollLocally(qty, sides);
             }
-            const values = results.map(r => r.value);
-            if (values.length !== qty || values.some(v => typeof v !== 'number' || Number.isNaN(v))) {
-                throw new Error('Formato de resultado inesperado retornado pela dice-box.');
+
+            try {
+                // Prazo um pouco maior que o settleTimeout (6s) configurado na
+                // DiceBox acima — essa lib já tem seu próprio timeout interno
+                // pra quando os dados "não assentam", isso aqui é só uma rede
+                // de segurança extra caso a promise nem isso respeite.
+                const results = await comPrazo(diceBoxRef.current.roll(notation), 8000);
+                if (results === PRAZO_ESTOUROU) {
+                    throw new Error('A rolagem animada não respondeu a tempo.');
+                }
+                const values = results.map(r => r.value);
+                if (values.length !== qty || values.some(v => typeof v !== 'number' || Number.isNaN(v))) {
+                    throw new Error('Formato de resultado inesperado retornado pela dice-box.');
+                }
+                return values;
+            } catch (err) {
+                console.warn('[dice-box] Falha ao animar a rolagem, usando gerador local.', err);
+                setAnimacao3dPronta(false);
+                return rollLocally(qty, sides);
             }
-            return values;
-        } catch (err) {
-            console.warn('[dice-box] Falha ao animar a rolagem, usando gerador local.', err);
-            setAnimacao3dPronta(false);
-            return rollLocally(qty, sides);
+        } finally {
+            setRolando(false);
         }
     }, []);
 
@@ -241,5 +262,5 @@ export function useDiceBox(containerSelector) {
         }
     }, []);
 
-    return { rollDiceAnimated, animacao3dPronta, updateDiceTheme };
+    return { rollDiceAnimated, animacao3dPronta, updateDiceTheme, rolando };
 }

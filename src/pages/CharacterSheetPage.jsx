@@ -128,7 +128,7 @@ export default function CharacterSheetPage() {
     const [diceQty, setDiceQty] = useState(1);
     const [diceMod, setDiceMod] = useState(0);
 
-    const { rollDiceAnimated, animacao3dPronta, updateDiceTheme } = useDiceBox('#dice-box');
+    const { rollDiceAnimated, animacao3dPronta, updateDiceTheme, rolando } = useDiceBox('#dice-box');
 
     // --- Tema/cor dos dados (preferência da conta, ver DiceThemeModal) ---
     const { prefs: dicePrefs, carregado: dicePrefsCarregado, salvar: salvarDicePrefs } = useDicePreferences(user.uid);
@@ -835,7 +835,16 @@ export default function CharacterSheetPage() {
             key,
             label,
             posClass,
-            content: <button className="attr-btn" onClick={() => rollSystemDice(nome, valor)}>{valor}</button>,
+            content: (
+                <button
+                    className="attr-btn"
+                    onClick={() => rollSystemDice(nome, valor)}
+                    disabled={rolando}
+                    title={rolando ? 'Aguarde a rolagem atual terminar' : undefined}
+                >
+                    {valor}
+                </button>
+            ),
         };
     });
 
@@ -970,6 +979,7 @@ export default function CharacterSheetPage() {
                     salvasPorNome={salvasPorNome}
                     bonusPericias={bonusPoderes.pericias}
                     onRollSkill={rollSkill}
+                    desabilitarRolagem={rolando}
                 />
 
                 <section className="sheet-tabs-section">
@@ -1024,6 +1034,7 @@ export default function CharacterSheetPage() {
                                 onDiceModChange={setDiceMod}
                                 onRollSelectedDice={handleRollSelectedDice}
                                 rollLog={rollLog}
+                                desabilitarRolagem={rolando}
                             />
                         )}
 

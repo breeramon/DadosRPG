@@ -25,6 +25,13 @@
 //   onRollSelectedDice()
 //   rollLog                              -- histórico de rolagens (ver
 //                                           logMessage em CharacterSheetPage.jsx)
+//   desabilitarRolagem                   -- true enquanto já existe uma
+//                                           rolagem em andamento na caixa
+//                                           de dados (ver "rolando" em
+//                                           useDiceBox.js) -- só um
+//                                           rolamento por vez evita que a
+//                                           lib 3D receba dois .roll()
+//                                           sobrepostos e "quebre" à toa
 // ============================================================
 
 function TrashIcon() {
@@ -63,6 +70,7 @@ export default function CombateTab({
     diceMod, onDiceModChange,
     onRollSelectedDice,
     rollLog,
+    desabilitarRolagem = false,
 }) {
     return (
         <div className="tab-panel-combate">
@@ -114,8 +122,9 @@ export default function CombateTab({
                                     <button
                                         type="button"
                                         className="btn-roll-icon"
-                                        title="Rolar dano"
-                                        aria-label="Rolar dano"
+                                        disabled={desabilitarRolagem}
+                                        title={desabilitarRolagem ? 'Aguarde a rolagem atual terminar' : 'Rolar dano'}
+                                        aria-label={desabilitarRolagem ? 'Aguarde a rolagem atual terminar' : 'Rolar dano'}
                                         onClick={ev => { ev.stopPropagation(); onRollAtaque(ataque); }}
                                     >
                                         <DiceIcon />
@@ -166,7 +175,14 @@ export default function CombateTab({
                         <label>Bônus</label>
                         <input type="number" value={diceMod} onChange={e => onDiceModChange(e.target.value)} />
                     </div>
-                    <button className="btn-action" onClick={onRollSelectedDice}>ROLAR</button>
+                    <button
+                        className="btn-action"
+                        onClick={onRollSelectedDice}
+                        disabled={desabilitarRolagem}
+                        title={desabilitarRolagem ? 'Aguarde a rolagem atual terminar' : undefined}
+                    >
+                        ROLAR
+                    </button>
                 </div>
             </div>
 
