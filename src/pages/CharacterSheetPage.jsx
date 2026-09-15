@@ -350,11 +350,17 @@ export default function CharacterSheetPage() {
     // ---------------------------------------------------------------
     // Só liga o listener global quando a preferência está ativa --
     // enquanto desativada (padrão), nenhuma tecla é interceptada.
-    // Duplo bloqueio pedido pelo usuário: nunca dispara enquanto o
-    // foco estiver num campo editável (input/textarea/select/
-    // contenteditable) OU enquanto qualquer modal estiver aberta
-    // (".modal-overlay" é a marcação genérica usada por todas as
-    // modais desta ficha).
+    // Triplo bloqueio: nunca dispara (1) enquanto o foco estiver num
+    // campo editável (input/textarea/select/contenteditable), (2)
+    // enquanto qualquer modal estiver aberta (".modal-overlay" é a
+    // marcação genérica usada por todas as modais desta ficha), ou (3)
+    // enquanto já existe uma rolagem em andamento na caixa de dados
+    // ("rolando", de useDiceBox.js) -- sem esse terceiro bloqueio, os
+    // atalhos "furavam" a trava de rolagem única que já existe nos
+    // botões (.attr-btn/.btn-roll-skill/etc ficam com disabled=
+    // {rolando}, mas o teclado ignorava esse estado e conseguia
+    // disparar um novo rollDiceAnimated() por cima do que já estava
+    // rolando).
     useEffect(() => {
         if (!atalhosAtivos) return;
 
@@ -369,6 +375,7 @@ export default function CharacterSheetPage() {
             if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
             if (focoEmCampoEditavel()) return;
             if (document.querySelector('.modal-overlay')) return;
+            if (rolando) return;
 
             if (e.key === 'r' || e.key === 'R') {
                 e.preventDefault();
@@ -382,7 +389,7 @@ export default function CharacterSheetPage() {
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [atalhosAtivos, ultimaPericia]);
+    }, [atalhosAtivos, ultimaPericia, rolando]);
 
     // ---------------------------------------------------------------
     // Vida / Determinação / Defesa

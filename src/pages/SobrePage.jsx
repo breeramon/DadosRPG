@@ -46,7 +46,7 @@ export default function SobrePage() {
                         <li>Rituais: catálogo filtrável por Elemento/Círculo, círculo liberado pelo NEX e cota de rituais conhecidos (ver "Extensões" abaixo pra como essa cota é calculada).</li>
                         <li>Poderes de Trilha e sub-trilha das 3 trilhas (Combatente, Especialista, Ocultista), liberados progressivamente pelo NEX.</li>
                         <li>Rolagem de dados 3D animada, com log de rolagens e um gerador comum de números como reserva caso o navegador não consiga rodar a animação.</li>
-                        <li>Atalhos de teclado opcionais pra rolagem rápida (botão tracejado abaixo da caixa de dados, desativado por padrão): <strong>R</strong> repete a última perícia rolada e <strong>Espaço</strong> rola um 1d20 avulso. Nunca disparam enquanto você estiver digitando em algum campo ou com qualquer modal aberta.</li>
+                        <li>Atalhos de teclado opcionais pra rolagem rápida (botão tracejado abaixo da caixa de dados, desativado por padrão): <strong>R</strong> repete a última perícia rolada e <strong>Espaço</strong> rola um 1d20 avulso. Nunca disparam enquanto você estiver digitando em algum campo, com qualquer modal aberta, ou enquanto já existe uma rolagem em andamento.</li>
                     </ul>
                 </section>
 
