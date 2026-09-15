@@ -304,7 +304,14 @@ export default function CharacterSheetPage() {
         }
         const total = bestDie + bonus;
         const details = `Dados: [${rolls.join(', ')}] (Melhor: ${bestDie}) + ${bonus}`;
-        logMessage(skillName, details, total, bestDie === 20 ? 'crit' : 'normal');
+        // Antes só marcava 'crit' (dado 20) e nunca 'fail' (dado 1) -- por
+        // isso o Decrypted Text não aparecia em falhas críticas de perícia
+        // (só funcionava no pentagrama/1d20 avulso, que já tinham esse
+        // check). Mesmo padrão usado em rollSystemDice/rollD20Rapido.
+        let type = 'normal';
+        if (bestDie === 20) type = 'crit';
+        if (bestDie === 1) type = 'fail';
+        logMessage(skillName, details, total, type);
     }
 
     // Atalho "R": refaz a última perícia rolada (mesmo atributo/bônus

@@ -34,6 +34,9 @@
 //                                           sobrepostos e "quebre" à toa
 // ============================================================
 
+import GlitchText from '@/components/GlitchText';
+import DecryptedText from '@/components/DecryptedText';
+
 function TrashIcon() {
     return (
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -199,7 +202,15 @@ export default function CombateTab({
                         >
                             <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{entry.title}</div>
                             <div style={{ color: '#aaa', fontSize: '0.85em' }}>{entry.details}</div>
-                            <div className="result-highlight">{entry.result}</div>
+                            <div className="result-highlight">
+                                {/* Acerto crítico ganha o "glitch" (GlitchText.jsx);
+                                    falha crítica ganha a "decodificação" (DecryptedText.jsx)
+                                    -- cada tipo de crítico com sua própria linguagem visual.
+                                    Resultado normal continua como texto simples. */}
+                                {entry.type === 'crit' && <GlitchText variant="success">{entry.result}</GlitchText>}
+                                {entry.type === 'fail' && <DecryptedText text={entry.result} />}
+                                {entry.type !== 'crit' && entry.type !== 'fail' && entry.result}
+                            </div>
                         </div>
                     ))
                 )}
