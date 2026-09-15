@@ -48,6 +48,37 @@ Essas chaves não são secretas (não são como uma senha) — só identificam o
 2. Clique em **"Get started"**.
 3. Na aba **"Sign-in method"**, clique em **"Email/Password"**, ative a primeira opção (Email/Password) e salve.
 
+## 3b. Ativar login com o Google (opcional)
+
+A ficha também tem um botão "Entrar com o Google" na tela de login,
+além do e-mail/senha do passo 3 — é opcional, mas reduz a chance de
+alguém esquecer a senha ou reusar uma senha fraca.
+
+1. Ainda na aba **"Sign-in method"**, clique em **"Google"** na lista
+   de provedores.
+2. Ative o provedor ("Ativar"/"Enable").
+3. Em **"Nome público do projeto"**, troque o valor genérico que o
+   Firebase preenche sozinho (tipo `project-123456789012`) por algo
+   reconhecível, tipo `BreusRPG` — é esse nome que aparece pro usuário
+   na tela de consentimento do Google ("Fazer login em [Nome] com o
+   Google...").
+4. Em **"E-mail de suporte do projeto"**, escolha seu e-mail (geralmente
+   já vem preenchido certo).
+5. As duas seções recolhidas ("Adicionar IDs de cliente...",
+   "Configuração do SDK da Web") podem ficar como estão — não são
+   necessárias pro fluxo padrão de popup que a ficha usa.
+6. Clique em **"Salvar"**.
+7. **Importante pra quando for publicar o site**: o Firebase só permite
+   o login do Google rodar em domínios que você autorizou
+   explicitamente. `localhost` já vem liberado por padrão pra
+   desenvolvimento, mas o domínio de produção (ex: o `.vercel.app` do
+   seu deploy, ou um domínio próprio) precisa ser adicionado à mão —
+   veja **Authentication → Settings → Authorized domains** ("Domínios
+   autorizados"), clique em **"Add domain"** e cole o domínio (sem
+   `https://`). Sem esse passo, o botão falha com o erro
+   `auth/unauthorized-domain` assim que alguém tentar usá-lo fora do
+   `localhost`.
+
 ## 4. Criar o banco de dados (Firestore)
 
 1. No menu lateral, vá em **Build → Firestore Database**.
@@ -129,3 +160,4 @@ Cada personagem é salvo em `usuarios/{seu-uid}/personagens/{id-do-personagem}` 
 - **Tela de login não sai do lugar / erro no console mencionando "firebase" ou ".env"**: as chaves em `.env.local` ainda não foram preenchidas (ou o arquivo tem outro nome) — volte no passo 2, e lembre de reiniciar `npm run dev` depois de criar/editar o `.env.local`.
 - **"Missing or insufficient permissions"**: as regras de segurança (passo 5) não foram publicadas, ou você editou a estrutura de pastas do Firestore.
 - **E-mail/senha não funciona**: confira se o método "Email/Password" está mesmo ativado (passo 3).
+- **Login com o Google dá erro `auth/unauthorized-domain`**: o domínio de onde você está acessando a ficha não está na lista de "Domínios autorizados" (Authentication → Settings → Authorized domains) — veja o passo 3b, item 7. Costuma acontecer na primeira vez que se testa fora do `localhost` (ex: logo depois de publicar em produção).

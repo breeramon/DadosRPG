@@ -8,18 +8,36 @@ Feito em **React + Vite**.
 ## Funcionalidades
 
 - Login e personagens salvos na nuvem (Firebase Auth + Firestore) — cada
-  jogador só vê e edita os próprios personagens.
+  jogador só vê e edita os próprios personagens. Login por e-mail/senha
+  ou "Entrar com o Google" (menos uma senha pra lembrar, mais
+  segurança), numa tela dividida em duas colunas (identidade/selo de um
+  lado, formulário do outro) que troca de lado entre Entrar/Criar
+  conta.
 - Pentagrama ritualístico de atributos, com rolagem de teste direto no
   número de cada atributo.
 - Catálogos de Perícias, Itens e Rituais fiéis às regras do sistema
   (filtráveis por busca, Elemento, Círculo etc.), com controle de
-  Vida, PE (Pontos de Esforço), Defesa, Proteção e Resistências.
+  Vida, PE (Pontos de Esforço), Sanidade (opcional, pode ser ocultada),
+  Defesa, Proteção e Resistências — os números de Vida/PE/Sanidade
+  contam suavemente até o novo valor ao mudar (em vez de trocar seco)
+  quando você causa/cura dano, gasta/recupera PE ou ajusta Sanidade.
 - Rolagem de dados 3D animada (`@3d-dice/dice-box`), com log de
-  rolagens e rolagem personalizada (Nd + bônus). Caso o navegador não
+  rolagens e rolagem personalizada (Nd + bônus). Só é possível uma
+  rolagem por vez — os controles (inclusive os atalhos de teclado, ver
+  abaixo) ficam bloqueados enquanto a rolagem atual não termina, pra
+  não sobrecarregar a biblioteca 3D com pedidos sobrepostos. Um acerto
+  crítico (natural 20) ganha um efeito visual de "glitch" no resultado
+  do log, e uma falha crítica (natural 1) um efeito de "decodificação"
+  — puramente cosmético, sem mudar o resultado. Caso o navegador não
   consiga rodar a animação 3D (sem aceleração de GPU/WebGL
   disponível), a ficha detecta isso sozinha, mostra um aviso discreto
   e usa um gerador de números comum — o resultado da rolagem nunca
   fica errado, só a animação em si que pode não aparecer.
+- Atalhos de teclado opcionais pra rolagem rápida (preferência de
+  conta, desativada por padrão, com botão de ligar/desligar na Ficha):
+  **R** repete a última perícia rolada e **Espaço** rola um 1d20
+  avulso. Nunca disparam enquanto você está digitando em algum campo,
+  com qualquer modal aberta, ou com uma rolagem já em andamento.
 - Layout responsivo: funciona tanto em telas largas (desktop) quanto
   em janelas mais estreitas, monitores em pé/retrato, tablet e
   celular — o conteúdo se reorganiza em uma coluna só e a caixa de
@@ -63,6 +81,13 @@ chaves do seu projeto Firebase:
    passo completo em [`GUIA_FIREBASE.md`](./GUIA_FIREBASE.md).
 3. Rode `npm run dev` de novo se o servidor já estava aberto (variáveis
    de ambiente só são lidas ao iniciar).
+
+Pra habilitar o "Entrar com o Google" além do e-mail/senha, é preciso
+ativar esse provedor manualmente no Console do Firebase (Authentication
+→ Método de login) e, ao publicar o site em produção, adicionar o
+domínio final em "Domínios autorizados" — senão o botão falha com
+`auth/unauthorized-domain`. Passo a passo completo também em
+[`GUIA_FIREBASE.md`](./GUIA_FIREBASE.md).
 
 Se você já rodava a versão antiga (HTML/CSS/JS puro) deste projeto e
 tinha um `javascript/firebase-config.js` preenchido, é só usar as
