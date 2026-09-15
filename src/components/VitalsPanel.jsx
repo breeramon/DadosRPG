@@ -9,6 +9,12 @@
 // cliques pros callbacks que o pai decide o que fazer, inclusive
 // persistir no Firestore via salvarCampos).
 //
+// Os números atuais de Vida/PE/Sanidade passam por CountUp.jsx (React
+// Bits, adaptado) -- ao clicar +/-, o número conta suavemente até o
+// valor novo em vez de trocar seco. Só o "atual" anima; o "máximo" (que
+// só muda por causa de trilha/atributo, não pelos steppers daqui)
+// continua texto simples.
+//
 // Props:
 //   vidaAtual, vidaMax, onAjustarVida(delta)
 //   detAtual, detMax, peFlash, onAjustarDet(delta)      -- peFlash vira
@@ -32,6 +38,8 @@
 //     modal de Origem (ver OrigemCatalogModal.jsx)
 // ============================================================
 
+import CountUp from '@/components/CountUp';
+
 export default function VitalsPanel({
     vidaAtual, vidaMax, onAjustarVida,
     detAtual, detMax, peFlash, onAjustarDet,
@@ -52,7 +60,7 @@ export default function VitalsPanel({
                     <button className="vital-btn" title="-1" aria-label="Diminuir vida em 1" onClick={() => onAjustarVida(-1)}>‹</button>
                     <div className="vital-bar vida-bar">
                         <div className="vital-bar-fill vida-fill" style={{ width: `${vidaMax > 0 ? Math.max(0, Math.min(100, (vidaAtual / vidaMax) * 100)) : 0}%` }}></div>
-                        <span className="vital-bar-text">{vidaAtual} / {vidaMax}</span>
+                        <span className="vital-bar-text"><CountUp value={vidaAtual} /> / {vidaMax}</span>
                     </div>
                     <button className="vital-btn" title="+1" aria-label="Aumentar vida em 1" onClick={() => onAjustarVida(1)}>&rsaquo;</button>
                     <button className="vital-btn" title="+5" aria-label="Aumentar vida em 5" onClick={() => onAjustarVida(5)}>&raquo;</button>
@@ -66,7 +74,7 @@ export default function VitalsPanel({
                     <button className="vital-btn" title="-1" aria-label="Diminuir PE em 1" onClick={() => onAjustarDet(-1)}>‹</button>
                     <div key={peFlash} className={`vital-bar det-bar${peFlash > 0 ? ' pe-spent-flash' : ''}`}>
                         <div className="vital-bar-fill det-fill" style={{ width: `${detMax > 0 ? Math.max(0, Math.min(100, (detAtual / detMax) * 100)) : 0}%` }}></div>
-                        <span className="vital-bar-text">{detAtual} / {detMax}</span>
+                        <span className="vital-bar-text"><CountUp value={detAtual} /> / {detMax}</span>
                     </div>
                     <button className="vital-btn" title="+1" aria-label="Aumentar PE em 1" onClick={() => onAjustarDet(1)}>&rsaquo;</button>
                     <button className="vital-btn" title="+5" aria-label="Aumentar PE em 5" onClick={() => onAjustarDet(5)}>&raquo;</button>
@@ -81,7 +89,7 @@ export default function VitalsPanel({
                         <button className="vital-btn" title="-1" aria-label="Diminuir sanidade em 1" onClick={() => onAjustarSanidade(-1)}>‹</button>
                         <div className="vital-bar san-bar">
                             <div className="vital-bar-fill san-fill" style={{ width: `${sanidadeMax > 0 ? Math.max(0, Math.min(100, (sanidadeAtual / sanidadeMax) * 100)) : 0}%` }}></div>
-                            <span className="vital-bar-text">{sanidadeAtual} / {sanidadeMax}</span>
+                            <span className="vital-bar-text"><CountUp value={sanidadeAtual} /> / {sanidadeMax}</span>
                         </div>
                         <button className="vital-btn" title="+1" aria-label="Aumentar sanidade em 1" onClick={() => onAjustarSanidade(1)}>&rsaquo;</button>
                         <button className="vital-btn" title="+5" aria-label="Aumentar sanidade em 5" onClick={() => onAjustarSanidade(5)}>&raquo;</button>
