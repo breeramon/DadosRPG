@@ -3,7 +3,64 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>BreusRPG</title>
+    <title>BreusRPG — Ficha de Personagem Online para Ordem Paranormal</title>
+
+    <!-- SEO básico -- pensado pra quem procura algo como "ficha Ordem
+         Paranormal" no Google encontrar essa página, e pra quando o link
+         é compartilhado no WhatsApp/Discord/Twitter aparecer com título,
+         descrição e imagem de verdade em vez de só a URL pelada. A url
+         canônica e o og:url/og:image abaixo assumem o domínio de produção
+         (breusrpg.vercel.app) -- se um domínio próprio for configurado no
+         Vercel algum dia, atualizar essas duas ocorrências junto. -->
+    <meta
+      name="description"
+      content="Ficha de personagem online para Ordem Paranormal: role dados 3D, gaste PE, controle perícias, rituais e inventário, tudo salvo na nuvem. Grátis e de código aberto."
+    />
+    <link rel="canonical" href="https://breusrpg.vercel.app/" />
+
+    <!-- Open Graph (WhatsApp, Discord, Facebook, LinkedIn...) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://breusrpg.vercel.app/" />
+    <meta property="og:site_name" content="BreusRPG" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:title" content="BreusRPG — Ficha de Personagem Online para Ordem Paranormal" />
+    <meta
+      property="og:description"
+      content="Role dados 3D, gaste PE, controle perícias, rituais e inventário -- tudo salvo na nuvem. Grátis e de código aberto."
+    />
+    <meta property="og:image" content="https://breusrpg.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter/X Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="BreusRPG — Ficha de Personagem Online para Ordem Paranormal" />
+    <meta
+      name="twitter:description"
+      content="Role dados 3D, gaste PE, controle perícias, rituais e inventário -- tudo salvo na nuvem. Grátis e de código aberto."
+    />
+    <meta name="twitter:image" content="https://breusrpg.vercel.app/og-image.png" />
+
+    <!-- Dado estruturado (JSON-LD) -- ajuda o Google a entender que isso
+         é um aplicativo web gratuito, não só uma página de texto. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "BreusRPG",
+        "url": "https://breusrpg.vercel.app/",
+        "description": "Ficha de personagem online para Ordem Paranormal: role dados 3D, gaste PE, controle perícias, rituais e inventário, tudo salvo na nuvem.",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Web",
+        "inLanguage": "pt-BR",
+        "isAccessibleForFree": true,
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "BRL"
+        }
+      }
+    </script>
 
     <!-- Ícone da aba (favicon) — um d20 facetado nas mesmas cores roxas
          já usadas no resto da ficha. O .svg é o principal (nítido em

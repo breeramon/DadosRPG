@@ -1,0 +1,12 @@
+# BreusRPG -- só a apresentação (/) e o formulário de login (/login) são
+# páginas públicas de verdade; o resto exige login (RequireAuth, ver
+# App.jsx) e não tem conteúdo útil pra indexar sem uma sessão.
+User-agent: *
+Allow: /
+Allow: /login
+Disallow: /characters
+Disallow: /form
+Disallow: /sheet
+Disallow: /sobre
+
+Sitemap: https://breusrpg.vercel.app/sitemap.xml
