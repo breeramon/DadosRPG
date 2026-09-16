@@ -69,7 +69,10 @@ export default function CharactersPage() {
 
     async function handleLogout() {
         await Auth.signOut();
-        navigate('/');
+        // Vai direto pro formulário de login, não pra apresentação (/) --
+        // quem clicou em "Sair" já conhece a ficha, não precisa ver a
+        // tela de boas-vindas de novo (ver WelcomePage.jsx/App.jsx).
+        navigate('/login');
     }
 
     return (

@@ -14,6 +14,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import RequireAuth from '@/components/RequireAuth';
+import WelcomePage from '@/pages/WelcomePage';
 import LoginPage from '@/pages/LoginPage';
 import CharactersPage from '@/pages/CharactersPage';
 import CharacterFormPage from '@/pages/CharacterFormPage';
@@ -65,7 +66,13 @@ export default function App() {
                 containerStyle={{ zIndex: 10050 }}
             />
             <Routes>
-                <Route path="/" element={<LoginPage />} />
+                {/* "/" é a apresentação do projeto (WelcomePage) -- aparece
+                    sempre, pra todo visitante, logado ou não. O formulário
+                    de Entrar/Criar conta em si mora em "/login" (só ali a
+                    LoginPage redireciona sozinha pra /characters quem já
+                    tem sessão salva). */}
+                <Route path="/" element={<WelcomePage />} />
+                <Route path="/login" element={<LoginPage />} />
 
                 <Route element={<RequireAuth />}>
                     <Route path="/characters" element={<CharactersPage />} />

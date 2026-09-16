@@ -2876,6 +2876,7 @@ h3 {
     .auth-subtitle,
     .auth-error,
     .form-hint,
+    .welcome-hero,
     .modal-box {
         animation: none !important;
     }
@@ -2956,6 +2957,218 @@ h3 {
 }
 
 .btn-danger:active { transform: translateY(0); }
+
+/* ============================================================
+   TELA: APRESENTAÇÃO (WelcomePage.jsx) -- primeira coisa que quem
+   visita o site vê, logada ou não (ver App.jsx: "/" é essa tela,
+   "/login" é o formulário de Entrar/Criar conta). Reaproveita o mesmo
+   fundo decorativo do login (.login-bg e companhia, ver acima), mas
+   diferente da tela de login (uma tela só, sem rolagem) essa aqui rola
+   normalmente e é bem mais alta que a viewport. Por isso o
+   .login-bg daqui fica limitado a uma altura de "hero" no topo (ver
+   .screen-welcome .login-bg abaixo, com uma máscara que apaga o fundo
+   suavemente até o final dessa altura) em vez de esticar com o
+   conteúdo todo -- o resto da página desce sobre o fundo liso do body.
+   Um corte seco (sem a máscara) deixava vinheta+degradê acumulados bem
+   escuros ali por perto, colando de repente no cinza liso do body logo
+   abaixo -- por isso a transição precisa ser gradual, não um corte.
+   overflow-x: hidden aqui é necessário porque as "bolhas" de brilho
+   (.login-bg-glow-1/2) são propositalmente posicionadas um pouco pra
+   fora da própria caixa (top/left/right negativos, ver acima) pra dar
+   aquele efeito de brilho "sangrando" pra fora -- sem cortar esse
+   sangramento, ele empurra a largura da página inteira pra além da
+   viewport e aparece uma barra de rolagem horizontal (a tela de login
+   nunca teve esse problema porque ela usa overflow: hidden comum, mas
+   aqui isso cortaria também a rolagem vertical, que essa tela precisa).
+   ============================================================ */
+.screen-welcome {
+    position: relative;
+    isolation: isolate;
+    overflow-x: hidden;
+    padding: 0 20px 60px;
+}
+
+.screen-welcome .login-bg {
+    inset: 0 0 auto 0;
+    height: min(820px, 100vh);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%);
+}
+
+.welcome-topbar {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 22px 0;
+}
+
+.welcome-topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--color-text);
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-size: 0.95rem;
+}
+
+.welcome-topbar-mark {
+    width: 26px;
+    height: 26px;
+    color: var(--color-primary-300);
+}
+
+.welcome-content {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.welcome-hero {
+    text-align: center;
+    padding: 28px 16px 12px;
+    animation: fadeIn 0.4s ease both;
+}
+
+.welcome-hero-mark {
+    width: 72px;
+    height: 72px;
+    color: var(--color-primary-300);
+    opacity: 0.9;
+    margin-bottom: 12px;
+}
+
+.welcome-hero h1 {
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+}
+
+.welcome-hero-tagline {
+    color: var(--color-text-muted);
+    max-width: 560px;
+    margin: 0 auto 20px;
+    line-height: 1.5;
+}
+
+.welcome-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px;
+}
+
+.welcome-feature-card {
+    background-color: rgba(30, 30, 30, 0.7);
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 16px;
+}
+
+.welcome-feature-card h3 {
+    color: var(--color-primary-200);
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+}
+
+.welcome-feature-card p {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.welcome-callout {
+    background-color: rgba(30, 30, 30, 0.7);
+    border: 1px solid var(--color-primary-900);
+    border-radius: 10px;
+    padding: 22px 24px;
+}
+
+.welcome-callout h2 {
+    font-size: 1.05rem;
+    margin-bottom: 8px;
+}
+
+.welcome-callout p {
+    color: var(--color-text-muted);
+    line-height: 1.5;
+    margin-bottom: 14px;
+    max-width: 640px;
+}
+
+.welcome-callout-link {
+    display: inline-block;
+    text-decoration: none;
+    text-align: center;
+}
+
+/* Rodapé simples -- fecha a página com algo de propósito em vez de
+   terminar só com o padding de baixo do .screen-welcome (era esse
+   trecho vazio, sobre o fundo escurecido pela vinheta, que parecia um
+   "footer" quebrado antes dessa seção existir). */
+.welcome-footer {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding-top: 22px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
+.welcome-footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.welcome-footer-mark {
+    width: 18px;
+    height: 18px;
+    color: var(--color-primary-300);
+    opacity: 0.8;
+}
+
+.welcome-footer-links {
+    display: flex;
+    gap: 18px;
+}
+
+.welcome-footer-links a {
+    color: var(--color-text-muted);
+    text-decoration: none;
+}
+
+.welcome-footer-links a:hover {
+    color: var(--color-primary-300);
+    text-decoration: underline;
+}
+
+@media (max-width: 560px) {
+    .welcome-topbar {
+        padding: 16px 0;
+    }
+
+    .welcome-hero-mark {
+        width: 56px;
+        height: 56px;
+    }
+}
 
 /* ============================================================
    TELA: LISTA DE PERSONAGENS
