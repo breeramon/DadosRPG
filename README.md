@@ -89,10 +89,6 @@ domínio final em "Domínios autorizados" — senão o botão falha com
 `auth/unauthorized-domain`. Passo a passo completo também em
 [`GUIA_FIREBASE.md`](./GUIA_FIREBASE.md).
 
-Se você já rodava a versão antiga (HTML/CSS/JS puro) deste projeto e
-tinha um `javascript/firebase-config.js` preenchido, é só usar as
-mesmas chaves de lá no `.env.local` novo — é o mesmo projeto Firebase,
-só muda onde as chaves ficam guardadas.
 
 ## Scripts disponíveis
 
@@ -127,8 +123,7 @@ As rotas (`src/App.jsx`) espelham as 4 telas do app:
 ## Sobre a precisão das regras
 
 Os dados de perícias, NEX, itens e armas (`src/lib/pericias.js` e
-`src/lib/itens.js`) vieram de pesquisa cuidadosa em fontes on-line, já
-que o livro oficial não está disponível pra conferência 100% garantida
+`src/lib/itens.js`) vieram de pesquisa cuidadosa em fontes on-line e do livro de regras
 — os comentários no topo desses dois arquivos explicam o nível de
 confiança de cada bloco de dados e como ajustar se sua mesa usar uma
 regra diferente.
