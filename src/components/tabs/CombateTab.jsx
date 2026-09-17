@@ -34,8 +34,8 @@
 //                                           sobrepostos e "quebre" à toa
 // ============================================================
 
-import GlitchText from '@/components/GlitchText';
-import DecryptedText from '@/components/DecryptedText';
+import GlitchText from '@/components/effects/GlitchText';
+import DecryptedText from '@/components/effects/DecryptedText';
 
 function TrashIcon() {
     return (

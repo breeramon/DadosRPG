@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { Characters } from '@/services/firebase';
-import AttributePentagram from '@/components/AttributePentagram';
+import AttributePentagram from '@/components/panels/AttributePentagram';
 import { useDiceBox } from '@/hooks/useDiceBox';
 import { useDicePreferences } from '@/hooks/useDicePreferences';
 import { useAtalhosPreferences } from '@/hooks/useAtalhosPreferences';
@@ -12,17 +12,17 @@ import * as OPI from '@/lib/itens';
 import * as OPR from '@/lib/rituais';
 import { origemPorNome, bonusNumericoDaOrigem } from '@/lib/origens';
 import * as OPT from '@/lib/trilhas';
-import OrigemCatalogModal from '@/components/OrigemCatalogModal';
-import DiceThemeModal from '@/components/DiceThemeModal';
-import NovoAtaqueModal from '@/components/NovoAtaqueModal';
-import AdicionarItemModal from '@/components/AdicionarItemModal';
-import VitalsPanel from '@/components/VitalsPanel';
-import PericiasTable from '@/components/PericiasTable';
-import CombateTab from '@/components/CombateTab';
-import TrilhaPanel from '@/components/TrilhaPanel';
-import InventarioTab from '@/components/InventarioTab';
-import RitualTab from '@/components/RitualTab';
-import RitualCatalogModal from '@/components/RitualCatalogModal';
+import OrigemCatalogModal from '@/components/modal/OrigemCatalogModal';
+import DiceThemeModal from '@/components/modal/DiceThemeModal';
+import NovoAtaqueModal from '@/components/modal/NovoAtaqueModal';
+import AdicionarItemModal from '@/components/modal/AdicionarItemModal';
+import VitalsPanel from '@/components/panels/VitalsPanel';
+import PericiasTable from '@/components/panels/PericiasTable';
+import CombateTab from '@/components/tabs/CombateTab';
+import TrilhaPanel from '@/components/panels/TrilhaPanel';
+import InventarioTab from '@/components/tabs/InventarioTab';
+import RitualTab from '@/components/tabs/RitualTab';
+import RitualCatalogModal from '@/components/modal/RitualCatalogModal';
 
 function GearIcon() {
     return (

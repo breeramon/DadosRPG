@@ -106,7 +106,12 @@ domínio final em "Domínios autorizados" — senão o botão falha com
 
 ```
 src/
-  components/   Componentes de UI reutilizados entre telas (pentagrama de atributos, modais de catálogo, RequireAuth)
+  components/   Componentes de UI reutilizados entre telas
+    modal/        Modais (catálogo de origem/ritual, tema dos dados, novo ataque, adicionar item)
+    tabs/         Abas da ficha do personagem (Combate, Inventário, Rituais, Trilha)
+    panels/       Painéis maiores da ficha (pentagrama de atributos, tabela de perícias, vida/PE/sanidade, trilha)
+    effects/      Efeitos visuais reaproveitáveis (Click Spark, Glitch Text, Decrypted Text, Count Up)
+    RequireAuth.jsx  Guarda de rotas que exigem login
   hooks/        Hooks React (autenticação, trava de scroll das modais, integração com a animação de dados 3D)
   lib/          Regras do sistema Ordem Paranormal (perícias, itens, rituais, origens, NEX) e som dos dados
   pages/        Uma página por rota (Login, Personagens, Criar/Editar, Ficha)

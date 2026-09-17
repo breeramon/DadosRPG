@@ -24,7 +24,7 @@
 // ============================================================
 
 import * as OP from '@/lib/pericias';
-import ClickSpark from '@/components/ClickSpark';
+import ClickSpark from '@/components/effects/ClickSpark';
 
 const ATTR_LABEL = { agi: 'AGI', int: 'INT', vig: 'VIG', pre: 'PRE', for: 'FOR' };
 const GRAU_ABREV = { treinado: 'T', veterano: 'V', expert: 'E' };

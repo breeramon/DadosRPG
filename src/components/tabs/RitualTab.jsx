@@ -58,7 +58,7 @@
 
 import * as OP from '@/lib/pericias';
 import * as OPR from '@/lib/rituais';
-import { elementoSlug, subtituloRitual, statsDoRitual, TrashIcon } from '@/components/RitualCatalogModal';
+import { elementoSlug, subtituloRitual, statsDoRitual, TrashIcon } from '@/components/modal/RitualCatalogModal';
 
 function RitualSparkIcon() {
     return (

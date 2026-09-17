@@ -38,7 +38,7 @@
 //     modal de Origem (ver OrigemCatalogModal.jsx)
 // ============================================================
 
-import CountUp from '@/components/CountUp';
+import CountUp from '@/components/effects/CountUp';
 
 export default function VitalsPanel({
     vidaAtual, vidaMax, onAjustarVida,

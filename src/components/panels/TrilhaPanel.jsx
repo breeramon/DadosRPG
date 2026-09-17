@@ -35,7 +35,7 @@
 //                            na Ficha), ver TrilhaTab.jsx
 // ============================================================
 
-import TrilhaTab from '@/components/TrilhaTab';
+import TrilhaTab from '@/components/tabs/TrilhaTab';
 import * as OPT from '@/lib/trilhas';
 
 export default function TrilhaPanel({
