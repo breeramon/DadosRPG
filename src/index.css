@@ -1394,6 +1394,17 @@ h3 {
     gap: 8px;
 }
 
+/* Animated List (React Bits): entrada com fade+slide sutil ao montar
+   (dispara sozinho -- ver Animated List no comentário do topo de
+   InventarioTab.jsx), com um leve atraso escalonado por item via --i
+   (inline, setado no JSX). A saída usa transition (não keyframe) porque
+   é acionada por uma classe (.inventory-item-saindo) que o componente
+   liga por ~200ms antes de remover o item de verdade da lista. */
+@keyframes listItemEntrar {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 .inventory-item {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1408,6 +1419,15 @@ h3 {
     background-color: var(--color-bg);
     border: 1px solid #333;
     border-radius: 6px;
+    animation: listItemEntrar 0.25s ease both;
+    animation-delay: calc(var(--i, 0) * 40ms);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.inventory-item-saindo {
+    opacity: 0;
+    transform: scale(0.94);
+    pointer-events: none;
 }
 
 .inventory-item.equipado { border-color: var(--color-success); }
@@ -1815,8 +1835,44 @@ h3 {
     background-color: #161616;
 }
 
+/* Animated List (React Bits) também na lista de Rituais Conhecidos --
+   mesma ideia do .inventory-item (ver @keyframes listItemEntrar), só que
+   escopada em .ritual-card em vez do .modal-item-card genérico (esse
+   também é usado no catálogo de rituais/itens, onde essa animação de
+   lista não faz sentido). */
 .ritual-card {
     border-left: 3px solid var(--color-primary-900);
+    animation: listItemEntrar 0.25s ease both;
+    animation-delay: calc(var(--i, 0) * 40ms);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.ritual-card-saindo {
+    opacity: 0;
+    transform: scale(0.94);
+    pointer-events: none;
+}
+
+/* Electric Border (React Bits) -- aproximação em CSS puro: a versão
+   "oficial" desse componente desloca a borda de verdade com SVG
+   feTurbulence + feDisplacementMap animados (efeito bem mais caro de
+   renderizar), mas alternando cor/box-shadow em steps() já dá aquele ar
+   de "energia instável" sem precisar de filtro SVG por cartão -- e
+   pesa muito menos quando vários rituais estão abertos ao mesmo tempo.
+   Diferente do Border Glow (pulsação suave em ease-in-out, ver
+   .vital-bar--critical), aqui o steps() dá uma cintilação picada de
+   propósito. Só liga quando o ritual está expandido (ver aberto em
+   RitualTab.jsx) -- não faz sentido todo o catálogo cintilando junto. */
+@keyframes electricBorderFlicker {
+    0%, 100% { box-shadow: 0 0 6px 1px rgba(124, 67, 189, 0.5), inset 0 0 0 1px rgba(124, 67, 189, 0.6); border-left-color: var(--color-primary-400); }
+    20% { box-shadow: 0 0 10px 2px rgba(179, 136, 255, 0.7), inset 0 0 0 1px rgba(179, 136, 255, 0.8); border-left-color: #b388ff; }
+    45% { box-shadow: 0 0 4px 1px rgba(124, 67, 189, 0.4), inset 0 0 0 1px rgba(124, 67, 189, 0.5); border-left-color: var(--color-primary-700); }
+    70% { box-shadow: 0 0 12px 3px rgba(224, 195, 255, 0.75), inset 0 0 0 1px rgba(224, 195, 255, 0.85); border-left-color: #e0c3ff; }
+    85% { box-shadow: 0 0 5px 1px rgba(124, 67, 189, 0.45); border-left-color: var(--color-primary-500); }
+}
+
+.ritual-card-eletrico {
+    animation: electricBorderFlicker 1.4s steps(6) infinite;
 }
 
 .ritual-card.elemento-conhecimento { border-left-color: var(--color-elemento-conhecimento); }
@@ -2460,6 +2516,43 @@ h3 {
     .tilt-card {
         transition: box-shadow 0.2s ease;
     }
+
+    .form-stepper-dot {
+        transition: none;
+    }
+
+    .form-stepper-dot:hover {
+        transform: none;
+    }
+
+    .accordion-icone,
+    .accordion-painel-wrap {
+        transition: none;
+    }
+
+    .inventory-item,
+    .ritual-card {
+        animation: none;
+        transition: none;
+    }
+
+    .ritual-card-eletrico {
+        animation: none;
+        box-shadow: 0 0 6px 1px rgba(124, 67, 189, 0.5);
+        border-left-color: var(--color-primary-400);
+    }
+
+    .fade-content {
+        transition: none;
+    }
+
+    .shiny-text {
+        animation: none;
+        background: none;
+        -webkit-background-clip: unset;
+        background-clip: unset;
+        color: var(--color-text);
+    }
 }
 
 /* DecryptedText: efeito de "decodificação" (React Bits, bem adaptado --
@@ -2557,6 +2650,31 @@ h3 {
     position: absolute;
     inset: 0;
     box-shadow: inset 0 0 min(25vw, 180px) rgba(0, 0, 0, 0.65);
+}
+
+/* Noise (React Bits): textura de grão bem sutil por cima do resto do
+   fundo decorativo -- puro CSS + SVG (feTurbulence via data URI, sem
+   canvas/WebGL nenhum, então zero dependência nova). mix-blend-mode:
+   overlay é o que dá o efeito "grão de filme" em vez de manchas cinzas
+   lisas por cima do gradiente. A "animação" é só o background-position
+   pulando em poucos passos (steps()), sem precisar rolar um novo frame
+   de ruído por JS. */
+.login-bg-noise {
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 140px 140px;
+    animation: loginBgNoiseJitter 0.6s steps(4) infinite;
+}
+
+@keyframes loginBgNoiseJitter {
+    0% { background-position: 0 0; }
+    25% { background-position: -25px 12px; }
+    50% { background-position: 18px -18px; }
+    75% { background-position: -12px 24px; }
+    100% { background-position: 0 0; }
 }
 
 @keyframes loginGlowDrift1 {
@@ -2926,6 +3044,7 @@ h3 {
 @media (prefers-reduced-motion: reduce) {
     .login-bg-glow,
     .login-bg-stars,
+    .login-bg-noise,
     .auth-split,
     .auth-selo-panel-mark,
     .auth-selo-panel-content,
@@ -3121,6 +3240,23 @@ h3 {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
     gap: 14px;
+}
+
+/* Fade/Animated Content (React Bits, ver components/effects/FadeContent.jsx):
+   revela ao entrar na tela rolando. height:100% é pra não quebrar o
+   grid de .welcome-features -- sem isso, esse wrapper (não o
+   .welcome-feature-card de dentro) vira o item do grid, e cards mais
+   curtos numa mesma linha ficariam com uma sobra vazia embaixo. */
+.fade-content {
+    height: 100%;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.fade-content-visivel {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .welcome-feature-card {
@@ -3419,8 +3555,70 @@ h3 {
     margin-bottom: 26px;
 }
 
-.sobre-section {
-    margin-bottom: 28px;
+/* Accordion (React Bits, ver components/effects/Accordion.jsx) -- usado
+   pelas seções de "Sobre esta Ficha" (bastante texto de referência, não
+   precisa estar tudo visível o tempo todo). */
+.accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.accordion-item {
+    background-color: var(--color-surface);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+}
+
+.accordion-item-aberto {
+    border-color: var(--color-primary-700);
+}
+
+.accordion-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    background: none;
+    border: none;
+    color: var(--color-text);
+    font-weight: bold;
+    font-size: 1rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.accordion-icone {
+    flex-shrink: 0;
+    color: var(--color-primary-300);
+    transition: transform 0.2s ease;
+}
+
+.accordion-item-aberto .accordion-icone {
+    transform: rotate(180deg);
+}
+
+/* Truque de grid-template-rows 0fr -> 1fr: anima a altura sem precisar
+   medir o conteúdo em JS, funciona com texto de tamanho variável. */
+.accordion-painel-wrap {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.25s ease;
+}
+
+.accordion-item-aberto .accordion-painel-wrap {
+    grid-template-rows: 1fr;
+}
+
+.accordion-painel-inner {
+    overflow: hidden;
+}
+
+.accordion-painel {
+    padding: 0 18px 16px;
 }
 
 .sobre-section-intro {
@@ -3478,8 +3676,122 @@ h3 {
     min-height: calc(100vh - 57px);
 }
 
+/* O formulário virou um assistente por etapas (ver Stepper.jsx /
+   CharacterFormPage.jsx) -- as 3 seções que antes ficavam lado a lado
+   (Identidade+Atributos / Perícias / Trilha+Rituais) agora só mostram
+   uma de cada vez, então a grade some e vira uma coluna única e
+   centralizada, mais fácil de acompanhar do que rolar uma tela enorme. */
 .character-form-grid {
-    grid-template-columns: clamp(315px, 22.5vw, 360px) 1fr clamp(263px, 18.75vw, 300px);
+    grid-template-columns: 1fr;
+    max-width: 760px;
+}
+
+/* Stepper (React Bits, ver Stepper.jsx): bolinhas numeradas + linha de
+   progresso no topo do formulário. Puramente de navegação -- quem
+   decide o que mostrar em cada etapa é o CharacterFormPage. */
+.form-stepper {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 24px 20px 4px;
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+.form-stepper-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.form-stepper-dot {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-bg);
+    border: 2px solid #444;
+    color: var(--color-text-subtle);
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-image 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.form-stepper-dot:hover {
+    transform: scale(1.08);
+}
+
+.form-stepper-dot-ativo {
+    background-image: linear-gradient(135deg, var(--color-primary-700), var(--color-primary-900));
+    border-color: var(--color-primary-400);
+    color: white;
+    box-shadow: 0 0 10px 2px rgba(124, 67, 189, 0.5);
+}
+
+.form-stepper-dot-concluido {
+    background-color: var(--color-primary-900);
+    border-color: var(--color-primary-700);
+    color: white;
+}
+
+.form-stepper-label {
+    font-size: 0.75rem;
+    color: var(--color-text-subtle);
+    text-align: center;
+    max-width: 110px;
+}
+
+.form-stepper-line {
+    width: 40px;
+    height: 2px;
+    flex-shrink: 1;
+    background-color: #444;
+    margin-top: 17px;
+}
+
+.form-stepper-line-concluido {
+    background-color: var(--color-primary-700);
+}
+
+.form-step-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    max-width: 760px;
+    margin: 0 auto 24px;
+    padding: 0 20px;
+}
+
+.form-step-nav-label {
+    color: var(--color-text-subtle);
+    font-size: 0.85rem;
+}
+
+/* Shiny Text (React Bits, ver components/effects/ShinyText.jsx): brilho
+   passando pelo texto em loop, via gradiente + background-clip: text.
+   Os stops do gradiente usam var(--color-text) (não currentColor) de
+   propósito -- currentColor resolveria pro próprio color:transparent
+   deste elemento e o texto sumiria fora da faixa de brilho. */
+.shiny-text {
+    background-image: linear-gradient(120deg, var(--color-text) 40%, #fff 50%, var(--color-text) 60%);
+    background-size: 200% 100%;
+    background-position: 100% 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shinyTextSweep 3.5s linear infinite;
+}
+
+@keyframes shinyTextSweep {
+    to { background-position: -100% 0; }
 }
 
 .form-identity-section {
@@ -3734,6 +4046,18 @@ h3 {
 
     .pericia-fixa-grupo {
         flex-wrap: wrap;
+    }
+
+    .form-stepper-line {
+        width: 16px;
+    }
+
+    .form-stepper-label {
+        display: none;
+    }
+
+    .form-step-nav {
+        padding: 0 12px;
     }
 }
 

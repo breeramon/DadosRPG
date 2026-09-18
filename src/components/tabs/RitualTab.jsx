@@ -59,6 +59,8 @@
 import * as OP from '@/lib/pericias';
 import * as OPR from '@/lib/rituais';
 import { elementoSlug, subtituloRitual, statsDoRitual, TrashIcon } from '@/components/modal/RitualCatalogModal';
+import useListaAnimada from '@/components/effects/useListaAnimada';
+import ShinyText from '@/components/effects/ShinyText';
 
 function RitualSparkIcon() {
     return (
@@ -82,6 +84,7 @@ export default function RitualTab({
     onRemoverRitual,
     onConjurar,
 }) {
+    const { estaSaindo, iniciarSaida } = useListaAnimada();
     const circuloLiberado = OP.circuloRitualLiberado(nex);
     const quotaEsgotada = rituais.length >= quota;
     // Lista combinada só pra exibição: os automáticos entram junto dos
@@ -119,11 +122,16 @@ export default function RitualTab({
                 {listaExibida.length === 0 && (
                     <div className="inventory-empty">Nenhum ritual conhecido ainda.</div>
                 )}
-                {listaExibida.map(({ ritual, index, automatico }) => {
+                {listaExibida.map(({ ritual, index, automatico }, posicao) => {
                     const aberto = expandidos.has(ritual.nome);
                     const custo = OPR.CUSTO_PE_POR_CIRCULO[ritual.circulo] || 0;
+                    const saindo = estaSaindo(ritual.nome);
                     return (
-                        <div className={`modal-item-card ritual-card elemento-${elementoSlug(ritual.elemento)}${aberto ? ' expanded' : ''}`} key={ritual.nome}>
+                        <div
+                            className={`modal-item-card ritual-card elemento-${elementoSlug(ritual.elemento)}${aberto ? ' expanded ritual-card-eletrico' : ''}${saindo ? ' ritual-card-saindo' : ''}`}
+                            style={{ '--i': posicao }}
+                            key={ritual.nome}
+                        >
                             <div
                                 className="modal-item-card-header"
                                 role="button"
@@ -136,7 +144,7 @@ export default function RitualTab({
                                 <span className="modal-item-card-chevron">▶</span>
                                 <div className="modal-item-card-info">
                                     <div className="modal-item-card-title-row">
-                                        <span className="modal-item-card-nome">{ritual.nome}</span>
+                                        <span className="modal-item-card-nome"><ShinyText>{ritual.nome}</ShinyText></span>
                                         <span className={`modal-item-card-badge badge-elemento-${elementoSlug(ritual.elemento)}`}>{ritual.elemento}</span>
                                         <span className="modal-item-card-badge badge-circulo">{ritual.circulo}º círc.</span>
                                         {automatico && (
@@ -164,7 +172,7 @@ export default function RitualTab({
                                             type="button"
                                             className="modal-item-card-remove"
                                             title="Esquecer ritual"
-                                            onClick={ev => { ev.stopPropagation(); onRemoverRitual(index); }}
+                                            onClick={ev => { ev.stopPropagation(); iniciarSaida(ritual.nome, () => onRemoverRitual(index)); }}
                                         >
                                             <TrashIcon />
                                         </button>

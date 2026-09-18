@@ -7,6 +7,7 @@ import RitualCatalogModal from '@/components/modal/RitualCatalogModal';
 import RitualTab from '@/components/tabs/RitualTab';
 import OrigemCatalogModal from '@/components/modal/OrigemCatalogModal';
 import TrilhaPanel from '@/components/panels/TrilhaPanel';
+import Stepper from '@/components/effects/Stepper';
 import * as OP from '@/lib/pericias';
 import * as OPR from '@/lib/rituais';
 import { origemPorNome } from '@/lib/origens';
@@ -15,6 +16,12 @@ import * as OPT from '@/lib/trilhas';
 // ATRIBUTOS agora mora em lib/pericias.js (era duplicado com o ATTR_MAP
 // da Ficha -- ver comentário lá).
 const { ATRIBUTOS } = OP;
+
+// Etapas do assistente de criação/edição (ver Stepper.jsx): o formulário
+// já era dividido nessas três seções dentro de .character-form-grid --
+// o Stepper só passou a mostrar uma de cada vez, em vez das três lado a
+// lado, pra não jogar tudo numa rolagem só.
+const ETAPAS_FORM = ['Identidade & Atributos', 'Perícias', 'Trilha & Rituais'];
 
 const ATRIBUTOS_ZERO = { agi: 0, int: 0, vig: 0, pre: 0, for: 0 };
 
@@ -110,6 +117,7 @@ export default function CharacterFormPage() {
     const [carregando, setCarregando] = useState(!!id);
     const [salvando, setSalvando] = useState(false);
     const [tentouSalvar, setTentouSalvar] = useState(false);
+    const [etapaAtual, setEtapaAtual] = useState(0);
 
     const [nome, setNome] = useState('');
     const [trilha, setTrilha] = useState('Ocultista');
@@ -474,7 +482,13 @@ export default function CharacterFormPage() {
     }
 
     function validarECollectar() {
+        // Como o formulário agora é dividido em etapas (ver Stepper.jsx),
+        // uma falha de validação aqui pode estar numa etapa que não é a
+        // que o usuário está vendo no momento -- por isso cada `return
+        // null` também manda o Stepper de volta pra etapa certa, além do
+        // toast de erro que já existia.
         if (!nome.trim()) {
+            setEtapaAtual(0);
             toast.error('Dê um nome para o personagem.');
             return null;
         }
@@ -485,15 +499,18 @@ export default function CharacterFormPage() {
             return v < regraAtributos.minPorAtributo || v > regraAtributos.maxPorAtributo;
         });
         if (atributoForaDoLimite) {
+            setEtapaAtual(0);
             toast.error(`${atributoForaDoLimite.label} está fora do limite permitido pelo NEX ${nex}% (entre ${regraAtributos.minPorAtributo} e ${regraAtributos.maxPorAtributo}).`);
             return null;
         }
         if (somaAtributos > regraAtributos.total) {
+            setEtapaAtual(0);
             toast.error(`Esse personagem tem ${somaAtributos} pontos de atributo distribuídos, mas o NEX ${nex}% só libera ${regraAtributos.total}. Ajuste os atributos antes de salvar.`);
             return null;
         }
 
         if (livresUsadas > quotaLivre) {
+            setEtapaAtual(1);
             toast.error(`Esse personagem tem ${livresUsadas} perícias treinadas à escolha, mas o NEX ${nex}% só permite ${quotaLivre}. Desmarque algumas perícias ou aumente o NEX.`);
             return null;
         }
@@ -570,7 +587,10 @@ export default function CharacterFormPage() {
                 </button>
             </div>
 
+            <Stepper etapas={ETAPAS_FORM} etapaAtual={etapaAtual} onSelecionar={setEtapaAtual} />
+
             <div className="character-form-grid">
+                {etapaAtual === 0 && (
                 <section className="form-identity-section">
                     <div className="control-group full">
                         <label>Nome do Personagem</label>
@@ -673,7 +693,9 @@ export default function CharacterFormPage() {
                         )}
                     </div>
                 </section>
+                )}
 
+                {etapaAtual === 1 && (
                 <section className="form-pericias-section skills-section">
                     <h3>Perícias</h3>
                     <div className="pericias-info">
@@ -775,7 +797,9 @@ export default function CharacterFormPage() {
                         ))}
                     </div>
                 </section>
+                )}
 
+                {etapaAtual === 2 && (
                 <section className="sheet-tabs-section">
                     <nav className="sheet-tabs-nav">
                         <button
@@ -834,6 +858,39 @@ export default function CharacterFormPage() {
                         )}
                     </div>
                 </section>
+                )}
+            </div>
+
+            <div className="form-step-nav">
+                <button
+                    type="button"
+                    className="btn-secondary"
+                    disabled={etapaAtual === 0}
+                    onClick={() => setEtapaAtual(e => Math.max(0, e - 1))}
+                >
+                    &larr; Voltar
+                </button>
+                <span className="form-step-nav-label">Etapa {etapaAtual + 1} de {ETAPAS_FORM.length}</span>
+                {etapaAtual < ETAPAS_FORM.length - 1 ? (
+                    <button
+                        type="button"
+                        className="btn-action"
+                        onClick={() => setEtapaAtual(e => Math.min(ETAPAS_FORM.length - 1, e + 1))}
+                    >
+                        Próximo &rarr;
+                    </button>
+                ) : (
+                    <button
+                        type="button"
+                        className={`btn-action${salvando ? ' btn-action-busy' : ''}`}
+                        onClick={handleSalvar}
+                        disabled={salvando}
+                        aria-busy={salvando}
+                    >
+                        {salvando && <span className="btn-spinner" />}
+                        <span>{salvando ? 'Salvando...' : 'Salvar Personagem'}</span>
+                    </button>
+                )}
             </div>
 
             <RitualCatalogModal

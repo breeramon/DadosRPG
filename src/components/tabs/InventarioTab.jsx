@@ -16,7 +16,17 @@
 //   onQtyDelta(index, delta)
 //   onEquiparToggle(index)
 //   onRemoverItem(index)
+//
+// Animated List (React Bits, reimplementado em CSS + JS puro): item novo
+// entra com um fade+slide sutil (é só a animação de entrada do próprio
+// .inventory-item, dispara sozinha quando o nó é criado -- ver
+// @keyframes listItemEntrar no index.css). Remover não chama
+// onRemoverItem na hora: useListaAnimada primeiro marca o item como
+// "saindo" (fade+encolhe) e só depois de a transição terminar chama o
+// callback de verdade, pra não sumir seco da lista.
 // ============================================================
+
+import useListaAnimada from '@/components/effects/useListaAnimada';
 
 function TrashIcon() {
     return (
@@ -41,6 +51,8 @@ export default function InventarioTab({
     onEquiparToggle,
     onRemoverItem,
 }) {
+    const { estaSaindo, iniciarSaida } = useListaAnimada();
+
     return (
         <div className="tab-panel-inventario">
             <div className="inventory-section-header">
@@ -73,7 +85,11 @@ export default function InventarioTab({
                     <div className="inventory-empty">Nenhum item no inventário ainda.</div>
                 )}
                 {inventario.map((item, index) => (
-                    <div className={`inventory-item${item.equipado ? ' equipado' : ''}`} key={index}>
+                    <div
+                        className={`inventory-item${item.equipado ? ' equipado' : ''}${estaSaindo(index) ? ' inventory-item-saindo' : ''}`}
+                        style={{ '--i': index }}
+                        key={index}
+                    >
                         <span className="inventory-item-nome">{item.nome}</span>
                         <span className="inventory-item-categoria">{item.categoria || 'Personalizado'}</span>
                         <span className="inventory-item-espacos">{item.espacos || 0} esp.</span>
@@ -96,7 +112,7 @@ export default function InventarioTab({
                                 type="button"
                                 className="modal-item-card-remove"
                                 title="Remover item"
-                                onClick={() => onRemoverItem(index)}
+                                onClick={() => iniciarSaida(index, () => onRemoverItem(index))}
                             >
                                 <TrashIcon />
                             </button>

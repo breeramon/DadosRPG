@@ -20,6 +20,8 @@
 // ============================================================
 
 import { useNavigate } from 'react-router-dom';
+import FadeContent from '@/components/effects/FadeContent';
+import ShinyText from '@/components/effects/ShinyText';
 
 // Mesmo ícone de "selo" abstrato usado na LoginPage.jsx (círculo +
 // marcações, sem nenhum significado religioso específico, só clima de
@@ -58,6 +60,7 @@ export default function WelcomePage() {
                 <div className="login-bg-glow login-bg-glow-2" />
                 <div className="login-bg-stars" />
                 <div className="login-bg-vignette" />
+                <div className="login-bg-noise" />
             </div>
 
             <div className="welcome-topbar">
@@ -73,7 +76,7 @@ export default function WelcomePage() {
             <div className="welcome-content">
                 <section className="welcome-hero">
                     <SeloIcon className="welcome-hero-mark" />
-                    <h1>Ficha Ordem Paranormal</h1>
+                    <h1><ShinyText>Ficha Ordem Paranormal</ShinyText></h1>
                     <p className="welcome-hero-tagline">
                         A ficha de personagem que você deixa aberta durante a própria
                         sessão de <strong>Ordem Paranormal</strong> — rola dados, gasta
@@ -84,58 +87,70 @@ export default function WelcomePage() {
                 </section>
 
                 <section className="welcome-features">
-                    <div className="welcome-feature-card">
-                        <h3>Tudo salvo na nuvem</h3>
-                        <p>Seus personagens ficam guardados na sua conta — acesse de qualquer aparelho, sem perder nada entre sessões.</p>
-                    </div>
-                    <div className="welcome-feature-card">
-                        <h3>Dados 3D animados</h3>
-                        <p>Rolagem com física de verdade na tela, com um gerador comum como reserva se o navegador não conseguir rodar a animação.</p>
-                    </div>
-                    <div className="welcome-feature-card">
-                        <h3>Regras do livro de Ordem</h3>
-                        <p>Perícias, itens, rituais e poderes de trilha pesquisados com base no livro de regras de Ordem Paranormal e sites que contêm informações sobre a franquia, caso ache algo errado, só me avisar.</p>
-                    </div>
-                    <div className="welcome-feature-card">
-                        <h3>Feito pra jogar ao vivo</h3>
-                        <p>Interface pensada pra ser rápida "de relance" durante a mesa, não só organizada entre sessões.</p>
-                    </div>
+                    <FadeContent atraso={0}>
+                        <div className="welcome-feature-card">
+                            <h3>Tudo salvo na nuvem</h3>
+                            <p>Seus personagens ficam guardados na sua conta — acesse de qualquer aparelho, sem perder nada entre sessões.</p>
+                        </div>
+                    </FadeContent>
+                    <FadeContent atraso={80}>
+                        <div className="welcome-feature-card">
+                            <h3>Dados 3D animados</h3>
+                            <p>Rolagem com física de verdade na tela, com um gerador comum como reserva se o navegador não conseguir rodar a animação.</p>
+                        </div>
+                    </FadeContent>
+                    <FadeContent atraso={160}>
+                        <div className="welcome-feature-card">
+                            <h3>Regras do livro de Ordem</h3>
+                            <p>Perícias, itens, rituais e poderes de trilha pesquisados com base no livro de regras de Ordem Paranormal e sites que contêm informações sobre a franquia, caso ache algo errado, só me avisar.</p>
+                        </div>
+                    </FadeContent>
+                    <FadeContent atraso={240}>
+                        <div className="welcome-feature-card">
+                            <h3>Feito pra jogar ao vivo</h3>
+                            <p>Interface pensada pra ser rápida "de relance" durante a mesa, não só organizada entre sessões.</p>
+                        </div>
+                    </FadeContent>
                 </section>
 
-                <section className="welcome-callout">
-                    <h2>Projeto de código aberto</h2>
-                    <p>
-                        O BreusRPG é feito e mantido por uma pessoa que assistiu e ama Ordem Paranormal,
-                        e todo o código-fonte está aberto no GitHub — qualquer um pode
-                        ver como foi feito, relatar problemas ou contribuir direto com o
-                        projeto.
-                    </p>
-                    <a
-                        className="btn-secondary welcome-callout-link"
-                        href={LINK_GITHUB}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        Ver o repositório no GitHub
-                    </a>
-                </section>
+                <FadeContent>
+                    <section className="welcome-callout">
+                        <h2>Projeto de código aberto</h2>
+                        <p>
+                            O BreusRPG é feito e mantido por uma pessoa que assistiu e ama Ordem Paranormal,
+                            e todo o código-fonte está aberto no GitHub — qualquer um pode
+                            ver como foi feito, relatar problemas ou contribuir direto com o
+                            projeto.
+                        </p>
+                        <a
+                            className="btn-secondary welcome-callout-link"
+                            href={LINK_GITHUB}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Ver o repositório no GitHub
+                        </a>
+                    </section>
+                </FadeContent>
 
-                <section className="welcome-callout">
-                    <h2>Encontrou um bug ou tem uma sugestão?</h2>
-                    <p>
-                        Sua opinião ajuda a melhorar a ficha pra todo mundo que joga com
-                        ela. Encontrou algo que não funciona direito, ou tem uma ideia de
-                        funcionalidade? Manda um e-mail, toda e qualquer crítica construtiva é bem-vinda.
-                    </p>
-                    <a
-                        className="btn-secondary welcome-callout-link"
-                        href={`mailto:${EMAIL_CONTATO}?subject=${encodeURIComponent(ASSUNTO_EMAIL)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        Enviar e-mail
-                    </a>
-                </section>
+                <FadeContent>
+                    <section className="welcome-callout">
+                        <h2>Encontrou um bug ou tem uma sugestão?</h2>
+                        <p>
+                            Sua opinião ajuda a melhorar a ficha pra todo mundo que joga com
+                            ela. Encontrou algo que não funciona direito, ou tem uma ideia de
+                            funcionalidade? Manda um e-mail, toda e qualquer crítica construtiva é bem-vinda.
+                        </p>
+                        <a
+                            className="btn-secondary welcome-callout-link"
+                            href={`mailto:${EMAIL_CONTATO}?subject=${encodeURIComponent(ASSUNTO_EMAIL)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Enviar e-mail
+                        </a>
+                    </section>
+                </FadeContent>
 
                 {/* Rodapé simples, só pra fechar a página com algo em vez
                     de terminar em espaço vazio (ver comentário sobre o

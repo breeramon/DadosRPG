@@ -133,6 +133,7 @@ export default function LoginPage() {
                 <div className="login-bg-glow login-bg-glow-2" />
                 <div className="login-bg-stars" />
                 <div className="login-bg-vignette" />
+                <div className="login-bg-noise" />
             </div>
 
             {/* Dois painéis lado a lado (identidade/selo + formulário) que
