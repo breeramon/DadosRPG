@@ -22,6 +22,19 @@
 // 25% é o mesmo patamar usado informalmente em RPGs pra "sangrando"/
 // crítico; vale ajustar se um dia isso virar regra oficial da mesa.
 //
+// Vida/PE/Sanidade normalmente ficam críticos em momentos diferentes
+// (um pode cair abaixo de 25% bem antes do outro) -- sem tratar isso,
+// cada barra pisca fora de sincronia das outras, porque o navegador
+// começa a contagem da animação do zero no instante em que a classe é
+// aplicada. useAtrasoPulsoCritico (logo abaixo) resolve isso: guarda o
+// instante exato em que CADA barra ficou crítica (via ref, só na
+// primeira vez) e usa esse instante pra calcular um animation-delay
+// negativo (módulo a duração do pulso). Matematicamente, isso faz a
+// fase da animação em qualquer momento depender só do relógio real, e
+// não de quando cada barra especificamente ficou crítica -- então duas
+// ou mais barras críticas ao mesmo tempo sempre pulsam juntas, mesmo
+// tendo entrado em estado crítico em momentos bem diferentes.
+//
 // Props:
 //   vidaAtual, vidaMax, onAjustarVida(delta)
 //   detAtual, detMax, peFlash, onAjustarDet(delta)      -- peFlash vira
@@ -47,6 +60,24 @@
 
 import CountUp from '@/components/effects/CountUp';
 
+// Duração do pulso -- precisa ser igual ao "1.6s" de
+// @keyframes vitalCriticalPulse / .vital-bar--critical no index.css.
+const DURACAO_PULSO_CRITICO_MS = 1600;
+
+// Ver o comentário grande lá em cima sobre por que isso existe. Não
+// precisa de estado nem de ref: calculando o delay como "-(agora módulo
+// a duração)" a cada render, o resultado matemático já é sempre a fase
+// correta pro relógio real naquele instante -- então nem importa se uma
+// barra específica remonta no meio do caminho (a barra de PE remonta a
+// cada vez que peFlash muda, pra reforçar a animação de "gastou PE" --
+// ver key={peFlash} logo abaixo -- e mesmo assim continua em fase com
+// as outras, porque cada remontagem recalcula de novo a partir do
+// mesmo relógio real).
+function estiloPulsoCritico(critico) {
+    if (!critico) return undefined;
+    return { animationDelay: `-${Date.now() % DURACAO_PULSO_CRITICO_MS}ms` };
+}
+
 export default function VitalsPanel({
     vidaAtual, vidaMax, onAjustarVida,
     detAtual, detMax, peFlash, onAjustarDet,
@@ -62,6 +93,10 @@ export default function VitalsPanel({
     const detCritico = detMax > 0 && detAtual / detMax <= 0.25;
     const sanidadeCritica = sanidadeMax > 0 && sanidadeAtual / sanidadeMax <= 0.25;
 
+    const estiloPulsoVida = estiloPulsoCritico(vidaCritica);
+    const estiloPulsoDet = estiloPulsoCritico(detCritico);
+    const estiloPulsoSanidade = estiloPulsoCritico(sanidadeCritica);
+
     return (
         <div className="vitals-block">
             <div className="vital-row">
@@ -69,7 +104,7 @@ export default function VitalsPanel({
                 <div className="vital-bar-wrap">
                     <button className="vital-btn" title="-5" aria-label="Diminuir vida em 5" onClick={() => onAjustarVida(-5)}>«</button>
                     <button className="vital-btn" title="-1" aria-label="Diminuir vida em 1" onClick={() => onAjustarVida(-1)}>‹</button>
-                    <div className={`vital-bar vida-bar${vidaCritica ? ' vital-bar--critical' : ''}`}>
+                    <div className={`vital-bar vida-bar${vidaCritica ? ' vital-bar--critical' : ''}`} style={estiloPulsoVida}>
                         <div className="vital-bar-fill vida-fill" style={{ width: `${vidaMax > 0 ? Math.max(0, Math.min(100, (vidaAtual / vidaMax) * 100)) : 0}%` }}></div>
                         <span className="vital-bar-text"><CountUp value={vidaAtual} /> / {vidaMax}</span>
                     </div>
@@ -83,7 +118,7 @@ export default function VitalsPanel({
                 <div className="vital-bar-wrap">
                     <button className="vital-btn" title="-5" aria-label="Diminuir PE em 5" onClick={() => onAjustarDet(-5)}>«</button>
                     <button className="vital-btn" title="-1" aria-label="Diminuir PE em 1" onClick={() => onAjustarDet(-1)}>‹</button>
-                    <div key={peFlash} className={`vital-bar det-bar${peFlash > 0 ? ' pe-spent-flash' : ''}${detCritico ? ' vital-bar--critical' : ''}`}>
+                    <div key={peFlash} className={`vital-bar det-bar${peFlash > 0 ? ' pe-spent-flash' : ''}${detCritico ? ' vital-bar--critical' : ''}`} style={estiloPulsoDet}>
                         <div className="vital-bar-fill det-fill" style={{ width: `${detMax > 0 ? Math.max(0, Math.min(100, (detAtual / detMax) * 100)) : 0}%` }}></div>
                         <span className="vital-bar-text"><CountUp value={detAtual} /> / {detMax}</span>
                     </div>
@@ -98,7 +133,7 @@ export default function VitalsPanel({
                     <div className="vital-bar-wrap">
                         <button className="vital-btn" title="-5" aria-label="Diminuir sanidade em 5" onClick={() => onAjustarSanidade(-5)}>«</button>
                         <button className="vital-btn" title="-1" aria-label="Diminuir sanidade em 1" onClick={() => onAjustarSanidade(-1)}>‹</button>
-                        <div className={`vital-bar san-bar${sanidadeCritica ? ' vital-bar--critical' : ''}`}>
+                        <div className={`vital-bar san-bar${sanidadeCritica ? ' vital-bar--critical' : ''}`} style={estiloPulsoSanidade}>
                             <div className="vital-bar-fill san-fill" style={{ width: `${sanidadeMax > 0 ? Math.max(0, Math.min(100, (sanidadeAtual / sanidadeMax) * 100)) : 0}%` }}></div>
                             <span className="vital-bar-text"><CountUp value={sanidadeAtual} /> / {sanidadeMax}</span>
                         </div>
