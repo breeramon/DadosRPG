@@ -3238,7 +3238,7 @@ h3 {
 
 .characters-panel {
     width: 100%;
-    max-width: 800px;
+    max-width: 1240px;
 }
 
 .characters-header {
@@ -3252,6 +3252,7 @@ h3 {
 
 .characters-header-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
 }
 
@@ -3269,21 +3270,60 @@ h3 {
 }
 
 .characters-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    display: grid;
+    /* minmax(min(280px, 100%), 1fr): mesma ideia de grid responsivo do
+       .welcome-features, mas com o "min(...,100%)" a mais pra garantir
+       que a coluna nunca fique maior que a tela em celulares bem
+       estreitos (ex: 320px) -- sem isso, 280px fixo estourava a largura
+       disponível depois do padding da tela/painel e criava scroll
+       horizontal. */
+    grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+    gap: 22px;
 }
 
+/* Estilo "carta física" (ver TiltCard.jsx logo abaixo): cada personagem
+   vira um card vertical em vez da antiga linha horizontal, pra combinar
+   melhor com a inclinação 3D do TiltCard -- uma carta alta faz mais
+   sentido "sendo segurada" do que uma faixa comprida. Continua usando só
+   as informações que já existiam (nome, trilha, NEX%, ações). O card
+   ficou maior de propósito, com destaque pro .character-card-portrait
+   logo abaixo -- é o espaço já reservado pra quando o usuário puder
+   colocar uma foto/arte do personagem (nesse dia, troca-se o <span> do
+   avatar por uma <img style={{ objectFit: 'cover' }}> dentro do mesmo
+   .character-card-portrait, sem mexer no resto do layout). */
 .character-card {
     background-color: var(--color-surface);
-    border-radius: 8px;
-    padding: 16px 20px;
+    background-image: linear-gradient(160deg, rgba(124, 67, 189, 0.08), transparent 55%);
+    border-radius: 12px;
+    padding: 20px;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 3px solid var(--color-primary-900);
+}
+
+/* Área de retrato: proporção 3:4 (como uma carta de personagem/RPG de
+   verdade), hoje preenchida só com a inicial do nome em destaque; vira
+   o lugar da foto do personagem quando essa funcionalidade existir. */
+.character-card-portrait {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    border-left: 3px solid var(--color-primary-900);
+    justify-content: center;
+    background-image: linear-gradient(150deg, var(--color-primary-700), var(--color-primary-900));
+    border: 1px solid var(--color-primary-400);
+}
+
+.character-card-avatar {
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: bold;
+    font-size: 3.2rem;
+    line-height: 1;
+    user-select: none;
 }
 
 /* Tilted Card (React Bits, ver TiltCard.jsx): a inclinação em si vem
@@ -3307,10 +3347,14 @@ h3 {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-width: 0;
 }
 
 .character-card-info strong {
     font-size: 1.1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .character-card-trilha {
@@ -3322,7 +3366,24 @@ h3 {
 
 .character-card-actions {
     display: flex;
+    flex-direction: column;
     gap: 8px;
+    margin-top: auto;
+}
+
+.character-card-actions .btn-action {
+    width: 100%;
+}
+
+.character-card-actions-secondary {
+    display: flex;
+    gap: 8px;
+}
+
+.character-card-actions-secondary .btn-secondary,
+.character-card-actions-secondary .btn-danger {
+    flex: 1;
+    padding: 8px 10px;
 }
 
 /* ============================================================

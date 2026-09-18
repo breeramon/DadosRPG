@@ -106,8 +106,12 @@ export default function CharactersPage() {
                 <div className="characters-list">
                     {personagens.map(personagem => {
                         const nex = Number(personagem.nex) || 5;
+                        const inicial = (personagem.nome || '?').trim().charAt(0).toUpperCase() || '?';
                         return (
                             <TiltCard className="character-card" key={personagem.id}>
+                                <div className="character-card-portrait" aria-hidden="true">
+                                    <span className="character-card-avatar">{inicial}</span>
+                                </div>
                                 <div className="character-card-info">
                                     <strong>{personagem.nome || '(sem nome)'}</strong>
                                     <span className="character-card-trilha">
@@ -121,15 +125,17 @@ export default function CharactersPage() {
                                     >
                                         Abrir
                                     </button>
-                                    <button
-                                        className="btn-secondary"
-                                        onClick={() => navigate(`/form/${encodeURIComponent(personagem.id)}`)}
-                                    >
-                                        Editar
-                                    </button>
-                                    <button className="btn-danger" onClick={() => pedirExclusao(personagem)}>
-                                        Excluir
-                                    </button>
+                                    <div className="character-card-actions-secondary">
+                                        <button
+                                            className="btn-secondary"
+                                            onClick={() => navigate(`/form/${encodeURIComponent(personagem.id)}`)}
+                                        >
+                                            Editar
+                                        </button>
+                                        <button className="btn-danger" onClick={() => pedirExclusao(personagem)}>
+                                            Excluir
+                                        </button>
+                                    </div>
                                 </div>
                             </TiltCard>
                         );
