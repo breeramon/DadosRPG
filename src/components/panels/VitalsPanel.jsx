@@ -15,6 +15,13 @@
 // só muda por causa de trilha/atributo, não pelos steppers daqui)
 // continua texto simples.
 //
+// Quando um vital cai pra 25% do máximo ou menos, a barra ganha uma
+// borda pulsante vermelha (.vital-bar--critical, React Bits "Border
+// Glow" adaptado em CSS puro -- ver index.css) -- chama atenção pro
+// personagem em risco sem precisar reparar no número dentro da barra.
+// 25% é o mesmo patamar usado informalmente em RPGs pra "sangrando"/
+// crítico; vale ajustar se um dia isso virar regra oficial da mesa.
+//
 // Props:
 //   vidaAtual, vidaMax, onAjustarVida(delta)
 //   detAtual, detMax, peFlash, onAjustarDet(delta)      -- peFlash vira
@@ -51,6 +58,10 @@ export default function VitalsPanel({
     resistencias, onResistenciasChange,
     origemEscolhida, onTrocarOrigem,
 }) {
+    const vidaCritica = vidaMax > 0 && vidaAtual / vidaMax <= 0.25;
+    const detCritico = detMax > 0 && detAtual / detMax <= 0.25;
+    const sanidadeCritica = sanidadeMax > 0 && sanidadeAtual / sanidadeMax <= 0.25;
+
     return (
         <div className="vitals-block">
             <div className="vital-row">
@@ -58,7 +69,7 @@ export default function VitalsPanel({
                 <div className="vital-bar-wrap">
                     <button className="vital-btn" title="-5" aria-label="Diminuir vida em 5" onClick={() => onAjustarVida(-5)}>«</button>
                     <button className="vital-btn" title="-1" aria-label="Diminuir vida em 1" onClick={() => onAjustarVida(-1)}>‹</button>
-                    <div className="vital-bar vida-bar">
+                    <div className={`vital-bar vida-bar${vidaCritica ? ' vital-bar--critical' : ''}`}>
                         <div className="vital-bar-fill vida-fill" style={{ width: `${vidaMax > 0 ? Math.max(0, Math.min(100, (vidaAtual / vidaMax) * 100)) : 0}%` }}></div>
                         <span className="vital-bar-text"><CountUp value={vidaAtual} /> / {vidaMax}</span>
                     </div>
@@ -72,7 +83,7 @@ export default function VitalsPanel({
                 <div className="vital-bar-wrap">
                     <button className="vital-btn" title="-5" aria-label="Diminuir PE em 5" onClick={() => onAjustarDet(-5)}>«</button>
                     <button className="vital-btn" title="-1" aria-label="Diminuir PE em 1" onClick={() => onAjustarDet(-1)}>‹</button>
-                    <div key={peFlash} className={`vital-bar det-bar${peFlash > 0 ? ' pe-spent-flash' : ''}`}>
+                    <div key={peFlash} className={`vital-bar det-bar${peFlash > 0 ? ' pe-spent-flash' : ''}${detCritico ? ' vital-bar--critical' : ''}`}>
                         <div className="vital-bar-fill det-fill" style={{ width: `${detMax > 0 ? Math.max(0, Math.min(100, (detAtual / detMax) * 100)) : 0}%` }}></div>
                         <span className="vital-bar-text"><CountUp value={detAtual} /> / {detMax}</span>
                     </div>
@@ -87,7 +98,7 @@ export default function VitalsPanel({
                     <div className="vital-bar-wrap">
                         <button className="vital-btn" title="-5" aria-label="Diminuir sanidade em 5" onClick={() => onAjustarSanidade(-5)}>«</button>
                         <button className="vital-btn" title="-1" aria-label="Diminuir sanidade em 1" onClick={() => onAjustarSanidade(-1)}>‹</button>
-                        <div className="vital-bar san-bar">
+                        <div className={`vital-bar san-bar${sanidadeCritica ? ' vital-bar--critical' : ''}`}>
                             <div className="vital-bar-fill san-fill" style={{ width: `${sanidadeMax > 0 ? Math.max(0, Math.min(100, (sanidadeAtual / sanidadeMax) * 100)) : 0}%` }}></div>
                             <span className="vital-bar-text"><CountUp value={sanidadeAtual} /> / {sanidadeMax}</span>
                         </div>

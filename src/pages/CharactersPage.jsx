@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { Auth, Characters } from '@/services/firebase';
+import TiltCard from '@/components/effects/TiltCard';
 
 export default function CharactersPage() {
     const { user } = useOutletContext();
@@ -106,7 +107,7 @@ export default function CharactersPage() {
                     {personagens.map(personagem => {
                         const nex = Number(personagem.nex) || 5;
                         return (
-                            <div className="character-card" key={personagem.id}>
+                            <TiltCard className="character-card" key={personagem.id}>
                                 <div className="character-card-info">
                                     <strong>{personagem.nome || '(sem nome)'}</strong>
                                     <span className="character-card-trilha">
@@ -130,7 +131,7 @@ export default function CharactersPage() {
                                         Excluir
                                     </button>
                                 </div>
-                            </div>
+                            </TiltCard>
                         );
                     })}
                 </div>

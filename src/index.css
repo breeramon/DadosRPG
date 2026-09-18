@@ -739,6 +739,22 @@ h3 {
     animation: peSpentFlash 0.7s ease-out;
 }
 
+/* Border Glow (React Bits, adaptado em CSS puro) -- aplicado quando um
+   vital (Vida/PE/Sanidade) cai pra 25% do máximo ou menos, ver
+   VitalsPanel.jsx. Uma borda vermelha pulsante ao redor da barra chama
+   atenção pro personagem em risco de relance, sem precisar reparar no
+   número. Continua pulsando enquanto o vital ficar nessa faixa
+   (diferente do .pe-spent-flash acima, que é um flash único de uma
+   ação pontual). */
+@keyframes vitalCriticalPulse {
+    0%, 100% { box-shadow: 0 0 4px 1px rgba(255, 23, 68, 0.35); border-color: var(--color-danger); }
+    50% { box-shadow: 0 0 14px 4px rgba(255, 23, 68, 0.85); border-color: #ff6584; }
+}
+
+.vital-bar--critical {
+    animation: vitalCriticalPulse 1.6s ease-in-out infinite;
+}
+
 .vital-bar-text {
     position: relative;
     z-index: 1;
@@ -2293,6 +2309,8 @@ h3 {
 }
 
 .btn-action {
+    position: relative;
+    overflow: hidden;
     padding: 10px 20px;
     background-image: linear-gradient(135deg, var(--color-primary-700), var(--color-primary-900));
     color: white;
@@ -2303,6 +2321,30 @@ h3 {
     letter-spacing: 0.3px;
     box-shadow: 0 3px 10px rgba(74, 20, 140, 0.35);
     transition: transform 0.15s ease, box-shadow 0.15s ease, background-image 0.15s ease;
+}
+
+/* Glare Hover (React Bits, adaptado em CSS puro): um brilho diagonal
+   varre o botão da esquerda pra direita no hover -- reforço de feedback
+   de interação nos botões de ação principal, na mesma linha do Click
+   Spark já usado nos botões de perícia. ::after porque o gradiente
+   precisa ficar POR CIMA do background-image do botão (senão o brilho
+   fica escondido atrás dele); overflow: hidden no .btn-action acima
+   garante que a barra não vaze pra fora do botão nas pontas. */
+.btn-action::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -75%;
+    width: 45%;
+    height: 100%;
+    background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
+    transform: skewX(-20deg);
+    transition: left 0.55s ease;
+    pointer-events: none;
+}
+
+.btn-action:hover::after {
+    left: 125%;
 }
 
 .btn-action:hover {
@@ -2402,6 +2444,21 @@ h3 {
     .glitch-text::before {
         animation: none;
         content: none;
+    }
+
+    .vital-bar--critical {
+        animation: none;
+        border-color: var(--color-danger);
+        box-shadow: 0 0 6px 2px rgba(255, 23, 68, 0.5);
+    }
+
+    .btn-action::after {
+        transition: none;
+        content: none;
+    }
+
+    .tilt-card {
+        transition: box-shadow 0.2s ease;
     }
 }
 
@@ -3227,6 +3284,23 @@ h3 {
     flex-wrap: wrap;
     gap: 10px;
     border-left: 3px solid var(--color-primary-900);
+}
+
+/* Tilted Card (React Bits, ver TiltCard.jsx): a inclinação em si vem
+   das variáveis --tilt-x/--tilt-y, atualizadas via JS a cada movimento
+   do mouse sobre o card. transform-style preserve-3d + a perspective
+   aqui é o que dá profundidade de verdade ao rotateX/rotateY, em vez de
+   só espremer o card visualmente. */
+.tilt-card {
+    --tilt-x: 0deg;
+    --tilt-y: 0deg;
+    transform: perspective(700px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+    transition: transform 0.15s ease-out, box-shadow 0.2s ease;
+    will-change: transform;
+}
+
+.tilt-card:hover {
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(124, 67, 189, 0.2);
 }
 
 .character-card-info {
