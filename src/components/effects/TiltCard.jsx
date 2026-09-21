@@ -16,6 +16,14 @@
 // hover) fica só no CSS -- consistente com o resto do projeto, que
 // prefere deixar visual em CSS sempre que dá.
 //
+// Junto com a inclinação, o mesmo mousemove também alimenta --spot-x/
+// --spot-y (posição do cursor em %, igual o SpotlightCard.jsx desta
+// pasta) -- é o que dá ao card de personagem o acabamento de "Profile
+// Card" (React Bits): uma luz suave acompanhando o mouse por cima do
+// card, além da inclinação 3D. Deixar os dois efeitos no mesmo
+// componente evita ter dois handlers de mousemove competindo pelo
+// mesmo elemento.
+//
 // Uso: <TiltCard className="character-card" key={...}>
 //        ...conteúdo do card...
 //      </TiltCard>
@@ -41,10 +49,19 @@ export default function TiltCard({ children, className = '', ...rest }) {
     }
 
     function handleMouseMove(e) {
-        if (reduzMovimentoAtivo() || !elementoRef.current) return;
+        if (!elementoRef.current) return;
         const rect = elementoRef.current.getBoundingClientRect();
         const proporcaoX = (e.clientX - rect.left) / rect.width; // 0 (esquerda) .. 1 (direita)
         const proporcaoY = (e.clientY - rect.top) / rect.height; // 0 (topo) .. 1 (base)
+
+        // O brilho (--spot-x/--spot-y) segue o cursor mesmo com "prefers
+        // reduced motion" -- é só uma posição de gradiente, não um
+        // movimento da própria carta, então não conta como a animação
+        // que a preferência pede pra evitar (só a inclinação 3D conta).
+        elementoRef.current.style.setProperty('--spot-x', `${(proporcaoX * 100).toFixed(1)}%`);
+        elementoRef.current.style.setProperty('--spot-y', `${(proporcaoY * 100).toFixed(1)}%`);
+
+        if (reduzMovimentoAtivo()) return;
         const rotateY = (proporcaoX - 0.5) * INCLINACAO_MAX_GRAUS * 2;
         const rotateX = (0.5 - proporcaoY) * INCLINACAO_MAX_GRAUS * 2;
         elementoRef.current.style.setProperty('--tilt-x', `${rotateX.toFixed(2)}deg`);

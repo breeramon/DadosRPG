@@ -34,8 +34,12 @@
 //                                           sobrepostos e "quebre" à toa
 // ============================================================
 
+import { useState } from 'react';
 import GlitchText from '@/components/effects/GlitchText';
 import DecryptedText from '@/components/effects/DecryptedText';
+import SpotlightCard from '@/components/effects/SpotlightCard';
+import WarmTooltip from '@/components/effects/WarmTooltip';
+import ConfirmModal from '@/components/modal/ConfirmModal';
 
 function TrashIcon() {
     return (
@@ -75,6 +79,11 @@ export default function CombateTab({
     rollLog,
     desabilitarRolagem = false,
 }) {
+    // Ataque esperando confirmação de remoção (ver ConfirmModal.jsx no
+    // fim do componente) -- guarda o objeto inteiro porque
+    // onRemoverAtaque espera o ataque, não um index.
+    const [ataqueParaRemover, setAtaqueParaRemover] = useState(null);
+
     return (
         <div className="tab-panel-combate">
             <div className="ataques-section-header">
@@ -97,7 +106,7 @@ export default function CombateTab({
                 {ataquesFiltrados.map((ataque, index) => {
                     const aberto = expandidosAtaques.has(ataque.nome);
                     return (
-                        <div className={`modal-item-card ataque-card${aberto ? ' expanded' : ''}`} key={`${ataque.nome}-${index}`}>
+                        <SpotlightCard className={`modal-item-card ataque-card${aberto ? ' expanded' : ''}`} key={`${ataque.nome}-${index}`}>
                             <div
                                 className="modal-item-card-header"
                                 role="button"
@@ -114,9 +123,11 @@ export default function CombateTab({
                                         {ataque.dano && <span className="modal-item-card-badge">Dano: {ataque.dano}</span>}
                                         {ataque.critico && <span className="modal-item-card-badge">Crítico: {ataque.critico}</span>}
                                         {ataque.auto && (
-                                            <span className="modal-item-card-badge badge-auto" title="Gerado automaticamente a partir da arma no Inventário">
-                                                Inventário
-                                            </span>
+                                            <WarmTooltip texto="Gerado automaticamente a partir da arma no Inventário" placement="bottom">
+                                                <span className="modal-item-card-badge badge-auto">
+                                                    Inventário
+                                                </span>
+                                            </WarmTooltip>
                                         )}
                                     </div>
                                     {ataque.alcance && <div className="modal-item-card-sub">Alcance {ataque.alcance}</div>}
@@ -137,7 +148,7 @@ export default function CombateTab({
                                             type="button"
                                             className="modal-item-card-remove"
                                             title="Remover ataque"
-                                            onClick={ev => { ev.stopPropagation(); onRemoverAtaque(ataque); }}
+                                            onClick={ev => { ev.stopPropagation(); setAtaqueParaRemover(ataque); }}
                                         >
                                             <TrashIcon />
                                         </button>
@@ -149,7 +160,7 @@ export default function CombateTab({
                                     <div className="modal-item-card-efeito">{ataque.observacoes}</div>
                                 </div>
                             )}
-                        </div>
+                        </SpotlightCard>
                     );
                 })}
             </div>
@@ -215,6 +226,17 @@ export default function CombateTab({
                     ))
                 )}
             </div>
+
+            <ConfirmModal
+                aberto={!!ataqueParaRemover}
+                titulo="Remover ataque"
+                mensagem={<>Isso vai remover <strong>{ataqueParaRemover?.nome}</strong> da lista de ataques.</>}
+                onFechar={() => setAtaqueParaRemover(null)}
+                onConfirmar={() => {
+                    onRemoverAtaque(ataqueParaRemover);
+                    setAtaqueParaRemover(null);
+                }}
+            />
         </div>
     );
 }

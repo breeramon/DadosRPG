@@ -26,7 +26,10 @@
 // callback de verdade, pra não sumir seco da lista.
 // ============================================================
 
+import { useState } from 'react';
 import useListaAnimada from '@/components/effects/useListaAnimada';
+import SpotlightCard from '@/components/effects/SpotlightCard';
+import ConfirmModal from '@/components/modal/ConfirmModal';
 
 function TrashIcon() {
     return (
@@ -52,6 +55,9 @@ export default function InventarioTab({
     onRemoverItem,
 }) {
     const { estaSaindo, iniciarSaida } = useListaAnimada();
+    // Item esperando confirmação de remoção (ver ConfirmModal.jsx no
+    // fim do componente).
+    const [itemParaRemover, setItemParaRemover] = useState(null);
 
     return (
         <div className="tab-panel-inventario">
@@ -85,7 +91,7 @@ export default function InventarioTab({
                     <div className="inventory-empty">Nenhum item no inventário ainda.</div>
                 )}
                 {inventario.map((item, index) => (
-                    <div
+                    <SpotlightCard
                         className={`inventory-item${item.equipado ? ' equipado' : ''}${estaSaindo(index) ? ' inventory-item-saindo' : ''}`}
                         style={{ '--i': index }}
                         key={index}
@@ -112,15 +118,26 @@ export default function InventarioTab({
                                 type="button"
                                 className="modal-item-card-remove"
                                 title="Remover item"
-                                onClick={() => iniciarSaida(index, () => onRemoverItem(index))}
+                                onClick={() => setItemParaRemover({ index, nome: item.nome })}
                             >
                                 <TrashIcon />
                             </button>
                         </div>
                         {item.efeito && <span className="inventory-item-efeito">{item.efeito}</span>}
-                    </div>
+                    </SpotlightCard>
                 ))}
             </div>
+
+            <ConfirmModal
+                aberto={!!itemParaRemover}
+                titulo="Remover item"
+                mensagem={<>Isso vai remover <strong>{itemParaRemover?.nome || '(sem nome)'}</strong> do inventário.</>}
+                onFechar={() => setItemParaRemover(null)}
+                onConfirmar={() => {
+                    iniciarSaida(itemParaRemover.index, () => onRemoverItem(itemParaRemover.index));
+                    setItemParaRemover(null);
+                }}
+            />
         </div>
     );
 }

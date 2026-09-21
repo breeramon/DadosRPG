@@ -23,6 +23,15 @@ import TrilhaPanel from '@/components/panels/TrilhaPanel';
 import InventarioTab from '@/components/tabs/InventarioTab';
 import RitualTab from '@/components/tabs/RitualTab';
 import RitualCatalogModal from '@/components/modal/RitualCatalogModal';
+import PillNav from '@/components/effects/PillNav';
+import TrueFocus from '@/components/effects/TrueFocus';
+
+const ABAS_FICHA = [
+    { value: 'combate', label: 'Combate' },
+    { value: 'rituais', label: 'Rituais' },
+    { value: 'inventario', label: 'Inventário' },
+    { value: 'trilha', label: 'Trilha' },
+];
 
 function GearIcon() {
     return (
@@ -869,7 +878,13 @@ export default function CharacterSheetPage() {
                 <div className="sheet-topbar-title">
                     <span>{personagem.nome || '-'}</span>
                     <span className="sheet-character-trilha">{personagem.trilha ? `(${personagem.trilha})` : ''}</span>
-                    <span className="sheet-character-nex">{personagem.nex ? `NEX ${Number(personagem.nex)}%` : ''}</span>
+                    {personagem.nex ? (
+                        <TrueFocus>
+                            <span className="sheet-character-nex">{`NEX ${Number(personagem.nex)}%`}</span>
+                        </TrueFocus>
+                    ) : (
+                        <span className="sheet-character-nex"></span>
+                    )}
                 </div>
                 <button className="btn-secondary" onClick={() => navigate(`/form/${encodeURIComponent(id)}`)}>Editar</button>
             </div>
@@ -997,36 +1012,13 @@ export default function CharacterSheetPage() {
                 />
 
                 <section className="sheet-tabs-section">
-                    <nav className="sheet-tabs-nav">
-                        <button
-                            type="button"
-                            className={`sheet-tab-btn${abaAtiva === 'combate' ? ' active' : ''}`}
-                            onClick={() => setAbaAtiva('combate')}
-                        >
-                            Combate
-                        </button>
-                        <button
-                            type="button"
-                            className={`sheet-tab-btn${abaAtiva === 'rituais' ? ' active' : ''}`}
-                            onClick={() => setAbaAtiva('rituais')}
-                        >
-                            Rituais
-                        </button>
-                        <button
-                            type="button"
-                            className={`sheet-tab-btn${abaAtiva === 'inventario' ? ' active' : ''}`}
-                            onClick={() => setAbaAtiva('inventario')}
-                        >
-                            Inventário
-                        </button>
-                        <button
-                            type="button"
-                            className={`sheet-tab-btn${abaAtiva === 'trilha' ? ' active' : ''}`}
-                            onClick={() => setAbaAtiva('trilha')}
-                        >
-                            Trilha
-                        </button>
-                    </nav>
+                    <PillNav
+                        className="sheet-tabs-nav"
+                        items={ABAS_FICHA}
+                        value={abaAtiva}
+                        onChange={setAbaAtiva}
+                        ariaLabel="Abas da ficha"
+                    />
 
                     <div className="sheet-tab-panel">
                         {abaAtiva === 'combate' && (

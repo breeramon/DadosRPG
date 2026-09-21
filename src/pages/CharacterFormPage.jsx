@@ -8,6 +8,7 @@ import RitualTab from '@/components/tabs/RitualTab';
 import OrigemCatalogModal from '@/components/modal/OrigemCatalogModal';
 import TrilhaPanel from '@/components/panels/TrilhaPanel';
 import Stepper from '@/components/effects/Stepper';
+import SpringCheck from '@/components/effects/SpringCheck';
 import * as OP from '@/lib/pericias';
 import * as OPR from '@/lib/rituais';
 import { origemPorNome } from '@/lib/origens';
@@ -760,15 +761,13 @@ export default function CharacterFormPage() {
                                     const st = periciasState[p.nome];
                                     return (
                                         <div className="pericia-catalogo-row" key={p.nome}>
-                                            <label className="pericia-catalogo-checkbox">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={st.treinado}
-                                                    disabled={!st.treinado && cotaEsgotada}
-                                                    onChange={() => handleCheckboxToggle(p.nome)}
-                                                />
-                                                {' ' + p.nome}
-                                            </label>
+                                            <SpringCheck
+                                                className="pericia-catalogo-checkbox"
+                                                checked={st.treinado}
+                                                disabled={!st.treinado && cotaEsgotada}
+                                                onChange={() => handleCheckboxToggle(p.nome)}
+                                                label={p.nome}
+                                            />
 
                                             {st.treinado && (
                                                 <>

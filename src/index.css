@@ -983,37 +983,62 @@ h3 {
     gap: 14px;
 }
 
-.sheet-tabs-nav {
-    display: flex;
-    gap: 4px;
-    border-bottom: 2px solid #2a2a2a;
+/* --- Pill Nav (React Bits "Pill Nav"/"Dock", reimplementado do zero
+   em CSS + JS puro -- ver PillNav.jsx) -- substitui o antigo sublinhado
+   estático por uma pílula com um indicador que desliza por baixo da
+   aba ativa. Como as N abas dividem a mesma largura (grid de colunas
+   iguais), a posição/largura do indicador sai só de --count (nº de
+   abas) e --index (índice da ativa), sem precisar medir nada em JS --
+   mesma ideia do .form-stepper-line, só que deslizando em vez de
+   "acender" progressivamente. */
+.pill-nav {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--count, 4), 1fr);
+    gap: 2px;
+    padding: 4px;
+    background-color: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
 }
 
-.sheet-tab-btn {
-    flex: 1;
+.pill-nav-indicator {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    width: calc((100% - 8px) / var(--count, 4));
+    transform: translateX(calc(var(--index, 0) * 100%));
+    background-image: linear-gradient(135deg, var(--color-primary-700), var(--color-primary-900));
+    border-radius: 999px;
+    box-shadow: 0 2px 10px rgba(124, 67, 189, 0.35);
+    transition: transform 0.35s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.pill-nav-btn {
+    position: relative;
+    z-index: 1;
     background: transparent;
     border: none;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
     color: var(--color-text-subtle);
     font-family: 'Montserrat', 'Segoe UI', sans-serif;
     font-size: 0.85rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 10px 4px;
+    letter-spacing: 0.5px;
+    padding: 9px 4px;
+    border-radius: 999px;
     cursor: pointer;
-    transition: color 0.18s ease, border-color 0.18s ease;
+    transition: color 0.2s ease;
+    white-space: nowrap;
 }
 
-.sheet-tab-btn:hover {
+.pill-nav-btn:hover {
     color: var(--color-primary-100);
 }
 
-.sheet-tab-btn.active {
-    color: var(--color-primary-200);
-    border-bottom-color: var(--color-primary-400);
-    text-shadow: 0 0 10px rgba(156, 100, 214, 0.5);
+.pill-nav-btn.active {
+    color: #fff;
 }
 
 .sheet-tab-panel {
@@ -2553,6 +2578,29 @@ h3 {
         background-clip: unset;
         color: var(--color-text);
     }
+
+    .tilt-card::before,
+    .spotlight-card::before {
+        transition: none;
+    }
+
+    .pill-nav-indicator {
+        transition: none;
+    }
+
+    .warm-tooltip-bubble {
+        transition: none;
+    }
+
+    .spring-check-tick {
+        transition: none;
+    }
+
+    .true-focus-corner {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
 }
 
 /* DecryptedText: efeito de "decodificação" (React Bits, bem adaptado --
@@ -3482,6 +3530,10 @@ h3 {
 .tilt-card {
     --tilt-x: 0deg;
     --tilt-y: 0deg;
+    --spot-x: 50%;
+    --spot-y: 50%;
+    position: relative;
+    z-index: 0;
     transform: perspective(700px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
     transition: transform 0.15s ease-out, box-shadow 0.2s ease;
     will-change: transform;
@@ -3489,6 +3541,30 @@ h3 {
 
 .tilt-card:hover {
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(124, 67, 189, 0.2);
+}
+
+/* Profile Card (React Bits, reimplementado do zero em CSS + JS puro):
+   o mesmo mousemove do TiltCard.jsx que já calcula a inclinação 3D
+   também alimenta --spot-x/--spot-y, então o card de personagem ganha
+   uma luz suave seguindo o cursor além da inclinação -- é o que dá o
+   acabamento de "cartão de identidade" que vai receber a foto do
+   personagem mais pra frente. Mesmo truque de z-index:-1 do
+   .spotlight-card (ver mais abaixo) pra ficar atrás do retrato/nome
+   em vez de em cima. */
+.tilt-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: radial-gradient(280px circle at var(--spot-x) var(--spot-y), rgba(124, 67, 189, 0.28), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+}
+
+.tilt-card:hover::before {
+    opacity: 1;
 }
 
 .character-card-info {
@@ -4210,7 +4286,7 @@ h3 {
         gap: 8px;
     }
 
-    .sheet-tab-btn {
+    .pill-nav-btn {
         font-size: 0.68rem;
         letter-spacing: 0.2px;
         padding: 10px 2px;
@@ -4242,4 +4318,247 @@ h3 {
     .character-form-grid {
         padding: 12px;
     }
+}
+
+/* ============================================================
+   SPOTLIGHT CARD / BORDER GLOW (React Bits, reimplementado do zero em
+   CSS + JS puro -- ver SpotlightCard.jsx). Usado nos cartões de
+   ritual/ataque/item (.modal-item-card, .inventory-item): um brilho
+   suave atrás do conteúdo que acompanha o cursor do mouse.
+
+   O "position:relative + z-index:0" abre um contexto de empilhamento
+   local só pra esse card -- é o que deixa o ::before usar z-index:-1
+   pra ficar atrás do cabeçalho/corpo do card (que não têm z-index
+   próprio) em vez de atrás do FUNDO DA PÁGINA inteira. Sem isso o
+   glow apareceria por cima do texto em vez de atrás dele.
+   ============================================================ */
+.spotlight-card {
+    position: relative;
+    z-index: 0;
+    --spot-x: 50%;
+    --spot-y: 50%;
+}
+
+.spotlight-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: radial-gradient(200px circle at var(--spot-x) var(--spot-y), rgba(124, 67, 189, 0.22), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+}
+
+.spotlight-card:hover::before,
+.spotlight-card:focus-within::before {
+    opacity: 1;
+}
+
+/* ============================================================
+   WARM TOOLTIP (React Bits, reimplementado do zero em CSS + JS puro
+   -- ver WarmTooltip.jsx). Substitui o title="" nativo do navegador
+   nos avisos mais importantes (cota de rituais, badges "Automático"):
+   aparece rápido, some suave, e usa a paleta do próprio tema em vez
+   da caixinha cinza padrão do navegador.
+
+   O balão (.warm-tooltip-bubble) é renderizado num portal direto pro
+   <body> -- por isso é "position: fixed" com a posição vindo de
+   coords calculados em JS (via style inline top/left), não de
+   left:50%/bottom:100% relativos ao gatilho como um tooltip comum.
+   Isso é o que deixa ele escapar do overflow:hidden dos cards de
+   ritual/ataque (.modal-item-card) -- ver o comentário completo no
+   WarmTooltip.jsx. */
+.warm-tooltip {
+    display: inline-flex;
+}
+
+.warm-tooltip-bubble {
+    position: fixed;
+    z-index: 200;
+    width: max-content;
+    max-width: 240px;
+    padding: 7px 11px;
+    background-color: #2a1d10;
+    border: 1px solid rgba(214, 143, 62, 0.45);
+    border-radius: 6px;
+    color: #f0d9b5;
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1.35;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+/* Padrão: coords.top (calculado no componente) já é um ponto ACIMA do
+   gatilho -- translateY(-100%) sobe o balão inteiro pra cima desse
+   ponto (a base do balão fica ali), em vez de descer a partir dele. */
+.warm-tooltip-top {
+    transform: translate(-50%, calc(-100% + 6px));
+}
+
+.warm-tooltip-top::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #2a1d10;
+}
+
+.warm-tooltip-top.warm-tooltip-aberto {
+    transform: translate(-50%, -100%);
+}
+
+/* placement="bottom": coords.top já é um ponto ABAIXO do gatilho --
+   aqui não precisa subir nada, só centralizar horizontalmente. */
+.warm-tooltip-bottom {
+    transform: translate(-50%, -6px);
+}
+
+.warm-tooltip-bottom::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-bottom-color: #2a1d10;
+}
+
+.warm-tooltip-bottom.warm-tooltip-aberto {
+    transform: translate(-50%, 0);
+}
+
+.warm-tooltip-bubble.warm-tooltip-aberto {
+    opacity: 1;
+}
+
+/* ============================================================
+   SPRING CHECK (React Bits, reimplementado do zero em CSS + JS puro
+   -- ver SpringCheck.jsx). Checkbox com o "V" entrando com um leve
+   exagero de escala (cubic-bezier com overshoot) em vez de só
+   aparecer -- usado nas perícias do formulário de criação/edição.
+   ============================================================ */
+.spring-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.spring-check input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.spring-check-box {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid #555;
+    border-radius: 4px;
+    background-color: var(--color-bg);
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.spring-check input:checked ~ .spring-check-box {
+    background-color: var(--color-primary-700);
+    border-color: var(--color-primary-400);
+}
+
+.spring-check input:focus-visible ~ .spring-check-box {
+    outline: 2px solid var(--color-primary-400);
+    outline-offset: 2px;
+}
+
+.spring-check input:disabled ~ .spring-check-box {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.spring-check-tick {
+    width: 12px;
+    height: 12px;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transform: scale(0) rotate(-20deg);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.spring-check input:checked ~ .spring-check-box .spring-check-tick {
+    transform: scale(1) rotate(0deg);
+}
+
+/* ============================================================
+   TRUE FOCUS (React Bits, reimplementado do zero em CSS + JS puro --
+   ver TrueFocus.jsx). Quatro cantinhos que fecham rápido ao redor do
+   conteúdo assim que ele aparece na tela, como uma câmera focando --
+   usado no selo de NEX do topo da Ficha pra chamar atenção pro valor
+   mais importante da tela assim que ela carrega.
+   ============================================================ */
+.true-focus {
+    position: relative;
+    display: inline-flex;
+    padding: 3px 9px;
+}
+
+.true-focus-corner {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border: 2px solid var(--color-primary-400);
+    opacity: 0;
+    animation: trueFocusSnap 0.55s ease-out 0.1s both;
+}
+
+.true-focus-corner-tl {
+    top: -1px;
+    left: -1px;
+    border-right: none;
+    border-bottom: none;
+}
+
+.true-focus-corner-tr {
+    top: -1px;
+    right: -1px;
+    border-left: none;
+    border-bottom: none;
+}
+
+.true-focus-corner-bl {
+    bottom: -1px;
+    left: -1px;
+    border-right: none;
+    border-top: none;
+}
+
+.true-focus-corner-br {
+    bottom: -1px;
+    right: -1px;
+    border-left: none;
+    border-top: none;
+}
+
+@keyframes trueFocusSnap {
+    0% { opacity: 0; transform: scale(1.7); }
+    60% { opacity: 1; }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.true-focus-content {
+    position: relative;
+    z-index: 1;
 }

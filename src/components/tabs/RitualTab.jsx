@@ -56,11 +56,15 @@
 //                          botão "Conjurar" simplesmente não aparece
 // ============================================================
 
+import { useState } from 'react';
 import * as OP from '@/lib/pericias';
 import * as OPR from '@/lib/rituais';
 import { elementoSlug, subtituloRitual, statsDoRitual, TrashIcon } from '@/components/modal/RitualCatalogModal';
 import useListaAnimada from '@/components/effects/useListaAnimada';
 import ShinyText from '@/components/effects/ShinyText';
+import SpotlightCard from '@/components/effects/SpotlightCard';
+import WarmTooltip from '@/components/effects/WarmTooltip';
+import ConfirmModal from '@/components/modal/ConfirmModal';
 
 function RitualSparkIcon() {
     return (
@@ -85,6 +89,10 @@ export default function RitualTab({
     onConjurar,
 }) {
     const { estaSaindo, iniciarSaida } = useListaAnimada();
+    // Ritual esperando confirmação de remoção (ver ConfirmModal.jsx no
+    // fim do componente) -- guarda nome+index porque iniciarSaida usa o
+    // nome (chave da animação de saída) e onRemoverRitual usa o index.
+    const [ritualParaRemover, setRitualParaRemover] = useState(null);
     const circuloLiberado = OP.circuloRitualLiberado(nex);
     const quotaEsgotada = rituais.length >= quota;
     // Lista combinada só pra exibição: os automáticos entram junto dos
@@ -108,9 +116,11 @@ export default function RitualTab({
                     Seu NEX libera até o{' '}
                     <strong>{circuloLiberado > 0 ? `${circuloLiberado}º círculo` : 'nenhum círculo ainda'}</strong>.
                 </span>
-                <span className={quotaEsgotada ? 'rituais-cota-cheia' : ''} title={quotaDetalhe}>
-                    Rituais conhecidos: <strong>{rituais.length} / {quota}</strong>
-                </span>
+                <WarmTooltip texto={quotaDetalhe}>
+                    <span className={quotaEsgotada ? 'rituais-cota-cheia' : ''}>
+                        Rituais conhecidos: <strong>{rituais.length} / {quota}</strong>
+                    </span>
+                </WarmTooltip>
                 {quota === 0 && (
                     <span className="rituals-quota-hint">
                         (escolha o poder "Aprender Ritual"{trilha === 'Ocultista' ? ', ou aumente o NEX,' : ''} pra desbloquear)
@@ -127,7 +137,7 @@ export default function RitualTab({
                     const custo = OPR.CUSTO_PE_POR_CIRCULO[ritual.circulo] || 0;
                     const saindo = estaSaindo(ritual.nome);
                     return (
-                        <div
+                        <SpotlightCard
                             className={`modal-item-card ritual-card elemento-${elementoSlug(ritual.elemento)}${aberto ? ' expanded ritual-card-eletrico' : ''}${saindo ? ' ritual-card-saindo' : ''}`}
                             style={{ '--i': posicao }}
                             key={ritual.nome}
@@ -148,9 +158,11 @@ export default function RitualTab({
                                         <span className={`modal-item-card-badge badge-elemento-${elementoSlug(ritual.elemento)}`}>{ritual.elemento}</span>
                                         <span className="modal-item-card-badge badge-circulo">{ritual.circulo}º círc.</span>
                                         {automatico && (
-                                            <span className="modal-item-card-badge badge-auto" title="Concedido automaticamente por um poder de sub-trilha — não conta na sua cota de rituais conhecidos">
-                                                Automático
-                                            </span>
+                                            <WarmTooltip texto="Concedido automaticamente por um poder de sub-trilha — não conta na sua cota de rituais conhecidos" placement="bottom">
+                                                <span className="modal-item-card-badge badge-auto">
+                                                    Automático
+                                                </span>
+                                            </WarmTooltip>
                                         )}
                                     </div>
                                     <div className="modal-item-card-sub">{subtituloRitual(ritual)}</div>
@@ -172,7 +184,7 @@ export default function RitualTab({
                                             type="button"
                                             className="modal-item-card-remove"
                                             title="Esquecer ritual"
-                                            onClick={ev => { ev.stopPropagation(); iniciarSaida(ritual.nome, () => onRemoverRitual(index)); }}
+                                            onClick={ev => { ev.stopPropagation(); setRitualParaRemover({ nome: ritual.nome, index }); }}
                                         >
                                             <TrashIcon />
                                         </button>
@@ -190,10 +202,22 @@ export default function RitualTab({
                                 </div>
                                 {ritual.descricao && <div className="modal-item-card-efeito">{ritual.descricao}</div>}
                             </div>
-                        </div>
+                        </SpotlightCard>
                     );
                 })}
             </div>
+
+            <ConfirmModal
+                aberto={!!ritualParaRemover}
+                titulo="Esquecer ritual"
+                mensagem={<>Isso vai remover <strong>{ritualParaRemover?.nome}</strong> dos rituais conhecidos.</>}
+                textoConfirmar="Esquecer"
+                onFechar={() => setRitualParaRemover(null)}
+                onConfirmar={() => {
+                    iniciarSaida(ritualParaRemover.nome, () => onRemoverRitual(ritualParaRemover.index));
+                    setRitualParaRemover(null);
+                }}
+            />
         </div>
     );
 }
