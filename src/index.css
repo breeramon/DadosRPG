@@ -3087,8 +3087,20 @@ h3 {
         min-height: 150px;
     }
 
+    /* O selo é "position: absolute" pra ficar de marca d'água atrás do
+       texto (ver .auth-selo-panel-mark lá em cima) contando com o painel
+       pai (.auth-selo-panel) ser o "position: absolute" que o contém --
+       mas aqui embaixo o painel virou "position: static" (pra empilhar
+       com o formulário), então o selo passava a se posicionar em
+       relação ao .auth-split inteiro (os dois painéis juntos, empilhados)
+       em vez de só ao seu próprio painel, ficando enorme e sobrepondo o
+       campo de e-mail e o texto "Entre com sua conta..." do formulário
+       embaixo. Nesse tamanho de tela ele só atrapalha por cima do
+       conteúdo real, então em vez de tentar conter/encolher ele dentro
+       de um painel já bem baixo (150px), some com ele -- o título
+       "Ficha Ordem Paranormal" já cumpre o papel de identificar a tela. */
     .auth-selo-panel-mark {
-        max-width: 130px;
+        display: none;
     }
 
     .auth-form-panel-inner {
