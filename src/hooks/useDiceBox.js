@@ -23,7 +23,32 @@
 // direto nele) — por isso o wrapper com useRef+useEffect: React só
 // cuida de montar a <div id="dice-box"> (ver CharacterSheetPage), a
 // própria lib toma conta do que acontece dentro dela.
-// ============================================================
+//
+// ------------------------------------------------------------
+// CORREÇÃO DO VAZAMENTO DE MEMÓRIA (motor 3D único, reaproveitado)
+//
+// Antes, cada vez que a ficha era aberta (ex: Ficha -> Meus Personagens
+// -> Ficha de novo, sem recarregar a página), este hook criava uma
+// DiceBox NOVA — e a antiga nunca era destruída. Cada DiceBox sobe 2
+// Web Workers (um pra física Ammo/wasm e outro pro Babylon desenhar no
+// OffscreenCanvas, cada um com seu próprio contexto WebGL) e registra
+// um listener de "resize" na janela. Medido em teste: depois de abrir
+// a ficha 7 vezes havia 14 workers vivos ao mesmo tempo. No celular,
+// numa sessão longa de jogo, isso vai acumulando memória/GPU até a aba
+// ficar lenta ou o navegador derrubar o WebGL.
+//
+// Não dá pra resolver só "destruindo ao sair": a lib (v1.1.4) não tem
+// nenhum método destroy()/dispose() — os workers ficam guardados em
+// campos privados dela, inacessíveis daqui, e o listener de resize
+// também não é exposto. Então a solução é o oposto: criar o motor 3D
+// UMA vez só por carregamento do site (variável de módulo "motor",
+// logo abaixo) e REAPROVEITAR. Quando a ficha desmonta, o <canvas>
+// da lib sai do DOM junto com a <div id="dice-box"> (mas continua vivo
+// na memória, guardado no motor); quando uma ficha monta de novo, o
+// mesmo <canvas> é simplesmente movido pra dentro da <div> nova. Os
+// workers continuam os mesmos 2 de sempre, não importa quantas vezes a
+// ficha seja aberta.
+// ------------------------------------------------------------
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import DiceBox from '@3d-dice/dice-box';
@@ -39,13 +64,25 @@ import DiceBox from '@3d-dice/dice-box';
 // (Babylon + física) com o container ainda 0x0 ou ausente — o mundo
 // físico nasce com limites degenerados: os dados nunca "assentam" de
 // verdade e a lib acaba devolvendo sempre 0 depois de vários segundos.
-function esperarContainerVisivel(seletor) {
+//
+// Agora também recebe um objeto "sinal" ({ cancelado: boolean }): se a
+// ficha for fechada antes do container aparecer (ex: personagem não
+// encontrado, ou a pessoa clicou em "Meus Personagens" ainda no
+// "Carregando..."), o efeito marca sinal.cancelado = true e o loop de
+// requestAnimationFrame para — antes ele ficava rodando a cada quadro
+// pra sempre, procurando uma <div> que nunca mais ia existir. Resolve
+// com o elemento encontrado, ou null se foi cancelado.
+function esperarContainerVisivel(seletor, sinal) {
     return new Promise(resolve => {
         function checar() {
+            if (sinal.cancelado) {
+                resolve(null);
+                return;
+            }
             const el = document.querySelector(seletor);
             const rect = el ? el.getBoundingClientRect() : null;
             if (rect && rect.width > 0 && rect.height > 0) {
-                resolve();
+                resolve(el);
             } else {
                 requestAnimationFrame(checar);
             }
@@ -86,6 +123,114 @@ function comPrazo(promise, ms) {
     });
 }
 
+// ---------------------------------------------------------------
+// MOTOR 3D COMPARTILHADO (um só por carregamento da página)
+//
+// Fica FORA do hook, no nível do módulo, justamente pra sobreviver à
+// desmontagem da ficha (estado de componente/useRef morre junto com o
+// componente; uma variável de módulo vive enquanto a aba estiver
+// aberta). Campos:
+//   box     -> a instância da DiceBox (null até ser criada)
+//   pronta  -> Promise<boolean>: true = animação 3D funcionando,
+//              false = indisponível (sem WebGL, erro, ou estourou o
+//              prazo de 15s). Criada uma vez só e reaproveitada por
+//              todas as montagens seguintes da ficha.
+//
+// Se a inicialização estourar o prazo, a DiceBox NÃO é descartada nem
+// recriada (recriar subiria mais 2 workers — exatamente o vazamento
+// que esta correção tira). Ela continua guardada; se a init dela
+// terminar depois, mesmo atrasada, "atrasadaMasPronta" vira true e a
+// próxima vez que a ficha abrir já usa a animação 3D normalmente.
+// ---------------------------------------------------------------
+const motor = {
+    box: null,
+    pronta: null,
+    atrasadaMasPronta: false,
+};
+
+const CONFIG_DICEBOX = {
+    // O pacote @3d-dice/dice-box copia sozinho seus assets
+    // (modelos/texturas dos dados) pra public/assets/ via um
+    // script "postinstall" que roda automaticamente depois de
+    // "npm install" (ver README) — esse caminho é o padrão que
+    // esse script usa, então não precisa configurar nada extra.
+    assetPath: '/assets/',
+    theme: 'default',
+    // Caixa no canto da tela — dados e força de arremesso/giro
+    // calibrados pro tamanho dela (ver #dice-box no CSS).
+    scale: 5,
+    gravity: 1,
+    throwForce: 4,
+    spinForce: 4,
+    startingHeight: 6,
+    settleTimeout: 6000,
+};
+
+// Cria a DiceBox (só na PRIMEIRA vez que alguma ficha abre) e devolve
+// a promise "pronta" do motor. Chamadas seguintes devolvem a mesma
+// promise, sem criar nada novo.
+function iniciarMotor(seletor) {
+    if (motor.pronta) return motor.pronta;
+
+    motor.pronta = (async () => {
+        try {
+            const box = new DiceBox({ container: seletor, ...CONFIG_DICEBOX });
+            motor.box = box;
+
+            const initBruto = box.init();
+            // Se a init terminar DEPOIS do prazo abaixo, ainda dá pra
+            // aproveitar essa mesma DiceBox na próxima vez que a ficha
+            // abrir (ver uso de atrasadaMasPronta no hook).
+            initBruto.then(() => { motor.atrasadaMasPronta = true; }, () => {});
+
+            // 15s (era 8s) — a primeira inicialização envolve compilar
+            // shaders WebGL de verdade (Babylon.js) e carregar o wasm da
+            // física (Ammo), o que pode demorar bem mais que 8s em GPUs
+            // integradas mais fracas ou notebooks — 8s era rápido demais
+            // e podia derrubar a animação em máquinas só um pouco mais
+            // lentas, não só em quem não tem GPU nenhuma.
+            const resultado = await comPrazo(initBruto, 15000);
+            if (resultado === PRAZO_ESTOUROU) {
+                console.warn(
+                    '[dice-box] A animação 3D não terminou de carregar a tempo (15s) — ' +
+                    'provavelmente sem aceleração de GPU disponível. Usando o gerador local.'
+                );
+                return false;
+            }
+            return true;
+        } catch (err) {
+            console.warn(
+                '[dice-box] Não foi possível carregar a animação 3D dos dados. ' +
+                'Os resultados continuam corretos, só ficam sem a animação visual.',
+                err
+            );
+            return false;
+        }
+    })();
+
+    return motor.pronta;
+}
+
+// Coloca o <canvas> do motor (criado na primeira ficha aberta) dentro
+// da <div id="dice-box"> da ficha ATUAL. Na primeira vez ele já nasce
+// lá dentro (a própria DiceBox faz o appendChild), então não faz nada;
+// nas seguintes, a <div> antiga já foi removida pelo React e o canvas
+// está "solto" (fora do DOM) — appendChild só move ele pro lugar novo.
+// Mover um canvas que foi transferido pra OffscreenCanvas é seguro: o
+// desenho continua vindo do mesmo worker de sempre.
+function anexarCanvas(container) {
+    const canvas = motor.box && motor.box.canvas;
+    if (!canvas || !container || canvas.parentNode === container) return;
+    container.appendChild(canvas);
+    // A lib só recalcula o tamanho do mundo 3D quando a janela dispara
+    // "resize" (listener que ela mesma registrou no init). A <div> nova
+    // pode ter outro tamanho que a anterior (ex: girou o celular entre
+    // uma ficha e outra), então dispara um "resize" pra ela reajustar —
+    // em vez de chamar box.resizeWorld() direto, que registraria MAIS
+    // um listener na janela a cada chamada (outro vazamento pequeno).
+    window.dispatchEvent(new Event('resize'));
+}
+
 // containerSelector: seletor CSS do elemento onde os dados vão cair
 // (ex: "#dice-box"). Devolve uma função rollDiceAnimated(notation) que
 // resolve com um array de valores individuais, na ordem em que os
@@ -93,7 +238,10 @@ function comPrazo(promise, ms) {
 export function useDiceBox(containerSelector) {
     const diceBoxRef = useRef(null);
     const readyPromiseRef = useRef(null);
-    const initStartedRef = useRef(false);
+    // (o antigo initStartedRef saiu: ele existia pra evitar criar duas
+    // DiceBox no StrictMode do React, que roda o efeito duas vezes em
+    // dev. Agora isso já é garantido pelo motor único acima — rodar o
+    // efeito de novo só reaproveita o que já existe.)
 
     // Estado exposto pra quem usa o hook — antes o "caiu pro gerador
     // local" só aparecia num console.warn (ninguém olha o console em
@@ -123,65 +271,51 @@ export function useDiceBox(containerSelector) {
     const [rolando, setRolando] = useState(false);
 
     useEffect(() => {
-        // Guarda contra o StrictMode do React (dev) rodando o efeito duas
-        // vezes na mesma montagem — sem isso, criaríamos dois canvases 3D
-        // sobrepostos e desperdiçaríamos a inicialização.
-        if (initStartedRef.current) return;
-        initStartedRef.current = true;
+        // Sinal de cancelamento desta montagem — vira true no cleanup
+        // (ficha fechou), pra parar a espera do container e não mexer
+        // em estado/canvas de uma ficha que já não está mais na tela.
+        const sinal = { cancelado: false };
 
         readyPromiseRef.current = (async () => {
-            try {
-                await esperarContainerVisivel(containerSelector);
+            const container = await esperarContainerVisivel(containerSelector, sinal);
+            if (!container) return false; // ficha fechou antes de aparecer
 
-                const box = new DiceBox({
-                    container: containerSelector,
-                    // O pacote @3d-dice/dice-box copia sozinho seus assets
-                    // (modelos/texturas dos dados) pra public/assets/ via um
-                    // script "postinstall" que roda automaticamente depois de
-                    // "npm install" (ver README) — esse caminho é o padrão que
-                    // esse script usa, então não precisa configurar nada extra.
-                    assetPath: '/assets/',
-                    theme: 'default',
-                    // Caixa no canto da tela — dados e força de arremesso/giro
-                    // calibrados pro tamanho dela (ver #dice-box no CSS).
-                    scale: 5,
-                    gravity: 1,
-                    throwForce: 4,
-                    spinForce: 4,
-                    startingHeight: 6,
-                    settleTimeout: 6000,
-                });
+            // Primeira ficha aberta: cria o motor. Fichas seguintes:
+            // devolve na hora a mesma promise já resolvida.
+            let ok = await iniciarMotor(containerSelector);
+            // Init tinha estourado o prazo numa ficha anterior, mas
+            // terminou depois — pode usar normalmente agora.
+            if (!ok && motor.atrasadaMasPronta) ok = true;
 
-                // 15s (era 8s) — a primeira inicialização envolve compilar
-                // shaders WebGL de verdade (Babylon.js) e carregar o wasm da
-                // física (Ammo), o que pode demorar bem mais que 8s em GPUs
-                // integradas mais fracas ou notebooks — 8s era rápido demais
-                // e podia derrubar a animação em máquinas só um pouco mais
-                // lentas, não só em quem não tem GPU nenhuma.
-                const resultado = await comPrazo(box.init(), 15000);
-                if (resultado === PRAZO_ESTOUROU) {
-                    console.warn(
-                        '[dice-box] A animação 3D não terminou de carregar a tempo (15s) — ' +
-                        'provavelmente sem aceleração de GPU disponível. Usando o gerador local.'
-                    );
-                    diceBoxRef.current = null;
-                    setAnimacao3dPronta(false);
-                    return false;
-                }
-                diceBoxRef.current = box;
+            if (sinal.cancelado) return false;
+
+            if (ok && motor.box) {
+                anexarCanvas(container);
+                diceBoxRef.current = motor.box;
                 setAnimacao3dPronta(true);
                 return true;
-            } catch (err) {
-                console.warn(
-                    '[dice-box] Não foi possível carregar a animação 3D dos dados. ' +
-                    'Os resultados continuam corretos, só ficam sem a animação visual.',
-                    err
-                );
-                diceBoxRef.current = null;
-                setAnimacao3dPronta(false);
-                return false;
             }
+            diceBoxRef.current = null;
+            setAnimacao3dPronta(false);
+            return false;
         })();
+
+        return () => {
+            sinal.cancelado = true;
+            // Limpa os dados que ficaram parados na mesa da última
+            // rolagem, pra próxima ficha aberta começar com a caixa
+            // vazia (o canvas é o mesmo, então sem isso os dados do
+            // personagem anterior apareceriam lá). Só mexe se esta
+            // montagem chegou a usar o motor.
+            if (diceBoxRef.current) {
+                try {
+                    diceBoxRef.current.clear();
+                } catch {
+                    // clear() falhar não pode quebrar a navegação
+                }
+            }
+            diceBoxRef.current = null;
+        };
     }, [containerSelector]);
 
     const rollDiceAnimated = useCallback(async (notation) => {
@@ -229,6 +363,11 @@ export function useDiceBox(containerSelector) {
     // loadTheme). Chamado tanto quando a preferência salva termina de
     // carregar (useDicePreferences) quanto quando a pessoa confirma uma
     // troca no DiceThemeModal.
+    //
+    // Com o motor único, o tema escolhido fica guardado na própria
+    // DiceBox entre uma ficha e outra — e a ficha nova reaplica a
+    // preferência salva assim que carrega, como antes, então não muda
+    // nada pro jogador.
     //
     // CUIDADO: "themeColor" só entra no objeto quando existe uma cor de
     // verdade (if abaixo) — nunca declarar a chave com valor undefined
