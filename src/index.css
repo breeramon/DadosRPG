@@ -505,6 +505,22 @@ h3 {
     transform: scale(0.92);
 }
 
+/* Botão -/+ de atributo desabilitado (sem pontos sobrando, ou já no
+   mínimo/máximo do NEX -- ver pentagramNodes em CharacterFormPage.jsx).
+   Apagado e sem o efeito de hover/clique, pra ficar claro que não dá
+   antes mesmo de clicar. O ":disabled" nos seletores de hover/active
+   evita que o botão "acenda" ao passar o mouse mesmo bloqueado. */
+.attr-stepper-btn:disabled,
+.attr-stepper-btn:disabled:hover,
+.attr-stepper-btn:disabled:active {
+    opacity: 0.35;
+    cursor: not-allowed;
+    background-color: #1a0808;
+    border-color: var(--color-blood-500);
+    color: #d3a3a3;
+    transform: none;
+}
+
 .pos-agi { top: 7.14%;  left: 50%;    transform: translate(-50%, -50%); }
 .pos-int { top: 36.76%; left: 90.76%; transform: translate(-50%, -50%); }
 .pos-vig { top: 84.67%; left: 75.19%; transform: translate(-50%, -50%); }
@@ -4561,4 +4577,4 @@ h3 {
 .true-focus-content {
     position: relative;
     z-index: 1;
-}
+}

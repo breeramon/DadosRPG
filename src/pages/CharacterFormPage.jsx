@@ -211,29 +211,25 @@ export default function CharacterFormPage() {
 
     const regraAtributos = useMemo(() => OP.pontosAtributoPorNex(nex), [nex]);
 
-    useEffect(() => {
-        const regra = regraAtributos;
-        const clamped = {};
-        ATRIBUTOS.forEach(({ key }) => {
-            let v = atributos[key];
-            if (Number.isNaN(v)) v = regra.minPorAtributo;
-            clamped[key] = Math.max(regra.minPorAtributo, Math.min(regra.maxPorAtributo, v));
-        });
-        let soma = ATRIBUTOS.reduce((acc, { key }) => acc + clamped[key], 0);
-        let guarda = 0;
-        while (soma > regra.total && guarda < 100) {
-            guarda++;
-            let maiorKey = null, maiorVal = regra.minPorAtributo;
-            ATRIBUTOS.forEach(({ key }) => {
-                if (clamped[key] > maiorVal) { maiorVal = clamped[key]; maiorKey = key; }
-            });
-            if (!maiorKey) break;
-            clamped[maiorKey] -= 1;
-            soma -= 1;
-        }
-        const mudou = ATRIBUTOS.some(({ key }) => clamped[key] !== atributos[key]);
-        if (mudou) setAtributos(clamped);
-    }, [nex, atributos, regraAtributos]);
+    // ---------------------------------------------------------------
+    // CORREÇÃO: antes existia aqui um useEffect que, toda vez que os
+    // atributos passavam do total permitido pelo NEX, tirava 1 ponto do
+    // MAIOR atributo automaticamente — sem avisar. Na prática: com 9/9
+    // pontos usados, apertar "+" em Força deixava Força 2 mas baixava
+    // Intelecto de 3 pra 2 sozinho (reproduzido em teste), mudando de
+    // tabela também a cota de perícias e de rituais, que dependem de
+    // Intelecto. O mesmo efeito também "consertava" em silêncio
+    // personagens antigos ao abrir a edição, ou ao baixar o NEX.
+    //
+    // Agora não existe mais nenhum ajuste automático: quem impede passar
+    // do limite são os próprios controles (handleAttrStepper /
+    // handleAttrChange logo abaixo, e os botões "+" desabilitados quando
+    // não sobra ponto). Se o personagem já estiver acima do limite (ex:
+    // baixou o NEX na edição, ou dado salvo com regra antiga), os avisos
+    // em vermelho embaixo do pentagrama aparecem e validarECollectar()
+    // bloqueia o salvamento até a pessoa decidir de qual atributo tirar —
+    // a escolha fica com ela, não com o código.
+    // ---------------------------------------------------------------
 
     const atributosForaDoLimite = useMemo(
         () => ATRIBUTOS.filter(({ key }) => {
@@ -318,14 +314,60 @@ export default function CharacterFormPage() {
         })).filter(grupo => grupo.itens.length);
     }, [nomesFixos]);
 
-    const handleAttrChange = useCallback((key, valor) => {
-        const v = parseInt(valor, 10);
-        setAtributos(prev => ({ ...prev, [key]: Number.isNaN(v) ? 0 : v }));
-    }, []);
+    // Pontos ainda livres pra distribuir (nunca negativo — se já estiver
+    // acima do total, o aviso vermelho de "somaAtributosExcedida" é que
+    // aparece). Usado nos botões "+" e no texto embaixo do pentagrama.
+    const pontosRestantes = Math.max(0, regraAtributos.total - somaAtributosAtual);
 
+    // Digitar direto no campo do atributo: o valor é limitado ao
+    // intervalo permitido pelo NEX (mínimo/máximo por atributo) E aos
+    // pontos que ainda sobram — nunca tira ponto de outro atributo pra
+    // caber. Se a pessoa digitar mais do que dá, o campo fica no máximo
+    // possível e um aviso explica o porquê (antes o valor entrava e o
+    // efeito removido acima "compensava" mexendo em outro atributo).
+    const handleAttrChange = useCallback((key, valor) => {
+        const digitado = parseInt(valor, 10);
+        const pedido = Number.isNaN(digitado) ? 0 : digitado;
+        const atual = atributos[key] || 0;
+        const somaDosOutros = somaAtributosAtual - atual;
+        // Teto real: o menor entre o máximo por atributo e o que cabe nos
+        // pontos que sobram. Math.max com "atual" garante que um valor que
+        // já estava acima (ex: NEX baixado) não suba, mas também não seja
+        // cortado à força só por clicar no campo.
+        const teto = Math.max(
+            Math.min(regraAtributos.maxPorAtributo, regraAtributos.total - somaDosOutros),
+            Math.min(atual, pedido)
+        );
+        const final = Math.max(regraAtributos.minPorAtributo, Math.min(teto, pedido));
+        if (final < pedido) {
+            toast.error(
+                pedido > regraAtributos.maxPorAtributo
+                    ? `O máximo por atributo no NEX ${nex}% é ${regraAtributos.maxPorAtributo}.`
+                    : `Não sobram pontos de atributo pra isso — tire de outro atributo primeiro.`,
+                { id: 'attr-limite' }
+            );
+        }
+        setAtributos(prev => ({ ...prev, [key]: final }));
+    }, [atributos, somaAtributosAtual, regraAtributos, nex]);
+
+    // Botões −/+ do pentagrama. Só mexe no próprio atributo: "+" não faz
+    // nada se já estiver no máximo do NEX ou se não sobrar ponto (os
+    // botões também ficam desabilitados nesses casos, ver pentagramNodes),
+    // e "−" não desce do mínimo. Diminuir é sempre permitido acima do
+    // mínimo — é assim que a pessoa corrige um personagem que ficou acima
+    // do limite depois de baixar o NEX.
     const handleAttrStepper = useCallback((key, delta) => {
-        setAtributos(prev => ({ ...prev, [key]: (prev[key] || 0) + delta }));
-    }, []);
+        setAtributos(prev => {
+            const atual = prev[key] || 0;
+            const novo = atual + delta;
+            if (novo < regraAtributos.minPorAtributo) return prev;
+            if (delta > 0) {
+                const soma = ATRIBUTOS.reduce((acc, a) => acc + (prev[a.key] || 0), 0);
+                if (novo > regraAtributos.maxPorAtributo || soma + delta > regraAtributos.total) return prev;
+            }
+            return { ...prev, [key]: novo };
+        });
+    }, [regraAtributos]);
 
     function handleTrilhaChange(novaTrilha) {
         setTrilha(novaTrilha);
@@ -551,23 +593,54 @@ export default function CharacterFormPage() {
         return <div className="app-loading">Carregando...</div>;
     }
 
-    const pentagramNodes = ATRIBUTOS.map(({ key, label, nome, posClass }) => ({
-        key,
-        label,
-        posClass,
-        content: (
-            <div className="attr-stepper">
-                <button type="button" className="attr-stepper-btn" aria-label={`Diminuir ${nome} em 1`} onClick={() => handleAttrStepper(key, -1)} title="-1">{'−'}</button>
-                <input
-                    type="number"
-                    className={`attr-value-input${atributosForaDoLimite.some(a => a.key === key) ? ' attr-value-input-erro' : ''}`}
-                    value={atributos[key]}
-                    onChange={e => handleAttrChange(key, e.target.value)}
-                />
-                <button type="button" className="attr-stepper-btn" aria-label={`Aumentar ${nome} em 1`} onClick={() => handleAttrStepper(key, 1)} title="+1">+</button>
-            </div>
-        ),
-    }));
+    const pentagramNodes = ATRIBUTOS.map(({ key, label, nome, posClass }) => {
+        const valor = atributos[key] || 0;
+        // Mesmas regras de handleAttrStepper, só que pra desabilitar o
+        // botão na tela — assim fica claro ANTES do clique que não dá,
+        // em vez de o clique simplesmente não fazer nada.
+        const noMinimo = valor <= regraAtributos.minPorAtributo;
+        const noMaximo = valor >= regraAtributos.maxPorAtributo;
+        const semPontos = pontosRestantes <= 0;
+        const motivoMaisBloqueado = noMaximo
+            ? `${nome} já está no máximo do NEX ${nex}% (${regraAtributos.maxPorAtributo})`
+            : 'Sem pontos sobrando — diminua outro atributo primeiro';
+        return {
+            key,
+            label,
+            posClass,
+            content: (
+                <div className="attr-stepper">
+                    <button
+                        type="button"
+                        className="attr-stepper-btn"
+                        aria-label={`Diminuir ${nome} em 1`}
+                        onClick={() => handleAttrStepper(key, -1)}
+                        disabled={noMinimo}
+                        title={noMinimo ? `${nome} já está no mínimo` : '-1'}
+                    >
+                        {'−'}
+                    </button>
+                    <input
+                        type="number"
+                        aria-label={nome}
+                        className={`attr-value-input${atributosForaDoLimite.some(a => a.key === key) ? ' attr-value-input-erro' : ''}`}
+                        value={valor}
+                        onChange={e => handleAttrChange(key, e.target.value)}
+                    />
+                    <button
+                        type="button"
+                        className="attr-stepper-btn"
+                        aria-label={`Aumentar ${nome} em 1`}
+                        onClick={() => handleAttrStepper(key, 1)}
+                        disabled={noMaximo || semPontos}
+                        title={noMaximo || semPontos ? motivoMaisBloqueado : '+1'}
+                    >
+                        +
+                    </button>
+                </div>
+            ),
+        };
+    });
 
     return (
         <div className="screen screen-form">
@@ -672,9 +745,14 @@ export default function CharacterFormPage() {
                     <AttributePentagram gradientId="opRitualGlowForm" nodes={pentagramNodes} className="form-pentagram" />
 
                     <div className="atributos-info">
-                        <span>Pontos de atributo: <strong className={ATRIBUTOS.reduce((acc, { key }) => acc + atributos[key], 0) > regraAtributos.total ? 'atributos-erro' : ''}>
-                            {ATRIBUTOS.reduce((acc, { key }) => acc + atributos[key], 0)} / {regraAtributos.total}
-                        </strong></span>
+                        {/* Usa somaAtributosAtual (já calculado lá em cima) em
+                            vez de refazer o reduce duas vezes aqui, e mostra
+                            quantos pontos ainda sobram — com o "+" agora
+                            desabilitando ao chegar no total, esse número é o
+                            que explica o porquê. */}
+                        <span>Pontos de atributo: <strong className={somaAtributosExcedida ? 'atributos-erro' : ''}>
+                            {somaAtributosAtual} / {regraAtributos.total}
+                        </strong>{!somaAtributosExcedida && ` (restam ${pontosRestantes})`}</span>
                         <span>Máximo por atributo neste NEX: <strong>{regraAtributos.maxPorAtributo}</strong> (mínimo 0)</span>
                         {regraAtributos.extrapolado && (
                             <div className="atributos-aviso">
