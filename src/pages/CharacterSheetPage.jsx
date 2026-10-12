@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { Characters } from '@/services/firebase';
@@ -6,6 +6,7 @@ import AttributePentagram from '@/components/panels/AttributePentagram';
 import { useDiceBox } from '@/hooks/useDiceBox';
 import { useDicePreferences } from '@/hooks/useDicePreferences';
 import { useAtalhosPreferences } from '@/hooks/useAtalhosPreferences';
+import { useSalvamentoAutomatico, recuperarPendente } from '@/hooks/useSalvamentoAutomatico';
 import { playDiceRollSound, playRitualCastSound } from '@/lib/diceSound';
 import * as OP from '@/lib/pericias';
 import * as OPI from '@/lib/itens';
@@ -182,19 +183,43 @@ export default function CharacterSheetPage() {
     }
 
     // ---------------------------------------------------------------
+    // Salvamento automático (PV/PE/Sanidade, inventário, rituais,
+    // ataques, poderes...). Antes era um setTimeout de 400ms escrito
+    // aqui mesmo, que perdia a última alteração se a aba fechasse
+    // antes dele disparar — agora mora em useSalvamentoAutomatico.js,
+    // que envia na hora quando a página vai sumir e guarda uma cópia
+    // de segurança local até o Firestore confirmar (ver o hook).
+    // ---------------------------------------------------------------
+    const { salvarCampos } = useSalvamentoAutomatico(user.uid, id);
+
+    // ---------------------------------------------------------------
     // Carrega o personagem
     // ---------------------------------------------------------------
     useEffect(() => {
         let cancelado = false;
         setCarregando(true);
         Characters.get(user.uid, id)
-            .then(p => {
+            .then(doServidor => {
                 if (cancelado) return;
-                if (!p) {
+                if (!doServidor) {
                     window.alert('Esse personagem não existe (ou já foi excluído).');
                     navigate('/characters');
                     return;
                 }
+
+                // Alterações que ficaram só na cópia de segurança local
+                // (a aba fechou, ou a internet caiu, antes do Firestore
+                // confirmar o último salvamento — ver
+                // useSalvamentoAutomatico.js). Aplica por cima do que veio
+                // do servidor, pra ficha já abrir com elas, e manda de novo
+                // pro Firestore pelo caminho normal do salvamento.
+                const recuperado = recuperarPendente(user.uid, id);
+                const p = recuperado ? { ...doServidor, ...recuperado } : doServidor;
+                if (recuperado) {
+                    salvarCampos(recuperado);
+                    toast.success('Recuperamos alterações desta ficha que não tinham sido salvas.', { id: 'sheet-recuperado' });
+                }
+
                 setPersonagem(p);
                 setInventario(Array.isArray(p.inventario) ? p.inventario : []);
                 setRituais(Array.isArray(p.rituais) ? p.rituais : []);
@@ -243,22 +268,6 @@ export default function CharacterSheetPage() {
         return () => { cancelado = true; };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id, user.uid]);
-
-    const pendenteRef = useRef({});
-    const saveTimeoutRef = useRef(null);
-    const salvarCampos = useCallback((campos) => {
-        Object.assign(pendenteRef.current, campos);
-        clearTimeout(saveTimeoutRef.current);
-        saveTimeoutRef.current = setTimeout(() => {
-            const aEnviar = pendenteRef.current;
-            pendenteRef.current = {};
-            Characters.update(user.uid, id, aEnviar).catch(err => {
-                console.error('[character-sheet] Erro ao salvar vida/determinação/defesa/inventário:', err);
-
-                toast.error('Não foi possível salvar — verifique sua conexão.', { id: 'sheet-autosave-error' });
-            });
-        }, 400);
-    }, [user.uid, id]);
 
     // ---------------------------------------------------------------
     // Log de rolagens (últimas 4)
