@@ -44,6 +44,15 @@
 // Firebase não conseguir inicializar (sem internet, chaves erradas
 // etc.), todas as chamadas acima rejeitam com um erro — quem chama
 // decide o que mostrar na tela.
+//
+// APP CHECK: além das chaves do Firebase em si (que não são secretas —
+// ver .env.example), o app também tenta provar pro Firebase que as
+// requisições estão vindo do site de verdade, e não de um script
+// batendo direto na API com a mesma chave copiada do navegador. Isso
+// usa o reCAPTCHA v3 como "atestado" -- ver GUIA_FIREBASE.md pro passo
+// a passo de criar a chave e ativar no Console. Sem
+// VITE_RECAPTCHA_SITE_KEY preenchida, o app continua funcionando
+// normalmente (só sem essa proteção extra).
 // ============================================================
 
 import { initializeApp } from 'firebase/app';
@@ -68,6 +77,7 @@ import {
     deleteDoc,
     serverTimestamp,
 } from 'firebase/firestore';
+import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -93,6 +103,32 @@ if (!firebaseConfig.apiKey) {
         const app = initializeApp(firebaseConfig);
         auth = getAuth(app);
         db = getFirestore(app);
+
+        const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+        if (recaptchaSiteKey) {
+            // Em desenvolvimento local (npm run dev), o reCAPTCHA v3 de
+            // verdade não valida "localhost" do mesmo jeito que valida o
+            // domínio publicado -- o App Check tem um modo "debug" pra
+            // isso: essa variável global precisa existir ANTES do
+            // initializeAppCheck, e faz o SDK imprimir um token de
+            // depuração no console do navegador na primeira vez (em vez
+            // de tentar validar o reCAPTCHA de verdade). Esse token é
+            // cadastrado manualmente uma única vez no Console (ver
+            // GUIA_FIREBASE.md) -- sem isso, toda chamada ao Firestore
+            // falharia em dev assim que o App Check estiver "Enforced".
+            if (import.meta.env.DEV) {
+                self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+            }
+            initializeAppCheck(app, {
+                provider: new ReCaptchaV3Provider(recaptchaSiteKey),
+                isTokenAutoRefreshEnabled: true,
+            });
+        } else {
+            console.warn(
+                '[firebase] VITE_RECAPTCHA_SITE_KEY não definida -- App Check desativado ' +
+                '(as requisições não terão o token de atestação; ver GUIA_FIREBASE.md).'
+            );
+        }
     } catch (err) {
         initError = err;
         console.warn('[firebase] Não foi possível inicializar o Firebase.', err);

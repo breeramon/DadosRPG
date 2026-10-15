@@ -89,7 +89,14 @@ alguém esquecer a senha ou reusar uma senha fraca.
 ## 5. Colar as regras de segurança
 
 Isso é o que garante que cada usuário só enxerga e edita os **próprios**
-personagens, nunca os de outra pessoa.
+personagens, nunca os de outra pessoa — e, além disso, que ninguém
+(nem um usuário legítimo autenticado, nem um script usando as mesmas
+chaves do navegador) consiga gravar campos fora do esperado ou
+documentos gigantes no seu banco. As regras antigas só checavam "é o
+dono?" — qualquer um logado podia gravar **qualquer campo, de
+qualquer tamanho** no documento (até o limite físico do Firestore, 1
+MB por documento). A versão abaixo valida nome dos campos, tipo e
+tamanho de cada um.
 
 1. Ainda em Firestore Database, vá na aba **"Rules"**.
 2. Apague o conteúdo atual e cole:
@@ -98,23 +105,176 @@ personagens, nunca os de outra pessoa.
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /usuarios/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+    // ---- Funções auxiliares ----
+
+    function donoAutenticado(userId) {
+      return request.auth != null && request.auth.uid == userId;
     }
+
+    function ehTexto(valor, tamanhoMax) {
+      return valor is string && valor.size() <= tamanhoMax;
+    }
+
+    function ehLista(valor, tamanhoMax) {
+      return valor is list && valor.size() <= tamanhoMax;
+    }
+
+    // Mapa de atributos: só as 5 chaves do jogo, cada uma um número
+    // dentro de uma faixa generosa (as regras não tentam recalcular a
+    // distribuição de pontos do NEX -- isso já é validado no app; aqui
+    // é só pra impedir um valor absurdo tipo -999999 ou 9999999).
+    function atributosValidos(a) {
+      return a is map
+        && a.keys().hasOnly(['agi', 'int', 'vig', 'pre', 'for'])
+        && a.agi is number && a.agi >= -5 && a.agi <= 15
+        && a.int is number && a.int >= -5 && a.int <= 15
+        && a.vig is number && a.vig >= -5 && a.vig <= 15
+        && a.pre is number && a.pre >= -5 && a.pre <= 15
+        && a.for is number && a.for >= -5 && a.for <= 15;
+    }
+
+    // Um personagem só pode ter exatamente estes campos (nada de
+    // extra), com o tipo e o tamanho esperado em cada um. Listas como
+    // "pericias"/"rituais"/"poderes...Escolhidos" têm o conteúdo de
+    // cada item validado pelo próprio app (as regras só limitam
+    // QUANTOS itens cabem, não o formato interno de cada um).
+    function personagemValido(p) {
+      return p.keys().hasOnly([
+            'nome', 'trilha', 'nex', 'atributos', 'pericias', 'origem',
+            'rituais', 'trilhaCombatenteEscolhida', 'poderesCombatenteEscolhidos',
+            'trilhaEspecialistaEscolhida', 'poderesEspecialistaEscolhidos',
+            'trilhaOcultistaEscolhida', 'poderesOcultistaEscolhidos', 'criadoEm'
+          ])
+        && ehTexto(p.nome, 100) && p.nome.size() >= 1
+        && p.trilha in ['Combatente', 'Especialista', 'Ocultista']
+        && p.nex is number && p.nex >= 5 && p.nex <= 99
+        && atributosValidos(p.atributos)
+        && ehLista(p.pericias, 100)
+        && ehTexto(p.origem, 100)
+        && ehLista(p.rituais, 100)
+        && ehTexto(p.trilhaCombatenteEscolhida, 100)
+        && ehLista(p.poderesCombatenteEscolhidos, 50)
+        && ehTexto(p.trilhaEspecialistaEscolhida, 100)
+        && ehLista(p.poderesEspecialistaEscolhidos, 50)
+        && ehTexto(p.trilhaOcultistaEscolhida, 100)
+        && ehLista(p.poderesOcultistaEscolhidos, 50);
+    }
+
+    // Preferências da conta (tema/cor dos dados 3D, atalhos de
+    // teclado) -- ver Preferences.get/save em firebase.js. Usa
+    // setDoc(merge:true), então o documento pode chegar com só um
+    // subconjunto desses 3 campos a cada gravação.
+    function preferenciasValidas(d) {
+      return d.keys().hasOnly(['dadosTema', 'dadosCor', 'atalhosAtivos'])
+        && (!('dadosTema' in d) || ehTexto(d.dadosTema, 50))
+        && (!('dadosCor' in d) || d.dadosCor == null || ehTexto(d.dadosCor, 50))
+        && (!('atalhosAtivos' in d) || d.atalhosAtivos is bool);
+    }
+
+    // ---- Regras ----
+
+    match /usuarios/{userId} {
+      allow read, delete: if donoAutenticado(userId);
+      allow create, update: if donoAutenticado(userId) && preferenciasValidas(request.resource.data);
+    }
+
     match /usuarios/{userId}/personagens/{personagemId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, delete: if donoAutenticado(userId);
+
+      // "criadoEm" é escrito com serverTimestamp() (ver firebase.js) --
+      // ao criar, tem que ser exatamente o horário do servidor; ao
+      // editar, tem que continuar o mesmo (ninguém pode "voltar no
+      // tempo" o personagem).
+      allow create: if donoAutenticado(userId)
+        && personagemValido(request.resource.data)
+        && request.resource.data.criadoEm == request.time;
+
+      allow update: if donoAutenticado(userId)
+        && personagemValido(request.resource.data)
+        && request.resource.data.criadoEm == resource.data.criadoEm;
     }
   }
 }
 ```
 
-(O primeiro bloco, pro documento `usuarios/{userId}` em si — não a
-subcoleção de personagens —, guarda preferências da conta que valem
-pra todos os personagens, como o tema/cor escolhida pros dados 3D. Se
-você já tinha as regras antigas publicadas antes dessa funcionalidade
-existir, volte aqui e cole essa versão atualizada.)
+(O bloco `usuarios/{userId}` -- o documento em si, não a subcoleção de
+personagens -- guarda as preferências da conta que valem pra todos os
+personagens. Se você já tinha as regras antigas publicadas, volte aqui
+e cole essa versão atualizada.)
 
 3. Clique em **"Publish"**.
+
+**O que essas regras NÃO fazem** (caso um dia você precise disso):
+elas não limitam **quantos personagens** cada usuário pode criar --
+isso exigiria um contador separado (um documento "resumo" por usuário,
+atualizado em transação a cada criação/remoção), que é mais trabalho e
+não foi pedido agora. Se isso virar um problema de verdade (alguém
+criando centenas de personagens-lixo), é possível adicionar depois.
+
+**Se você mudar os nomes dos campos no código** (por exemplo, trocar
+`trilhaCombatenteEscolhida` por outro nome, ou adicionar uma quarta
+trilha): a função `personagemValido` acima vai **rejeitar** a
+gravação até você atualizar a lista de campos permitidos nas regras
+também -- é o preço de ter uma lista branca em vez de aceitar
+qualquer coisa.
+
+## 5b. Ativar o Firebase App Check (opcional, mas recomendado)
+
+As regras do passo 5 garantem que só o dono acessa seus próprios
+dados, e com o formato esperado -- mas nada ali impede que alguém
+copie a sua `apiKey` (ela aparece no código do navegador de qualquer
+app 100% front-end, não é segredo) e escreva um script próprio
+batendo direto na API do Firestore, se passando por "um usuário
+autenticado". O **App Check** resolve esse problema: ele faz o
+navegador provar, a cada requisição, que quem está chamando é
+mesmo o seu site rodando num navegador de verdade -- não um script.
+Sem a chave configurada, o app continua funcionando normalmente
+(é opcional); com ela, fica mais difícil abusar da sua API de fora
+do site.
+
+1. **Criar uma chave reCAPTCHA v3**: acesse
+   [google.com/recaptcha/admin](https://www.google.com/recaptcha/admin/create)
+   e registre um novo site.
+   - Tipo: **reCAPTCHA v3**.
+   - Domínios: adicione `localhost` (pra testar em dev) e o domínio de
+     produção (ex: o seu `.vercel.app`, sem `https://`).
+   - Ao salvar, copie a **"Chave do site"** (site key) -- é essa que
+     entra no `.env.local`, não a chave secreta (essa última o App
+     Check nunca usa no front-end).
+2. **Registrar o app no Firebase**: no Console, vá em **Build → App
+   Check**, clique em **"Get started"** e registre o seu app Web,
+   escolhendo o provedor **reCAPTCHA v3** e colando a chave de site do
+   passo anterior.
+3. **Preencher a variável de ambiente**: copie a chave de site pro seu
+   `.env.local` (veja o modelo já atualizado em `.env.example`):
+   ```
+   VITE_RECAPTCHA_SITE_KEY=sua-chave-de-site-aqui
+   ```
+   Reinicie `npm run dev` depois de salvar.
+4. **Registrar o "token de depuração" pra testar em localhost**: o
+   reCAPTCHA de verdade não valida bem o `localhost`, então o App
+   Check tem um modo de depuração só pra isso. Com a chave já no
+   `.env.local`, rode `npm run dev`, abra o site e veja o **console do
+   navegador** (F12 → Console): na primeira vez vai aparecer uma
+   mensagem com um token longo (algo como "App Check debug token:
+   xxxxxxxx-xxxx-..."). Copie esse token e cole em **Build → App
+   Check → aba "Apps" → ⋮ no seu app → "Manage debug tokens"**, dando
+   um nome qualquer (ex: "meu notebook"). Sem isso, toda chamada ao
+   Firestore feita a partir do `npm run dev` vai falhar assim que você
+   fizer o passo 5 abaixo.
+5. **Ativar a aplicação ("Enforced") -- faça isso por último, com
+   calma**: enquanto você não mexe em nada, o App Check só *observa*
+   (modo "Unenforced") -- ele não bloqueia ninguém ainda, só mostra
+   métricas de quantas requisições vêm com e sem o token válido. Depois
+   de testar o site normalmente (logado, criando/editando/removendo
+   personagem) por alguns dias e ver que a maioria das requisições
+   aparece como "verificadas" nas métricas de **Build → App Check →
+   aba "APIs"**, aí sim mude o Cloud Firestore de "Unenforced" pra
+   **"Enforced"**. Fazer isso cedo demais, sem testar, corre o risco de
+   bloquear o próprio site se algo no passo 2-4 estiver errado.
+
+## 6. Testar
 
 ## 6. Testar
 
@@ -161,3 +321,5 @@ Cada personagem é salvo em `usuarios/{seu-uid}/personagens/{id-do-personagem}` 
 - **"Missing or insufficient permissions"**: as regras de segurança (passo 5) não foram publicadas, ou você editou a estrutura de pastas do Firestore.
 - **E-mail/senha não funciona**: confira se o método "Email/Password" está mesmo ativado (passo 3).
 - **Login com o Google dá erro `auth/unauthorized-domain`**: o domínio de onde você está acessando a ficha não está na lista de "Domínios autorizados" (Authentication → Settings → Authorized domains) — veja o passo 3b, item 7. Costuma acontecer na primeira vez que se testa fora do `localhost` (ex: logo depois de publicar em produção).
+- **"Missing or insufficient permissions" só depois de criar/editar personagem (regras novas do passo 5)**: confira se o documento tem exatamente os campos esperados — um campo extra, faltando, ou com o tipo errado (ex: `nex` como texto em vez de número) faz a regra `personagemValido` rejeitar a gravação. Se você mudou algum nome de campo no código, atualize a lista em `personagemValido` nas regras também.
+- **Firestore para de funcionar depois de ativar o App Check (passo 5b)**: geralmente é token de depuração não cadastrado (em dev/`localhost`) ou chave de site do reCAPTCHA errada/sem o domínio certo cadastrado. Volte a Cloud Firestore pra "Unenforced" em Build → App Check → APIs enquanto investiga — isso desbloqueia todo mundo na hora, sem precisar reverter nada no código.
